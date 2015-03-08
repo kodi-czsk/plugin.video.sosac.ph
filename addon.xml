@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<addon id="plugin.video.sosac.ph" name="Sosáč" provider-name="Pepa" version="1.0.0">
+  <requires>
+    <import addon="xbmc.python" version="2.1.0" />
+    <import addon="script.module.stream.resolver" version="1.6.24" />
+  </requires>
+  <extension library="default.py" point="xbmc.python.pluginsource" provides="video">
+    <provides>video</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <summary lang="en">sosac.ph</summary>
+    <summary lang="cs">sosac.ph</summary>
+    <description lang="en">Watch online movies and tv shows from www.sosac.ph.</description>
+    <description lang="cs">Sledujte online videa a serialy z www.sosac.ph.</description>
+    <platform>all</platform>
+  </extension>
+</addon>
