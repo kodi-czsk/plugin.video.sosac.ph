@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 #/*
-# *      Copyright (C) 2013 Libor Zoubek + jondas
+# *      Copyright (C) 2015 Libor Zoubek + jondas
 # *
 # *
 # *  This Program is free software; you can redistribute it and/or modify
@@ -165,7 +165,7 @@ class SosacContentProvider(ContentProvider):
                 current_page = int(current.group('page'))
             if current_page < next_page:
                 url = re.sub('\?.+?$','',url) + '?page='+str(next_page)
-                result += self.list_movies_by_letter(url)
+                result += self.list_by_letter(url)
         return result
 
     def add_flag_to_url(self, item, flag):
