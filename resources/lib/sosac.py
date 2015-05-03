@@ -27,8 +27,8 @@ from urlparse import urljoin
 from provider import ContentProvider,cached,ResolveException
 
 
-MOVIES_BASE_URL = "http://movies.sosac.ph"
-TV_SHOWS_BASE_URL = "http://tv.sosac.ph"
+MOVIES_BASE_URL = "http://movies.prehraj.me"
+TV_SHOWS_BASE_URL = "http://tv.prehraj.me"
 MOVIES_A_TO_Z_TYPE = "movies-a-z"
 TV_SHOWS_A_TO_Z_TYPE = "tv-shows-a-z"
 TV_SHOW_FLAG = "#tvshow#"
