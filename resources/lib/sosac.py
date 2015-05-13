@@ -26,6 +26,8 @@ import util
 from urlparse import urljoin
 from provider import ContentProvider,cached,ResolveException
 
+import sys
+sys.setrecursionlimit(10000)
 
 MOVIES_BASE_URL = "http://movies.prehraj.me"
 TV_SHOWS_BASE_URL = "http://tv.prehraj.me"
