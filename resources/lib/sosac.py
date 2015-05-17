@@ -35,6 +35,7 @@ MOVIES_A_TO_Z_TYPE = "movies-a-z"
 TV_SHOWS_A_TO_Z_TYPE = "tv-shows-a-z"
 TV_SHOW_FLAG = "#tvshow#"
 ISO_639_1_CZECH = "cs"
+MOST_POPULAR_TYPE = "most-popular"
 class SosacContentProvider(ContentProvider):
 
     def __init__(self,username=None,password=None,filter=None,reverse_eps=False):
@@ -48,7 +49,7 @@ class SosacContentProvider(ContentProvider):
 
     def categories(self):
         result = []
-        for title, url in [("Movies", MOVIES_BASE_URL), ("TV Shows", TV_SHOWS_BASE_URL)]:
+        for title, url in [("Movies", MOVIES_BASE_URL), ("TV Shows", TV_SHOWS_BASE_URL), ("Movies - Most popular", MOVIES_BASE_URL + "/" + MOST_POPULAR_TYPE), ("TV Shows - Most popular", TV_SHOWS_BASE_URL + "/" + MOST_POPULAR_TYPE)]:
             item = self.dir_item(title=title, url=url)
             result.append(item)
         return result
@@ -78,6 +79,13 @@ class SosacContentProvider(ContentProvider):
             return False
 
     @staticmethod
+    def is_most_popular(url):
+        if MOST_POPULAR_TYPE in url:
+            return True
+        else:
+            return False
+
+    @staticmethod
     def particular_letter(url):
         return "a-z" in url
 
@@ -89,6 +97,11 @@ class SosacContentProvider(ContentProvider):
 
     def list(self,url):
         print("Examining url", url)
+        if self.is_most_popular(url):
+            if "movie" in url:
+                return self.list_movies_by_letter(url)
+            if "tv" in url:
+                return self.list_tv_shows_by_letter(url)
         if self.is_base_url(url):
             self.base_url = url
             if "movie" in url:
@@ -163,6 +176,8 @@ class SosacContentProvider(ContentProvider):
             next_page = int(next.group('page'))
             current = re.search('\?page=(?P<page>\d)',url)
             current_page = 0
+            if self.is_most_popular(url) and next_page > 10:
+                return result
             if current:
                 current_page = int(current.group('page'))
             if current_page < next_page:
