@@ -225,7 +225,7 @@ class SosacContentProvider(ContentProvider):
                 result += self.list_by_letter(url)
         return result
 
-	@cached(ttl=24)
+    @cached(ttl=24)
     def list_tv_recently_added(self, url):
         result = []
         page = util.request(url)
@@ -251,7 +251,7 @@ class SosacContentProvider(ContentProvider):
         return result
 
     @cached(ttl=24)
-	def list_movie_recently_added(self, url):
+    def list_movie_recently_added(self, url):
         result = []
         page = util.request(url)
         data = util.substr(page,'<div class=\"content\"','</ul>')
