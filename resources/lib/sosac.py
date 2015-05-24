@@ -22,6 +22,7 @@
 
 import re,os,urllib,urllib2,cookielib
 import util
+import pprint
 
 from urlparse import urljoin
 from provider import ContentProvider,cached,ResolveException
@@ -36,6 +37,31 @@ TV_SHOWS_A_TO_Z_TYPE = "tv-shows-a-z"
 TV_SHOW_FLAG = "#tvshow#"
 ISO_639_1_CZECH = "cs"
 MOST_POPULAR_TYPE = "most-popular"
+RECENTLY_ADDED_TYPE = "recently-added"
+
+try:
+    import xbmc
+
+    def debug(text):
+        xbmc.log(str([text]), xbmc.LOGDEBUG)
+
+    def info(text):
+        xbmc.log(str([text]))
+
+    def error(text):
+        xbmc.log(str([text]), xbmc.LOGERROR)
+except:
+    def debug(text):
+        if LOG > 1:
+            print('[DEBUG] ' + str([text]))
+
+    def info(text):
+        if LOG > 0:
+            print('[INFO] ' + str([text]))
+
+    def error(text):
+        print('[ERROR] ' + str([text]))
+
 class SosacContentProvider(ContentProvider):
 
     def __init__(self,username=None,password=None,filter=None,reverse_eps=False):
@@ -49,7 +75,7 @@ class SosacContentProvider(ContentProvider):
 
     def categories(self):
         result = []
-        for title, url in [("Movies", MOVIES_BASE_URL), ("TV Shows", TV_SHOWS_BASE_URL), ("Movies - Most popular", MOVIES_BASE_URL + "/" + MOST_POPULAR_TYPE), ("TV Shows - Most popular", TV_SHOWS_BASE_URL + "/" + MOST_POPULAR_TYPE)]:
+        for title, url in [("Movies", MOVIES_BASE_URL), ("TV Shows", TV_SHOWS_BASE_URL), ("Movies - Most popular", MOVIES_BASE_URL + "/" + ISO_639_1_CZECH + "/" + MOST_POPULAR_TYPE), ("TV Shows - Most popular", TV_SHOWS_BASE_URL + "/" + ISO_639_1_CZECH +  "/" + MOST_POPULAR_TYPE), ("TV Shows - Recently added", TV_SHOWS_BASE_URL + "/" + ISO_639_1_CZECH +  "/" + RECENTLY_ADDED_TYPE)]:
             item = self.dir_item(title=title, url=url)
             result.append(item)
         return result
@@ -86,6 +112,13 @@ class SosacContentProvider(ContentProvider):
             return False
 
     @staticmethod
+    def is_recently_added(url):
+        if RECENTLY_ADDED_TYPE in url:
+            return True
+        else:
+            return False
+
+    @staticmethod
     def particular_letter(url):
         return "a-z" in url
 
@@ -102,6 +135,13 @@ class SosacContentProvider(ContentProvider):
                 return self.list_movies_by_letter(url)
             if "tv" in url:
                 return self.list_tv_shows_by_letter(url)
+        if self.is_recently_added(url):
+            debug("is recently added")
+            if "movie" in url:
+                return self.list_movies_by_letter(url)
+            if "tv" in url:
+                debug("is TV")
+                return self.list_recently_added_tv_shows(url)
         if self.is_base_url(url):
             self.base_url = url
             if "movie" in url:
@@ -185,6 +225,30 @@ class SosacContentProvider(ContentProvider):
                 result += self.list_by_letter(url)
         return result
 
+    def list_tv_recently_added(self, url):
+        result = []
+        page = util.request(url)
+        data = util.substr(page,'<div class=\"content\"','</ul>')
+        for m in re.finditer('<a href=\"(?P<url>[^\"]+)[^>]+((?!<strong).)*<strong>S(?P<serie>\d+) / E(?P<epizoda>\d+)</strong>((?!<a href).)*<a href=\"(?P<surl>[^\"]+)[^>]+class=\"mini\">((?!<span>).)*<span>\((?P<name>[^)]+)\)<', data, re.IGNORECASE | re.DOTALL):
+            item = self.video_item()
+            item['url'] = m.group('url')
+            item['title'] = "Rada " + m.group('serie') + " Epizoda " + m.group('epizoda') + " " + m.group('name')
+            self._filter(result,item)
+        paging = util.substr(page,'<div class=\"pagination\"','</div')
+        next = re.search('<li class=\"next[^<]+<a href=\"\?page_1=(?P<page>\d+)',paging,re.IGNORECASE | re.DOTALL)
+        if next:
+            next_page = int(next.group('page'))
+            current = re.search('\?page_1=(?P<page>\d)',url)
+            current_page = 0
+            if next_page > 30:
+                return result
+            if current:
+                current_page = int(current.group('page'))
+            if current_page < next_page:
+                url = re.sub('\?.+?$','',url) + '?page_1='+str(next_page)
+                result += self.list_tv_recently_added(url)
+        return result
+
     def add_flag_to_url(self, item, flag):
         item['url'] = flag + item['url']
         return item
@@ -196,6 +260,14 @@ class SosacContentProvider(ContentProvider):
 
     def _url(self, url):
         return self.base_url + "/" + url.lstrip('./')
+
+    def list_recently_added_tv_shows(self,url):
+        print("Getting recntly added tv shows", url)
+        shows = self.list_tv_recently_added(url)
+        print("Resloved shows", shows)
+        #shows = self.add_directory_flag(shows)
+        #return self.add_url_flag_to_items(shows, TV_SHOW_FLAG)
+        return shows
 
     def list_tv_shows_by_letter(self, url):
         print("Getting shows by letter", url)
