@@ -201,7 +201,7 @@ class SosacContentProvider(ContentProvider):
             flagged_items.append(flagged_item)
         return flagged_items
 
-    #@cached(ttl=24)
+    @cached(ttl=24)
     def list_by_letter(self, url):
         result = []
         page = util.request(url)
