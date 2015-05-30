@@ -38,10 +38,17 @@ settings = {'downloads':__set('downloads'),'quality':__set('quality'),'subs':__s
 
 reverse_eps = __set('order-episodes') == '0'
 
+print("URL: ", sys.argv[2])
 params = util.params()
 if params=={}:
 	xbmcutil.init_usage_reporting( __scriptid__)
 print("Running sosac provider with params:", params)
-xbmcprovider.XBMCMultiResolverContentProvider(SosacContentProvider(reverse_eps=reverse_eps),settings,__addon__).run(params)
+#print("Running sosac provider with params:", util._create_plugin_url(params));
 
-
+if 'action' in params.keys():
+	print("ACTION")
+	params['__addon__'] = __addon__
+	SosacContentProvider(reverse_eps=reverse_eps).run_custom(params)
+else:
+	print("DEFAULT")
+	xbmcprovider.XBMCMultiResolverContentProvider(SosacContentProvider(reverse_eps=reverse_eps),settings,__addon__).run(params)

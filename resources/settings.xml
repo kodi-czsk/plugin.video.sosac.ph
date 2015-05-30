@@ -7,4 +7,6 @@
 	<setting label="30030" id="downloads" type="folder" default="" />
 	<setting label="30032" id="download-notify" type="bool" default="true" />
 	<setting label="30033" id="download-notify-every" type="enum" lvalues="30034|30035|30036" default="0" visible="eq(-1,true)" />
+	<setting label="30100" id="library-movies" type="folder" default="special://profile/addon_data/plugin.video.sosac.ph/Movies/" />
+	<setting label="30101" id="library-tvshows" type="folder" default="special://profile/addon_data/plugin.video.sosac.ph/TVShows/" />
 </settings>

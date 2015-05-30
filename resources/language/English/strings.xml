@@ -30,6 +30,8 @@
   <string id="30057">Episodes order</string>
   <string id="30058">Oldest first</string>
   <string id="30059">Latest first</string>
+	<string id="30100">Movies library</string>
+	<string id="30101">TVShow library</string>
 	<string id="30063">Load subtitles if available</string>
 	<string id="31000">Usage of plugin is tracked whenever you play or download video.</string>
 </strings>
