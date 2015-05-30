@@ -39,29 +39,6 @@ ISO_639_1_CZECH = "cs"
 MOST_POPULAR_TYPE = "most-popular"
 RECENTLY_ADDED_TYPE = "recently-added"
 
-try:
-    import xbmc
-
-    def debug(text):
-        xbmc.log(str([text]), xbmc.LOGDEBUG)
-
-    def info(text):
-        xbmc.log(str([text]))
-
-    def error(text):
-        xbmc.log(str([text]), xbmc.LOGERROR)
-except:
-    def debug(text):
-        if LOG > 1:
-            print('[DEBUG] ' + str([text]))
-
-    def info(text):
-        if LOG > 0:
-            print('[INFO] ' + str([text]))
-
-    def error(text):
-        print('[ERROR] ' + str([text]))
-
 class SosacContentProvider(ContentProvider):
 
     def __init__(self,username=None,password=None,filter=None,reverse_eps=False):
@@ -136,11 +113,11 @@ class SosacContentProvider(ContentProvider):
             if "tv" in url:
                 return self.list_tv_shows_by_letter(url)
         if self.is_recently_added(url):
-            debug("is recently added")
+            util.debug("is recently added")
             if "movie" in url:
                 return self.list_movie_recently_added(url)
             if "tv" in url:
-                debug("is TV")
+                util.debug("is TV")
                 return self.list_tv_recently_added(url)
         if self.is_base_url(url):
             self.base_url = url
@@ -228,66 +205,6 @@ class SosacContentProvider(ContentProvider):
         print("RES: ", result)
         return result
 
-    def run_custom(self, params):
-        if params['action'] == 'add-to-library':
-#            import json
-#            url = "http://csfd.bbaron.sk/find.php?json=" + urllib.quote(json.dumps([params['name']])) + ";details=1"
-#            print("URL: ", url)
-#            data = util.request(url)
-#            try:
-#                data = json.loads(data)
-#                print("Mame data: ", data)
-#            except Exception, e:
-#                data = {"name_orig": params['name']}
-#                print("Nenasli sa data na serveri", params['name'])
-            icon = os.path.join(params['__addon__'].getAddonInfo('path'),'icon.png')
-            arg = {"play": params['url'], 'cp': 'sosac.ph'}
-            item_url = util._create_plugin_url(arg)
-            if "movie" in params['url']:
-                xbmc.executebuiltin('XBMC.Notification(%s,%s,3000,%s)' % ('Linking',params['name'],icon))
-                item_dir = params['__addon__'].getSetting('library-movies')
-                self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), self.normalize_filename(params['name'])) + '.strm', item_url)
-            else:
-                xbmc.executebuiltin('XBMC.Notification(%s,%s,100,%s)' % ('Linking',params['name'],icon))
-                list = self.list_tv_show(params['url'])
-                for itm in list:
-                    arg = {"play": itm['url'], 'cp': 'sosac.ph'}
-                    item_url = util._create_plugin_url(arg)
-                    item_dir = params['__addon__'].getSetting('library-tvshows')
-                    self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), self.normalize_filename(itm['title']) + '.strm'), item_url)
-            xbmc.executebuiltin('XBMC.Notification(%s,%s,3000,%s)' % ('Done','Linking',icon))
-
-    @staticmethod
-    def normalize_filename(name):
-        return name.replace('/','-').replace('\\','-').replace(':', '-').replace('*', '-').replace('!', '').replace('?', '')
-
-    @staticmethod
-    def add_item_to_library(item_path, item_url):
-        error = False
-        print("path: ", item_path)
-        if item_path:
-            
-            import xbmcvfs
-            import os
-            
-            item_path = os.path.normpath(item_path)
-            if not xbmcvfs.exists(os.path.dirname(item_path)):
-                try:
-                    xbmcvfs.mkdirs(os.path.dirname(item_path))
-                except Exception, e:
-                    print('Failed to create directory', item_path)
-
-            try:
-                file_desc = xbmcvfs.File(item_path, 'w')
-                file_desc.write(item_url)
-                file_desc.close()
-            except Exception, e:
-                print('Failed to create .strm file: ', item_path, e)
-                error = True
-        else:
-            error = True
-            
-        return error
 
     @cached(ttl=24)
     def list_tv_recently_added(self, url):
