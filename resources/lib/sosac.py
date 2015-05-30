@@ -59,14 +59,12 @@ class SosacContentProvider(ContentProvider):
 
     def a_to_z(self, url_type):
         result = []
-        #user_language = 'cs'
         for letter in ['0-9','a','b','c','d','e','f','g','e','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']:
             item = self.dir_item(title=letter.upper())
-            #if user_language == ISO_639_1_CZECH:
-            # let's hardcode czech language
-            item['url'] = self.base_url + "/" + ISO_639_1_CZECH +  "/" + url_type + "/" + letter
-            #else:
-            #    item['url'] = self.base_url + "/" + url_type + "/" + letter
+            if self.lang == ISO_639_1_CZECH:
+                item['url'] = self.base_url + "/" + ISO_639_1_CZECH +  "/" + url_type + "/" + letter
+            else:
+                item['url'] = self.base_url + "/" + url_type + "/" + letter
             result.append(item)
         return result
 
