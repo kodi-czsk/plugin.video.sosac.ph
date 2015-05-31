@@ -257,6 +257,7 @@ class SosacContentProvider(ContentProvider):
             icon = os.path.join(params['__addon__'].getAddonInfo('path'),'icon.png')
             arg = {"play": params['url'], 'cp': 'sosac.ph'}
             item_url = util._create_plugin_url(arg, 'plugin://plugin.video.sosac.ph/')
+            new_items = False
             if "movie" in params['url']:
                 xbmc.executebuiltin('XBMC.Notification(%s,%s,3000,%s)' % ('Linking',params['name'],icon))
                 item_dir = params['__addon__'].getSetting('library-movies')
@@ -279,8 +280,13 @@ class SosacContentProvider(ContentProvider):
                     item_url = util._create_plugin_url(arg, 'plugin://plugin.video.sosac.ph/')
                     item_dir = params['__addon__'].getSetting('library-tvshows')
                     nfo = re.search('[^\d+](?P<season>\d+)[^\d]+(?P<episode>\d+)', itm['title'], re.IGNORECASE | re.DOTALL)
-                    self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), 'Season ' + nfo.group('season'), "S" + nfo.group('season') + "E" + nfo.group('episode') + '.strm'), item_url)
+                    ret = self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), 'Season ' + nfo.group('season'), "S" + nfo.group('season') + "E" + nfo.group('episode') + '.strm'), item_url)
+                    if ret[1] == True:
+                        new_items = True
+                if new_items and not params['update']:
+                    xbmc.executebuiltin('UpdateLibrary(video)')
             xbmc.executebuiltin('XBMC.Notification(%s,%s,3000,%s)' % ('Done','Linking',icon))
+            return new_items
 
     @staticmethod
     def normalize_filename(name):
@@ -290,6 +296,7 @@ class SosacContentProvider(ContentProvider):
     def add_item_to_library(item_path, item_url):
         error = False
         print("path: ", item_path)
+        new = False
         if item_path:
             
             import xbmcvfs
@@ -303,17 +310,19 @@ class SosacContentProvider(ContentProvider):
                 except Exception, e:
                     print('Failed to create directory', item_path)
 
-            try:
-                file_desc = xbmcvfs.File(item_path, 'w')
-                file_desc.write(item_url)
-                file_desc.close()
-            except Exception, e:
-                print('Failed to create .strm file: ', item_path, e)
-                error = True
+            if not xbmcvfs.exists(item_path):
+                try:
+                    file_desc = xbmcvfs.File(item_path, 'w')
+                    file_desc.write(item_url)
+                    file_desc.close()
+                    new = True
+                except Exception, e:
+                    print('Failed to create .strm file: ', item_path, e)
+                    error = True
         else:
             error = True
             
-        return error
+        return (error, new)
 
     @cached(ttl=24)
     def list_tv_recently_added(self, url):

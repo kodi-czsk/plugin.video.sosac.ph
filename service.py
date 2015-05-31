@@ -50,9 +50,14 @@ class subs:
             else:
                 subs = json.loads(subs)
 
+            new_items = False
             for url, name in subs.iteritems():
                 if self.sosac.is_tv_shows_url(url):
-                    self.sosac.run_custom({'action': 'add-to-library', '__addon__': addon(), 'name': name, 'url': url})
+                    new = self.sosac.run_custom({'action': 'add-to-library', '__addon__': addon(), 'name': name, 'url': url, 'update': True})
+                    if new:
+                        new_items = True
+            if new_items:
+                xbmc.executebuiltin('UpdateLibrary(video)')
         else:
             log("Nieco srotuje, tak nic nerobim")
         
