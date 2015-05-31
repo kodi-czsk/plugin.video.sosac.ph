@@ -20,7 +20,7 @@
 # *
 # */
 
-import re,os,urllib,urllib2,cookielib,json
+import re,os,urllib,urllib2,cookielib,json,xbmcaddon
 import util
 import pprint
 
@@ -240,12 +240,8 @@ class SosacContentProvider(ContentProvider):
                 self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), self.normalize_filename(params['name'])) + '.strm', item_url)
             else:
                 xbmc.executebuiltin('XBMC.Notification(%s,%s,3000,%s)' % ('Linking',params['name'],icon))
-                subs = params['__addon__'].getSetting('tvshows-subs')
-                if (subs == ""):
-                    subs = {}
-                else:
-                    subs = json.loads(subs)
-                    
+                subs = self.get_subs()
+                
                 if not params['url'] in subs.keys():
                     subs.update({params['url']: params['name']})
                     params['__addon__'].setSetting('tvshows-subs', json.dumps(subs))
@@ -267,6 +263,15 @@ class SosacContentProvider(ContentProvider):
     @staticmethod
     def normalize_filename(name):
         return name.replace('/','-').replace('\\','-').replace(':', '-').replace('*', '-').replace('!', '').replace('?', '')
+
+    @staticmethod
+    def get_subs():
+        subs = xbmcaddon.Addon('plugin.video.sosac.ph').getSetting('tvshows-subs')
+        if (subs == ""):
+            subs = {}
+        else:
+            subs = json.loads(subs)
+        return subs
 
     @staticmethod
     def add_item_to_library(item_path, item_url):
@@ -357,7 +362,13 @@ class SosacContentProvider(ContentProvider):
         return item
 
     def add_url_flag_to_items(self, items, flag):
+        subs = self.get_subs()
+        print("SUBS: ", subs)
         for item in items:
+            print("ITEM: ", item)
+            if item['url'] in subs:
+                item['title'] = '[B][COLOR yellow]*[/COLOR][/B]' + item['title']
+                print("MAME SUBS:", item['title'])
             self.add_flag_to_url(item, flag)
         return items
 
