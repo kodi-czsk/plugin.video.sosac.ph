@@ -232,7 +232,7 @@ class SosacContentProvider(ContentProvider):
 #                print("Nenasli sa data na serveri", params['name'])
             icon = os.path.join(params['__addon__'].getAddonInfo('path'),'icon.png')
             arg = {"play": params['url'], 'cp': 'sosac.ph'}
-            item_url = util._create_plugin_url(arg)
+            item_url = util._create_plugin_url(arg, 'plugin://plugin.video.sosac.ph/')
             if "movie" in params['url']:
                 xbmc.executebuiltin('XBMC.Notification(%s,%s,3000,%s)' % ('Linking',params['name'],icon))
                 item_dir = params['__addon__'].getSetting('library-movies')
@@ -254,7 +254,8 @@ class SosacContentProvider(ContentProvider):
                     arg = {"play": itm['url'], 'cp': 'sosac.ph'}
                     item_url = util._create_plugin_url(arg, 'plugin://plugin.video.sosac.ph/')
                     item_dir = params['__addon__'].getSetting('library-tvshows')
-                    self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), self.normalize_filename(itm['title']) + '.strm'), item_url)
+                    nfo = re.search('[^\d+](?P<season>\d+)[^\d]+(?P<episode>\d+)', itm['title'], re.IGNORECASE | re.DOTALL)
+                    self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), 'Season ' + nfo.group('season'), "S" + nfo.group('season') + "E" + nfo.group('episode') + '.strm'), item_url)
             xbmc.executebuiltin('XBMC.Notification(%s,%s,3000,%s)' % ('Done','Linking',icon))
 
     @staticmethod
