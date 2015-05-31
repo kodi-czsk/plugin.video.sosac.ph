@@ -259,7 +259,7 @@ class SosacContentProvider(ContentProvider):
                     ret = self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), 'Season ' + nfo.group('season'), "S" + nfo.group('season') + "E" + nfo.group('episode') + '.strm'), item_url)
                     if ret[1] == True:
                         new_items = True
-                if new_items and not params['update']:
+                if new_items and not 'update' in params:
                     xbmc.executebuiltin('UpdateLibrary(video)')
             xbmc.executebuiltin('XBMC.Notification(%s,%s,3000,%s)' % ('Done','Linking',icon))
             return new_items
