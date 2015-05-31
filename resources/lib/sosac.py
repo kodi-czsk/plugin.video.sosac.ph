@@ -20,7 +20,7 @@
 # *
 # */
 
-import re,os,urllib,urllib2,cookielib
+import re,os,urllib,urllib2,cookielib,json
 import util
 import pprint
 
@@ -46,13 +46,17 @@ class SosacContentProvider(ContentProvider):
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.LWPCookieJar()))
         urllib2.install_opener(opener)
         self.reverse_eps = reverse_eps
+        if self.lang == ISO_639_1_CZECH:
+            ISO_639_1_CZECH = ISO_639_1_CZECH + '/'
+        else:
+            ISO_639_1_CZECH = ''
 
     def capabilities(self):
         return ['resolve','categories']
 
     def categories(self):
         result = []
-        for title, url in [("Movies", MOVIES_BASE_URL), ("TV Shows", TV_SHOWS_BASE_URL), ("Movies - Most popular", MOVIES_BASE_URL + "/" + ISO_639_1_CZECH + "/" + MOST_POPULAR_TYPE), ("TV Shows - Most popular", TV_SHOWS_BASE_URL + "/" + ISO_639_1_CZECH +  "/" + MOST_POPULAR_TYPE), ("Movies - Recently added", MOVIES_BASE_URL + "/" + ISO_639_1_CZECH +  "/" + RECENTLY_ADDED_TYPE), ("TV Shows - Recently added", TV_SHOWS_BASE_URL + "/" + ISO_639_1_CZECH +  "/" + RECENTLY_ADDED_TYPE)]:
+        for title, url in [("Movies", MOVIES_BASE_URL), ("TV Shows", TV_SHOWS_BASE_URL), ("Movies - Most popular", MOVIES_BASE_URL + "/" + ISO_639_1_CZECH + MOST_POPULAR_TYPE), ("TV Shows - Most popular", TV_SHOWS_BASE_URL + "/" + ISO_639_1_CZECH + MOST_POPULAR_TYPE), ("Movies - Recently added", MOVIES_BASE_URL + "/" + ISO_639_1_CZECH + RECENTLY_ADDED_TYPE), ("TV Shows - Recently added", TV_SHOWS_BASE_URL + "/" + ISO_639_1_CZECH + RECENTLY_ADDED_TYPE)]:
             item = self.dir_item(title=title, url=url)
             result.append(item)
         return result
@@ -61,10 +65,7 @@ class SosacContentProvider(ContentProvider):
         result = []
         for letter in ['0-9','a','b','c','d','e','f','g','e','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']:
             item = self.dir_item(title=letter.upper())
-            if self.lang == ISO_639_1_CZECH:
-                item['url'] = self.base_url + "/" + ISO_639_1_CZECH +  "/" + url_type + "/" + letter
-            else:
-                item['url'] = self.base_url + "/" + url_type + "/" + letter
+            item['url'] = self.base_url + "/" + ISO_639_1_CZECH +  "/" + url_type + "/" + letter
             result.append(item)
         return result
 
@@ -75,6 +76,20 @@ class SosacContentProvider(ContentProvider):
     @staticmethod
     def is_base_url(url):
         if url in [MOVIES_BASE_URL, TV_SHOWS_BASE_URL]:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def is_movie_url(url):
+        if MOVIES_BASE_URL in url:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def is_tv_shows_url(url):
+        if TV_SHOWS_BASE_URL in url:
             return True
         else:
             return False
@@ -203,6 +218,77 @@ class SosacContentProvider(ContentProvider):
         print("RES: ", result)
         return result
 
+    def run_custom(self, params):
+        if params['action'] == 'add-to-library':
+#            import json
+#            url = "http://csfd.bbaron.sk/find.php?json=" + urllib.quote(json.dumps([params['name']])) + ";details=1"
+#            print("URL: ", url)
+#            data = util.request(url)
+#            try:
+#                data = json.loads(data)
+#                print("Mame data: ", data)
+#            except Exception, e:
+#                data = {"name_orig": params['name']}
+#                print("Nenasli sa data na serveri", params['name'])
+            icon = os.path.join(params['__addon__'].getAddonInfo('path'),'icon.png')
+            arg = {"play": params['url'], 'cp': 'sosac.ph'}
+            item_url = util._create_plugin_url(arg)
+            if "movie" in params['url']:
+                xbmc.executebuiltin('XBMC.Notification(%s,%s,3000,%s)' % ('Linking',params['name'],icon))
+                item_dir = params['__addon__'].getSetting('library-movies')
+                self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), self.normalize_filename(params['name'])) + '.strm', item_url)
+            else:
+                xbmc.executebuiltin('XBMC.Notification(%s,%s,3000,%s)' % ('Linking',params['name'],icon))
+                subs = params['__addon__'].getSetting('tvshows-subs')
+                if (subs == ""):
+                    subs = {}
+                else:
+                    subs = json.loads(subs)
+                    
+                if not params['url'] in subs.keys():
+                    subs.update({params['url']: params['name']})
+                    params['__addon__'].setSetting('tvshows-subs', json.dumps(subs))
+                
+                list = self.list_tv_show(params['url'])
+                for itm in list:
+                    arg = {"play": itm['url'], 'cp': 'sosac.ph'}
+                    item_url = util._create_plugin_url(arg, 'plugin://plugin.video.sosac.ph/')
+                    item_dir = params['__addon__'].getSetting('library-tvshows')
+                    self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), self.normalize_filename(itm['title']) + '.strm'), item_url)
+            xbmc.executebuiltin('XBMC.Notification(%s,%s,3000,%s)' % ('Done','Linking',icon))
+
+    @staticmethod
+    def normalize_filename(name):
+        return name.replace('/','-').replace('\\','-').replace(':', '-').replace('*', '-').replace('!', '').replace('?', '')
+
+    @staticmethod
+    def add_item_to_library(item_path, item_url):
+        error = False
+        print("path: ", item_path)
+        if item_path:
+            
+            import xbmcvfs
+            import os, codecs
+            import unicodedata
+            
+            item_path = os.path.normpath(unicodedata.normalize('NFKD', item_path.decode('utf-8')).encode('ascii', 'ignore'))
+            if not xbmcvfs.exists(os.path.dirname(item_path)):
+                try:
+                    xbmcvfs.mkdirs(os.path.dirname(item_path))
+                except Exception, e:
+                    print('Failed to create directory', item_path)
+
+            try:
+                file_desc = xbmcvfs.File(item_path, 'w')
+                file_desc.write(item_url)
+                file_desc.close()
+            except Exception, e:
+                print('Failed to create .strm file: ', item_path, e)
+                error = True
+        else:
+            error = True
+            
+        return error
 
     @cached(ttl=24)
     def list_tv_recently_added(self, url):
