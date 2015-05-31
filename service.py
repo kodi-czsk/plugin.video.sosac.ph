@@ -44,12 +44,7 @@ class subs:
         if not self.scanRunning() and xbmc.Player().isPlaying() == False:
             showNotification('Subscription',"Spustam scan")
             log("Spustam co mam naplanovane")
-            subs = addon().getSetting('tvshows-subs')
-            if (subs == ""):
-                subs = {}
-            else:
-                subs = json.loads(subs)
-
+            subs = self.sosac.get_subs()
             new_items = False
             for url, name in subs.iteritems():
                 if self.sosac.is_tv_shows_url(url):
