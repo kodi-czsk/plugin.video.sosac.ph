@@ -1,9 +1,9 @@
 import util,xbmcprovider,xbmcutil,xbmcvfs,xbmcgui,xbmc
-import unicodedata,json,os,re,time,string,datetime
+import unicodedata,json,os,re,time,string,datetime,urllib
 
 class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
     last_run = 0
-    sleep_time = 600
+    sleep_time = 60
     
     def __init__(self,provider,settings,addon):
         xbmcprovider.XBMCMultiResolverContentProvider.__init__(self,provider,settings,addon)
@@ -14,15 +14,13 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         except Exception, e:
             from pysqlite2 import dbapi2 as database
             
-        path = self.addon_dir()
-        self.db = os.path.join(path, 'subscription.db')
-        print("DB: ", self.db)
-        self.dbcon = database.connect(self.db)
-        self.dbcon.row_factory = database.Row
-        self.dbcon.text_factory = str
-        self.dbcur = self.dbcon.cursor()
-        self._create_subscription_tables()
-    
+        try:
+            import StorageServer
+            self.cache = StorageServer.StorageServer("Downloader")
+        except:
+            import storageserverdummy as StorageServer
+            self.cache = StorageServer.StorageServer("Downloader") 
+            
     def normalize_filename(self,name):
         validFilenameChars = "-_.() %s%s" % (string.ascii_letters, string.digits)
         cleanedFilename = self.encode(name)
@@ -30,7 +28,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     def service(self):
         util.info("Start")
-        self.evalSchedules();
+        #self.evalSchedules();
         xbmc.sleep(self.sleep_time)
         self.last_run = time.time()
         while(not xbmc.abortRequested):
@@ -81,6 +79,9 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     (error, new) = self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), self.normalize_filename(params['name'])) + '.strm', item_url)
                 else:
                     self.showNotification(params['name'],'Checking new content')
+                    data = util.request('http://thetvdb.com/api/GetSeries.php?' + urllib.urlencode({'seriesname': params['name'], 'language':'cs'}))
+                    tvid = re.search('<id>(\d+)</id>', data).group(1);
+                    print("data: ", data)
                     subs = self.get_subs()
 
                     if not params['url'] in subs.keys():
@@ -88,15 +89,18 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                         self.set_subs(subs)
                         #self.addon.setSetting('tvshows-subs', json.dumps(subs))
 
+                    item_dir = self.getSetting('library-tvshows')
+                    if tvid:
+                        self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), 'tvshow.nfo'), 'http://thetvdb.com/index.php?tab=series&id=' + tvid)
+                        
                     list = self.provider.list_tv_show(params['url'])
                     for itm in list:
                         arg = {"play": re.sub(r'/cs/', r'/', itm['url']), 'cp': 'sosac.ph'}
                         item_url = util._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
-                        item_dir = self.getSetting('library-tvshows')
                         nfo = re.search('[^\d+](?P<season>\d+)[^\d]+(?P<episode>\d+)', itm['title'], re.IGNORECASE | re.DOTALL)
-                        info = ''.join(('<episodedetails><season>',nfo.group('season'),'</season><episode>',nfo.group('episode'),'</episode></episodedetails>'))
+                        #info = ''.join(('<episodedetails><season>',nfo.group('season'),'</season><episode>',nfo.group('episode'),'</episode></episodedetails>'))
                         (err, new) = self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), 'Season ' + nfo.group('season'), "S" + nfo.group('season') + "E" + nfo.group('episode') + '.strm'), item_url)
-                        self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), 'Season ' + nfo.group('season'), "S" + nfo.group('season') + "E" + nfo.group('episode') + '.nfo'), info)
+                        #self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), 'Season ' + nfo.group('season'), "S" + nfo.group('season') + "E" + nfo.group('episode') + '.nfo'), info)
                         error |= err
                         if new == True and not err:
                             new_items = True
@@ -135,39 +139,20 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             
         return (error, new)
 
-    def _create_subscription_tables(self):
-        sql_create = "CREATE TABLE IF NOT EXISTS subscription (url TEXT, name TEXT, tmstmp TIMESTAMP, UNIQUE(url))"
-        self.dbcur.execute(sql_create)
-        self.dbcur.execute('CREATE INDEX IF NOT EXISTS subindex on subscription (url);')
-        self.dbcur.execute('CREATE INDEX IF NOT EXISTS subtmindex on subscription (tmstmp);')
-
     def get_subs(self):
-        sql_select = "SELECT * FROM subscription ORDER BY tmstmp ASC"
-        subs = {}
         
+        data = self.cache.get("subscription")
         try:
-            self.dbcur.execute(sql_select)
-            for matchedrow in self.dbcur.fetchall():
-                data = dict(matchedrow)
-                subs.update({data['url']: data['name']})
-        except Exception, e:
-            print('SQL - failure: %s' % e)
-            pass
+            subs = eval(data)
+        except:
+            subs = {}
+
         print('SAVED SUBS: ', subs)
         return subs
     
     def set_subs(self, subs):
         print('SET SUBS: ', subs)
-        tmstmp = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
-        sql_insert = "INSERT INTO subscription( url, name, tmstmp ) VALUES(?, ?, ?)"
-        for url, name in subs.iteritems():
-            try:
-                print('SAVE ITM: ', url, name)
-                self.dbcur.execute(sql_insert, (url, name, tmstmp))
-                self.dbcon.commit()
-            except Exception, e:
-                print('SQL - failure: %s' % e )
-                pass
+        self.cache.set("subscription", repr(subs))
     
     @staticmethod
     def encode(string):

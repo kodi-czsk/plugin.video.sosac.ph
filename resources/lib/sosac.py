@@ -20,7 +20,7 @@
 # *
 # */
 
-import re,os,urllib,urllib2,cookielib,json,xbmcaddon
+import re,os,urllib,urllib2,cookielib
 import util
 import pprint
 
