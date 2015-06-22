@@ -23,6 +23,7 @@
 import re,os,urllib,urllib2,cookielib
 import util
 import pprint
+import xml.etree.ElementTree as ET
 
 from urlparse import urljoin
 from provider import ContentProvider,cached,ResolveException
@@ -58,7 +59,14 @@ class SosacContentProvider(ContentProvider):
 
     def categories(self):
         result = []
-        for title, url in [("Movies", MOVIES_BASE_URL), ("TV Shows", TV_SHOWS_BASE_URL), ("Movies - Most popular", MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE), ("TV Shows - Most popular", TV_SHOWS_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE), ("Movies - Recently added", MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE), ("TV Shows - Recently added", TV_SHOWS_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE)]:
+        for title, url in [
+                #('Recently added from xml', 'recently_added_xml'),#
+                ("Movies", MOVIES_BASE_URL), 
+                ("TV Shows", TV_SHOWS_BASE_URL), 
+                ("Movies - Most popular", MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE), 
+                ("TV Shows - Most popular", TV_SHOWS_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE), 
+                ("Movies - Recently added", MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE), 
+                ("TV Shows - Recently added", TV_SHOWS_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE)]:
             item = self.dir_item(title=title, url=url)
             result.append(item)
         return result
@@ -122,6 +130,8 @@ class SosacContentProvider(ContentProvider):
 
     def list(self,url):
         print("Examining url", url)
+        if "recently_added_xml" in url:
+            return self.list_movie_recently_added_xml()
         if self.is_most_popular(url):
             if "movie" in url:
                 return self.list_movies_by_letter(url)
@@ -165,6 +175,7 @@ class SosacContentProvider(ContentProvider):
                 ep_name = re.search('<a href=\"#[^<]+<span>(?P<id>[^<]+)</span>(?P<name>[^<]+)',episode)
                 if ep_name:
                     item['title'] = '%s %s %s' % (serie_name,ep_name.group('id'),ep_name.group('name'))
+                    item['epname'] = ep_name.group('name')
                     item['ep'] = ep_name
                 i = re.search('<div class=\"inner-item[^<]+<img src=\"(?P<img>[^\"]+).+?<a href=\"(?P<url>[^\"]+)',episode, re.IGNORECASE | re.DOTALL)
                 if i:
@@ -217,7 +228,6 @@ class SosacContentProvider(ContentProvider):
             if current_page < next_page:
                 url = re.sub('\?.+?$','',url) + '?page='+str(next_page)
                 result += self.list_by_letter(url)
-        print("RES: ", result)
         return result
 
     @cached(ttl=24)
@@ -247,6 +257,22 @@ class SosacContentProvider(ContentProvider):
         return result
 
     @cached(ttl=24)
+    def list_movie_recently_added_xml(self):
+        result = []
+        data = util.request('http://tv.prehraj.me/filmyxml2.php?limit=10000&sirka=670&vyska=377&affid=0#')
+        tree = ET.fromstring(data)
+        for film in tree.findall('film'):
+            item = self.video_item()
+            try:
+                item['title'] = '%s (%s)' % (film.findtext('nazeven'), film.findtext('rokvydani'))
+                item['url'] = 'http://movies.prehraj.me/player/' + self.parent.make_name(film.findtext('nazeven').encode('utf-8') + '-' + film.findtext('rokvydani'))
+                item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]" : {'url':item['url'], 'action':'add-to-library', 'name': item['title']}}
+                self._filter(result,item)
+            except:
+                pass
+        return result
+    
+    @cached(ttl=24)
     def list_movie_recently_added(self, url):
         result = []
         page = util.request(url)
@@ -263,7 +289,7 @@ class SosacContentProvider(ContentProvider):
             next_page = int(next.group('page'))
             current = re.search('\?page=(?P<page>\d)',url)
             current_page = 0
-            if next_page > 30:
+            if next_page > 5:
                 return result
             if current:
                 current_page = int(current.group('page'))
