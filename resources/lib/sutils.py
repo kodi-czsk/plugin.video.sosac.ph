@@ -8,6 +8,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
     def __init__(self,provider,settings,addon):
         xbmcprovider.XBMCMultiResolverContentProvider.__init__(self,provider,settings,addon)
         provider.parent = self
+        self.dialog = xbmcgui.DialogProgress()
         try:
             import StorageServer
             self.cache = StorageServer.StorageServer("Downloader")
@@ -104,7 +105,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             item_dir = self.getSetting('library-movies')
             (error, new_items) = self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), self.normalize_filename(params['name'])) + '.strm', item_url)
         else:
-            self.showNotification(params['name'], 'Checking new content')
+            if not ('notify' in params):
+                self.showNotification(params['name'], 'Checking new content')
 
             subs = self.get_subs()
             if not params['url'] in subs.keys():
@@ -125,16 +127,15 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 #info = ''.join(('<episodedetails><season>',nfo.group('season'),'</season><episode>',nfo.group('episode'),'</episode></episodedetails>'))
                 item_url = util._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
                 (err, new) = self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), 'Season ' + nfo.group('season'), "S" + nfo.group('season') + "E" + nfo.group('episode') + '.strm'), item_url)
-                #self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), 'Season ' + nfo.group('season'), "S" + nfo.group('season') + "E" + nfo.group('episode') + '.nfo'), info)
                 error |= err
                 if new == True and not err:
                     new_items = True
-        if not error and new_items and not ('update' in params):
+        if not error and new_items and not ('update' in params) and not ('notify' in params):
             self.showNotification(params['name'],'New content')
             xbmc.executebuiltin('UpdateLibrary(video)')
-        elif not error:
+        elif not error and not ('notify' in params):
             self.showNotification(params['name'],'No new contents')
-        if error:
+        if error and not ('notify' in params):
             self.showNotification('Failed, Please check kodi.util.info','Linking')
         return new_items
     
@@ -143,6 +144,12 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             icon = os.path.join(self.addon.getAddonInfo('path'),'icon.png')
             if params['action'] == 'add-to-library':
                 return self.add_item(params)
+            if params['action'] == 'add-all-to-library':
+                if params['title'] == 'Movies':
+                    self.provider.list_movie_recently_added_xml()
+                elif params['title'] == 'TV Shows':
+                    self.provider.library_tvshows_all_xml()
+                xbmc.executebuiltin('UpdateLibrary(video)')
             
     def add_item_to_library(self, item_path, item_url):
         error = False

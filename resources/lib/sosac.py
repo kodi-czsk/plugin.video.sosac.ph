@@ -60,7 +60,6 @@ class SosacContentProvider(ContentProvider):
     def categories(self):
         result = []
         for title, url in [
-                ('Add all movies to library', 'recently_added_xml'),#
                 ("Movies", MOVIES_BASE_URL), 
                 ("TV Shows", TV_SHOWS_BASE_URL), 
                 ("Movies - Most popular", MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE), 
@@ -68,6 +67,8 @@ class SosacContentProvider(ContentProvider):
                 ("Movies - Recently added", MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE), 
                 ("TV Shows - Recently added", TV_SHOWS_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE)]:
             item = self.dir_item(title=title, url=url)
+            if title == 'Movies' or title == 'TV Shows':
+                item['menu'] = {"[B][COLOR red]Add all to library[/COLOR][/B]" : {'action':'add-all-to-library', 'title': title}}
             result.append(item)
         return result
 
@@ -130,8 +131,6 @@ class SosacContentProvider(ContentProvider):
 
     def list(self,url):
         print("Examining url", url)
-        if "recently_added_xml" in url:
-            return self.list_movie_recently_added_xml()
         if self.is_most_popular(url):
             if "movie" in url:
                 return self.list_movies_by_letter(url)
@@ -256,8 +255,7 @@ class SosacContentProvider(ContentProvider):
                 result += self.list_tv_recently_added(url)
         return result
 
-    def list_movie_recently_added_xml(self):
-        result = []
+    def library_movie_recently_added_xml(self):
         data = util.request('http://tv.prehraj.me/filmyxml2.php?limit=10000&sirka=670&vyska=377&affid=0#')
         tree = ET.fromstring(data)
         for film in tree.findall('film'):
@@ -268,13 +266,32 @@ class SosacContentProvider(ContentProvider):
                 item['url'] = 'http://movies.prehraj.me/player/' + self.parent.make_name(film.findtext('nazeven').encode('utf-8') + '-' + film.findtext('rokvydani'))
                 item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]" : {'url':item['url'], 'action':'add-to-library', 'name': item['title']}}
                 item['update'] = True
+                item['notify'] = False
                 self.parent.add_item(item)
                 #print("TITLE: ", item['title'])
-                self._filter(result,item)
             except:
                 print("ERR TITLE: ", item['title'])
                 pass
         return result
+    
+    def library_tvshows_all_xml(self):
+        page = util.request('http://tv.prehraj.me/serialyxml.php')
+        data = util.substr(page,'<select name=\"serialy\">','</select>')
+        items = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', data, re.IGNORECASE | re.DOTALL)
+        total = float(len(list(items)))
+        items = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', data, re.IGNORECASE | re.DOTALL)
+        print("Pocet: ", total)
+        self.parent.dialog.create('sosac', 'Add all to library')
+        num = 0
+        for m in items:
+            num += 1
+            perc = float(num / total) * 100
+            print("percento: ", int(perc))
+            self.parent.dialog.update(int(perc), m.group('name'))
+            item = {'url': 'http://tv.prehraj.me/cs/detail/' + m.group('url'), 'action':'add-to-library', 'name': m.group('name'), 'update': True, 'notify': True}
+            self.parent.add_item(item)
+        self.parent.dialog.close()
+        print("done....")
     
     @cached(ttl=24)
     def list_movie_recently_added(self, url):
