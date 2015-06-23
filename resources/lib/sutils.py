@@ -90,56 +90,60 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             tvid = self.getBBDB(name)
         return tvid
     
+    def add_item(self, params):
+        error = False
+        arg = {"play": params['url'], 'cp': 'sosac.ph', "title": params['name']}
+        item_url = util._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
+        print("item: ", item_url, params)
+        new_items = False
+        #self.showNotification('Linking', params['name'])
+        if self.scanRunning():
+            self.showNotification('Library scan or subscription update in progress.', 'Please wait for it to complete.', 5000)
+            return
+        if "movie" in params['url']:
+            item_dir = self.getSetting('library-movies')
+            (error, new_items) = self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), self.normalize_filename(params['name'])) + '.strm', item_url)
+        else:
+            self.showNotification(params['name'], 'Checking new content')
+
+            subs = self.get_subs()
+            if not params['url'] in subs.keys():
+                subs.update({params['url']: params['name']})
+                self.set_subs(subs)
+                #self.addon.setSetting('tvshows-subs', json.dumps(subs))
+
+            item_dir = self.getSetting('library-tvshows')
+
+            tvid = self.getTVDB(params['name'])
+            if tvid:
+                self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), 'tvshow.nfo'), 'http://thetvdb.com/index.php?tab=series&id=' + tvid)
+
+            list = self.provider.list_tv_show(params['url'])
+            for itm in list:
+                nfo = re.search('[^\d+](?P<season>\d+)[^\d]+(?P<episode>\d+)', itm['title'], re.IGNORECASE | re.DOTALL)
+                arg = {"play": itm['url'], 'cp': 'sosac.ph', "title": self.normalize_filename(itm['epname'])}
+                #info = ''.join(('<episodedetails><season>',nfo.group('season'),'</season><episode>',nfo.group('episode'),'</episode></episodedetails>'))
+                item_url = util._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
+                (err, new) = self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), 'Season ' + nfo.group('season'), "S" + nfo.group('season') + "E" + nfo.group('episode') + '.strm'), item_url)
+                #self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), 'Season ' + nfo.group('season'), "S" + nfo.group('season') + "E" + nfo.group('episode') + '.nfo'), info)
+                error |= err
+                if new == True and not err:
+                    new_items = True
+        if not error and new_items and not ('update' in params):
+            self.showNotification(params['name'],'New content')
+            xbmc.executebuiltin('UpdateLibrary(video)')
+        elif not error:
+            self.showNotification(params['name'],'No new contents')
+        if error:
+            self.showNotification('Failed, Please check kodi.util.info','Linking')
+        return new_items
+    
     def run_custom(self, params):
         if 'action' in params.keys():
             icon = os.path.join(self.addon.getAddonInfo('path'),'icon.png')
             if params['action'] == 'add-to-library':
-                error = False
-                arg = {"play": params['url'], 'cp': 'sosac.ph', "title": params['name']}
-                item_url = util._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
-                new_items = False
-                #self.showNotification('Linking', params['name'])
-                if self.scanRunning():
-                    self.showNotification('Library scan or subscription update in progress.', 'Please wait for it to complete.', 5000)
-                    return
-                if "movie" in params['url']:
-                    item_dir = self.getSetting('library-movies')
-                    (error, new_items) = self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), self.normalize_filename(params['name'])) + '.strm', item_url)
-                else:
-                    self.showNotification(params['name'], 'Checking new content')
-                    
-                    subs = self.get_subs()
-                    if not params['url'] in subs.keys():
-                        subs.update({params['url']: params['name']})
-                        self.set_subs(subs)
-                        #self.addon.setSetting('tvshows-subs', json.dumps(subs))
-
-                    item_dir = self.getSetting('library-tvshows')
-                    
-                    tvid = self.getTVDB(params['name'])
-                    if tvid:
-                        self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), 'tvshow.nfo'), 'http://thetvdb.com/index.php?tab=series&id=' + tvid)
-                        
-                    list = self.provider.list_tv_show(params['url'])
-                    for itm in list:
-                        nfo = re.search('[^\d+](?P<season>\d+)[^\d]+(?P<episode>\d+)', itm['title'], re.IGNORECASE | re.DOTALL)
-                        arg = {"play": itm['url'], 'cp': 'sosac.ph', "title": self.normalize_filename(itm['epname'])}
-                        #info = ''.join(('<episodedetails><season>',nfo.group('season'),'</season><episode>',nfo.group('episode'),'</episode></episodedetails>'))
-                        item_url = util._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
-                        (err, new) = self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), 'Season ' + nfo.group('season'), "S" + nfo.group('season') + "E" + nfo.group('episode') + '.strm'), item_url)
-                        #self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), 'Season ' + nfo.group('season'), "S" + nfo.group('season') + "E" + nfo.group('episode') + '.nfo'), info)
-                        error |= err
-                        if new == True and not err:
-                            new_items = True
-                if not error and new_items and not ('update' in params):
-                    self.showNotification(params['name'],'New content')
-                    xbmc.executebuiltin('UpdateLibrary(video)')
-                elif not error:
-                    self.showNotification(params['name'],'No new contents')
-                if error:
-                    self.showNotification('Failed, Please check kodi.util.info','Linking')
-                return new_items
-
+                return self.add_item(params)
+            
     def add_item_to_library(self, item_path, item_url):
         error = False
         new = False

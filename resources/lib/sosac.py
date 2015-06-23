@@ -60,7 +60,7 @@ class SosacContentProvider(ContentProvider):
     def categories(self):
         result = []
         for title, url in [
-                #('Recently added from xml', 'recently_added_xml'),#
+                ('Add all movies to library', 'recently_added_xml'),#
                 ("Movies", MOVIES_BASE_URL), 
                 ("TV Shows", TV_SHOWS_BASE_URL), 
                 ("Movies - Most popular", MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE), 
@@ -256,7 +256,6 @@ class SosacContentProvider(ContentProvider):
                 result += self.list_tv_recently_added(url)
         return result
 
-    @cached(ttl=24)
     def list_movie_recently_added_xml(self):
         result = []
         data = util.request('http://tv.prehraj.me/filmyxml2.php?limit=10000&sirka=670&vyska=377&affid=0#')
@@ -265,10 +264,15 @@ class SosacContentProvider(ContentProvider):
             item = self.video_item()
             try:
                 item['title'] = '%s (%s)' % (film.findtext('nazeven'), film.findtext('rokvydani'))
+                item['name'] = item['title']
                 item['url'] = 'http://movies.prehraj.me/player/' + self.parent.make_name(film.findtext('nazeven').encode('utf-8') + '-' + film.findtext('rokvydani'))
                 item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]" : {'url':item['url'], 'action':'add-to-library', 'name': item['title']}}
+                item['update'] = True
+                self.parent.add_item(item)
+                #print("TITLE: ", item['title'])
                 self._filter(result,item)
             except:
+                print("ERR TITLE: ", item['title'])
                 pass
         return result
     
