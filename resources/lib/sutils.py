@@ -80,15 +80,18 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
     def getBBDB(self, name):
         name = util.request('http://csfd.bbaron.sk/find.php?sosac=1;' + urllib.urlencode({'name': name}))
         if name != '':
-            return self.getTVDB(name)
+            return self.getTVDB(name, 1)
         return None
         
-    def getTVDB(self, name):
+    def getTVDB(self, name, level=0):
         data = util.request('http://thetvdb.com/api/GetSeries.php?' + urllib.urlencode({'seriesname': name, 'language':'cs'}))
         try:
             tvid = re.search('<id>(\d+)</id>', data).group(1);
         except:
-            tvid = self.getBBDB(name)
+            if level == 0:
+                tvid = self.getBBDB(name)
+            else:
+                tvid = None
         return tvid
     
     def add_item(self, params):
@@ -109,16 +112,17 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 self.showNotification(params['name'], 'Checking new content')
 
             subs = self.get_subs()
+            item_dir = self.getSetting('library-tvshows')
+            
             if not params['url'] in subs.keys():
                 subs.update({params['url']: params['name']})
                 self.set_subs(subs)
                 #self.addon.setSetting('tvshows-subs', json.dumps(subs))
-
-            item_dir = self.getSetting('library-tvshows')
-
-            tvid = self.getTVDB(params['name'])
-            if tvid:
-                self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), 'tvshow.nfo'), 'http://thetvdb.com/index.php?tab=series&id=' + tvid)
+            
+            if not xbmcvfs.exists(os.path.join(item_dir, self.normalize_filename(params['name']), 'tvshow.nfo')):
+                tvid = self.getTVDB(params['name'])
+                if tvid:
+                    self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), 'tvshow.nfo'), 'http://thetvdb.com/index.php?tab=series&id=' + tvid)
 
             list = self.provider.list_tv_show(params['url'])
             for itm in list:
