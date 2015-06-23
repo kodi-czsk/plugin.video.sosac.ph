@@ -258,21 +258,30 @@ class SosacContentProvider(ContentProvider):
     def library_movie_recently_added_xml(self):
         data = util.request('http://tv.prehraj.me/filmyxml2.php?limit=10000&sirka=670&vyska=377&affid=0#')
         tree = ET.fromstring(data)
+        total = float(len(list(tree.findall('film'))))
+        print("TOTAL: ", total)
+        num = 0
         for film in tree.findall('film'):
+            num += 1
+            perc = float(num / total) * 100
+            print("percento: ", int(perc))
+            if self.parent.dialog.iscanceled():
+                return
+            self.parent.dialog.update(int(perc), film.findtext('nazeven'))
             item = self.video_item()
             try:
-                item['title'] = '%s (%s)' % (film.findtext('nazeven'), film.findtext('rokvydani'))
-                item['name'] = item['title']
+                item['title'] = '%s (%s)' % (film.findtext('nazeven').encode('utf-8'), film.findtext('rokvydani'))
+                item['name'] = item['title'].encode('utf-8')
                 item['url'] = 'http://movies.prehraj.me/player/' + self.parent.make_name(film.findtext('nazeven').encode('utf-8') + '-' + film.findtext('rokvydani'))
                 item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]" : {'url':item['url'], 'action':'add-to-library', 'name': item['title']}}
                 item['update'] = True
                 item['notify'] = False
                 self.parent.add_item(item)
                 #print("TITLE: ", item['title'])
-            except:
-                print("ERR TITLE: ", item['title'])
+            except Exception, e:
+                print("ERR TITLE: ", item['title'], e)
                 pass
-        return result
+        self.parent.dialog.close()
     
     def library_tvshows_all_xml(self):
         page = util.request('http://tv.prehraj.me/serialyxml.php')
@@ -281,16 +290,17 @@ class SosacContentProvider(ContentProvider):
         total = float(len(list(items)))
         items = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', data, re.IGNORECASE | re.DOTALL)
         print("Pocet: ", total)
-        self.parent.dialog.create('sosac', 'Add all to library')
         num = 0
         for m in items:
             num += 1
+            if self.parent.dialog.iscanceled():
+                return
             perc = float(num / total) * 100
             print("percento: ", int(perc))
             self.parent.dialog.update(int(perc), m.group('name'))
             item = {'url': 'http://tv.prehraj.me/cs/detail/' + m.group('url'), 'action':'add-to-library', 'name': m.group('name'), 'update': True, 'notify': True}
             self.parent.add_item(item)
-        self.parent.dialog.close()
+        
         print("done....")
     
     @cached(ttl=24)

@@ -145,10 +145,13 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             if params['action'] == 'add-to-library':
                 return self.add_item(params)
             if params['action'] == 'add-all-to-library':
+                self.dialog.create('sosac', 'Add all to library')
+                self.dialog.update(0)
                 if params['title'] == 'Movies':
-                    self.provider.list_movie_recently_added_xml()
+                    self.provider.library_movie_recently_added_xml()
                 elif params['title'] == 'TV Shows':
                     self.provider.library_tvshows_all_xml()
+                self.dialog.close()
                 xbmc.executebuiltin('UpdateLibrary(video)')
             
     def add_item_to_library(self, item_path, item_url):
