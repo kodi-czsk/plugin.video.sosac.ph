@@ -208,11 +208,15 @@ class SosacContentProvider(ContentProvider):
         result = []
         page = util.request(url)
         data = util.substr(page,'<ul class=\"content','</ul>')
+        subs = self.get_subs()
         for m in re.finditer('<a class=\"title\" href=\"(?P<url>[^\"]+)[^>]+>(?P<name>[^<]+)',data,re.IGNORECASE | re.DOTALL):
             item = {}
             item['url'] = m.group('url')
             item['title'] = m.group('name')
-            item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]" : {'url':m.group('url'), 'action':'add-to-library', 'name': m.group('name')}}
+            if item['url'] in subs:
+                item['menu'] = {"[B][COLOR red]Remove from subscription[/COLOR][/B]" : {'url':m.group('url'), 'action':'remove-subscription', 'name': m.group('name')}}
+            else:
+                item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]" : {'url':m.group('url'), 'action':'add-to-library', 'name': m.group('name')}}
             self._filter(result,item)
         paging = util.substr(page,'<div class=\"pagination\"','</div')
         next = re.search('<li class=\"next[^<]+<a href=\"\?page=(?P<page>\d+)',paging,re.IGNORECASE | re.DOTALL)
@@ -234,11 +238,15 @@ class SosacContentProvider(ContentProvider):
         result = []
         page = util.request(url)
         data = util.substr(page,'<div class=\"content\"','</ul>')
+        subs = self.get_subs()
         for m in re.finditer('<a href=\"(?P<url>[^\"]+)[^>]+((?!<strong).)*<strong>S(?P<serie>\d+) / E(?P<epizoda>\d+)</strong>((?!<a href).)*<a href=\"(?P<surl>[^\"]+)[^>]+class=\"mini\">((?!<span>).)*<span>\((?P<name>[^)]+)\)<', data, re.IGNORECASE | re.DOTALL):
             item = self.video_item()
             item['url'] = m.group('url')
             item['title'] = "Rada " + m.group('serie') + " Epizoda " + m.group('epizoda') + " - " + m.group('name')
-            item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]" : {'url':m.group('url'), 'action':'add-to-library', 'name': m.group('name') + " S" + m.group('serie') + 'E'+m.group('epizoda')}}
+            if item['url'] in subs:
+                item['menu'] = {"[B][COLOR red]Remove from subscription[/COLOR][/B]" : {'url':m.group('url'), 'action':'remove-subscription', 'name': m.group('name') + " S" + m.group('serie') + 'E'+m.group('epizoda')}}
+            else:
+                item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]" : {'url':m.group('url'), 'action':'add-to-library', 'name': m.group('name') + " S" + m.group('serie') + 'E'+m.group('epizoda')}}
             self._filter(result,item)
         paging = util.substr(page,'<div class=\"pagination\"','</div')
         next = re.search('<li class=\"next[^<]+<a href=\"\?page_1=(?P<page>\d+)',paging,re.IGNORECASE | re.DOTALL)

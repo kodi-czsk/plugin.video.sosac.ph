@@ -146,6 +146,14 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
     def run_custom(self, params):
         if 'action' in params.keys():
             icon = os.path.join(self.addon.getAddonInfo('path'),'icon.png')
+            if params['action'] == 'remove-subscription':
+                subs = self.get_subs()
+                if params['url'] in subs.keys():
+                    subs.pop(params['url'], None)
+                    self.set_subs(subs)
+                    self.showNotification(params['name'], 'Removed from subscription')
+                return
+            
             if params['action'] == 'add-to-library':
                 return self.add_item(params)
             if params['action'] == 'add-all-to-library':
