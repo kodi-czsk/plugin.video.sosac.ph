@@ -20,15 +20,13 @@
 # *
 # */
 
-import re,os,urllib,urllib2,cookielib
+import re,os,urllib2,cookielib
 import util
-import pprint
 import xml.etree.ElementTree as ET
 
-from urlparse import urljoin
 from provider import ContentProvider,cached,ResolveException
 
-import sys,json
+import sys
 sys.setrecursionlimit(10000)
 
 MOVIES_BASE_URL = "http://movies.prehraj.me"
