@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 #/*
-# *      Copyright (C) 2013 Libor Zoubek + jondas
+# *      Copyright (C) 2015 BBaronSVK
 # *
 # *
 # *  This Program is free software; you can redistribute it and/or modify
@@ -23,9 +23,7 @@
 import os
 sys.path.append( os.path.join ( os.path.dirname(__file__),'resources','lib') )
 
-import re
-import xbmcaddon,xbmcutil
-import util
+import xbmcaddon
 from sosac import SosacContentProvider
 from sutils import XBMCSosac
 
@@ -39,10 +37,4 @@ settings = {'downloads':__set__('downloads'),'quality':__set__('quality'),'subs'
 
 reverse_eps = __set__('order-episodes') == '0'
 
-print("URL: ", sys.argv[2])
-params = util.params()
-if params=={}:
-	xbmcutil.init_usage_reporting( __scriptid__)
-
-print("Running sosac provider with params:", params)
-XBMCSosac(SosacContentProvider(reverse_eps=reverse_eps),settings,__addon__).run(params)
+XBMCSosac(SosacContentProvider(reverse_eps=reverse_eps),settings,__addon__).service()
