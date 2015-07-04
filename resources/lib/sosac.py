@@ -21,10 +21,12 @@
 # */
 
 import re
+import urllib
 import urllib2
 import cookielib
 import xml.etree.ElementTree as ET
 import sys
+from bs4 import BeautifulSoup
 
 import util
 from provider import ContentProvider, cached, ResolveException
@@ -39,6 +41,7 @@ TV_SHOW_FLAG = "#tvshow#"
 ISO_639_1_CZECH = "cs"
 MOST_POPULAR_TYPE = "most-popular"
 RECENTLY_ADDED_TYPE = "recently-added"
+SEARCH_TYPE = "search"
 
 
 class SosacContentProvider(ContentProvider):
@@ -57,7 +60,7 @@ class SosacContentProvider(ContentProvider):
             self.ISO_639_1_CZECH = ''
 
     def capabilities(self):
-        return ['resolve', 'categories']
+        return ['resolve', 'categories', 'search']
 
     def categories(self):
         result = []
@@ -78,6 +81,10 @@ class SosacContentProvider(ContentProvider):
                     'action': 'add-all-to-library', 'title': title}}
             result.append(item)
         return result
+
+    def search(self, keyword):
+        return self.list_search('%s/%ssearch?%s' % (MOVIES_BASE_URL, self.ISO_639_1_CZECH,
+                                                    urllib.urlencode({'q': keyword})))
 
     def a_to_z(self, url_type):
         result = []
@@ -128,6 +135,10 @@ class SosacContentProvider(ContentProvider):
             return False
 
     @staticmethod
+    def is_search(url):
+        return SEARCH_TYPE in url
+
+    @staticmethod
     def particular_letter(url):
         return "a-z" in url
 
@@ -151,6 +162,8 @@ class SosacContentProvider(ContentProvider):
             if "tv" in url:
                 util.debug("is TV")
                 return self.list_tv_recently_added(url)
+        if self.is_search(url):
+            return self.list_search(url)
         if self.is_base_url(url):
             self.base_url = url
             if "movie" in url:
@@ -412,3 +425,44 @@ class SosacContentProvider(ContentProvider):
 
     def get_subs(self):
         return self.parent.get_subs()
+
+    @staticmethod
+    def parse_html(url):
+        return BeautifulSoup(util.request(url))
+
+    def list_search(self, url):
+        result = []
+        html_tree = self.parse_html(url)
+        for entry in html_tree.select('ul.content li'):
+            item = self.video_item()
+            entry.p.strong.extract()
+            item['url'] = entry.h4.a.get('href')
+            item['title'] = entry.h4.a.text
+            item['img'] = MOVIES_BASE_URL + entry.img.get('src')
+            item['plot'] = entry.p.text.strip()
+            item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
+                'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
+            self._filter(result, item)
+        # Process next 4 pages, so we'll get 20 items per page instead of 4
+        for next_page in html_tree.select('.pagination ul li.next a'):
+            next_url = '%s/%ssearch%s' % (MOVIES_BASE_URL, self.ISO_639_1_CZECH,
+                                          next_page.get('href'))
+            page_number = 1
+            page = re.search(r'\bpage=(\d+)', url)
+            if page:
+                page_number = int(page.group(1))
+            next_page_number = 1
+            page = re.search(r'\bpage=(\d+)', next_url)
+            if page:
+                next_page_number = int(page.group(1))
+            if page_number > next_page_number:
+                break
+            if page_number % 5 != 0:
+                result += self.list_search(next_url)
+            else:
+                item = self.dir_item()
+                item['type'] = 'next'
+                item['url'] = next_url
+                result.append(item)
+            break
+        return result
