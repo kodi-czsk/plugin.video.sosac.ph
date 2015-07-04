@@ -202,9 +202,12 @@ class SosacContentProvider(ContentProvider):
         return flagged_items
 
     @cached(ttl=24)
+    def get_data_cached(self, url):
+        return util.request(url)
+
     def list_by_letter(self, url):
         result = []
-        page = util.request(url)
+        page = self.get_data_cached(url)
         data = util.substr(page,'<ul class=\"content','</ul>')
         subs = self.get_subs()
         for m in re.finditer('<a class=\"title\" href=\"(?P<url>[^\"]+)[^>]+>(?P<name>[^<]+)',data,re.IGNORECASE | re.DOTALL):
@@ -231,10 +234,9 @@ class SosacContentProvider(ContentProvider):
                 result += self.list_by_letter(url)
         return result
 
-    @cached(ttl=24)
     def list_tv_recently_added(self, url):
         result = []
-        page = util.request(url)
+        page = self.get_data_cached(url)
         data = util.substr(page,'<div class=\"content\"','</ul>')
         subs = self.get_subs()
         for m in re.finditer('<a href=\"(?P<url>[^\"]+)[^>]+((?!<strong).)*<strong>S(?P<serie>\d+) / E(?P<epizoda>\d+)</strong>((?!<a href).)*<a href=\"(?P<surl>[^\"]+)[^>]+class=\"mini\">((?!<span>).)*<span>\((?P<name>[^)]+)\)<', data, re.IGNORECASE | re.DOTALL):
@@ -309,10 +311,9 @@ class SosacContentProvider(ContentProvider):
         
         print("done....")
     
-    @cached(ttl=24)
     def list_movie_recently_added(self, url):
         result = []
-        page = util.request(url)
+        page = self.get_data_cached(url)
         data = util.substr(page,'<div class=\"content\"','</ul>')
         for m in re.finditer('<a class=\"content-block\" href=\"(?P<url>[^\"]+)\" title=\"(?P<name>[^\"]+)', data, re.IGNORECASE | re.DOTALL):
             item = self.video_item()
