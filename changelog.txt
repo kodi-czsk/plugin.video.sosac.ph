@@ -1,3 +1,5 @@
+[B]1.2.3:[/B] 20. 10. 2015
+- opraveno stahování videí
 [B]1.2.2:[/B] 06. 07. 2015
 - přidána možnost hledání filmů
 [B]1.2.1:[/B] 04. 07. 2015
