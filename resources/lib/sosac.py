@@ -397,9 +397,6 @@ class SosacContentProvider(ContentProvider):
             self.add_flag_to_url(item, flag)
         return items
 
-    def _url(self, url):
-        return self.base_url + "/" + url.lstrip('./')
-
     def list_tv_shows_by_letter(self, url):
         print("Getting shows by letter", url)
         shows = self.list_by_letter(url)
