@@ -179,8 +179,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         error = False
         new = False
         if item_path:
-            item_path = os.path.normpath(xbmc.translatePath( item_path ))
-            dir = os.path.dirname(item_path) + '/'
+            item_path = xbmc.translatePath( item_path )
+            dir = os.path.dirname(item_path)
             if not xbmcvfs.exists(dir):
                 try:
                     xbmcvfs.mkdirs(dir)
