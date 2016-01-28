@@ -37,6 +37,7 @@ MOVIES_BASE_URL = "http://movies.prehraj.me"
 TV_SHOWS_BASE_URL = "http://tv.prehraj.me"
 MOVIES_A_TO_Z_TYPE = "movies-a-z"
 TV_SHOWS_A_TO_Z_TYPE = "tv-shows-a-z"
+XML_LETTER = "xmlpismeno"
 TV_SHOW_FLAG = "#tvshow#"
 ISO_639_1_CZECH = "cs"
 MOST_POPULAR_TYPE = "most-popular"
@@ -91,7 +92,10 @@ class SosacContentProvider(ContentProvider):
         for letter in ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'e', 'h', 'i', 'j', 'k', 'l', 'm',
                        'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']:
             item = self.dir_item(title=letter.upper())
-            item['url'] = self.base_url + "/" + self.ISO_639_1_CZECH + url_type + "/" + letter
+            if url_type == MOVIES_A_TO_Z_TYPE:
+                item['url'] = self.base_url + "/filmyxmlpismeno.php?pismeno=" + letter
+            else:
+                item['url'] = self.base_url + "/" + self.ISO_639_1_CZECH + url_type + "/" + letter
             result.append(item)
         return result
 
@@ -99,6 +103,12 @@ class SosacContentProvider(ContentProvider):
     def remove_flag_from_url(url, flag):
         return url.replace(flag, "", count=1)
 
+    @staticmethod
+    def is_xml_letter(url):
+        if XML_LETTER in url:
+            return True
+        return False
+    
     @staticmethod
     def is_base_url(url):
         if url in [MOVIES_BASE_URL, TV_SHOWS_BASE_URL]:
@@ -179,8 +189,52 @@ class SosacContentProvider(ContentProvider):
 
         if self.has_tv_show_flag(url):
             return self.list_tv_show(self.remove_flags(url))
+        
+        if self.is_xml_letter(url):
+            print("xml letter")
+            if "movie" in url:
+                return self.list_xml_letter(url)
 
         return [self.dir_item(title="I failed", url="fail")]
+
+    def list_xml_letter(self, url):
+        result = []
+        data = util.request(url)
+        print(data);
+        tree = ET.fromstring(data)
+        titles = []
+        num = 0
+        turl = 'http://csfd.bbaron.sk/find.php'
+        #for film in tree.findall('film'):
+        #    titles.append(film.findtext('nazeven').encode('utf-8'))
+        #    num = num + 1
+        #    if num > 5:
+        #        print('posielam titles: %s' % (json.dumps(titles)))
+        #        stdata = json.loads(util.post(turl, {'details': 1, 'json': json.dumps(titles)}))
+        #        print(stdata)
+        #        num = 0
+        #        titles = []
+        
+        for film in tree.findall('film'):
+            item = self.video_item()
+            try:
+                if ISO_639_1_CZECH in self.ISO_639_1_CZECH:
+                    title = film.findtext('nazevcs')
+                else:
+                    title = film.findtext('nazeven')
+                item['title'] = '%s (%s)' % (title , film.findtext('rokvydani'))
+                item['name'] = item['title'].encode('utf-8')
+                item['img'] = film.findtext('obrazekmaly')
+                item['url'] = self.base_url + '/player/' + self.parent.make_name(
+                    film.findtext('nazeven').encode('utf-8') + '-' + film.findtext('rokvydani'))
+                item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
+                    'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
+                self._filter(result, item)
+            except Exception, e:
+                print("ERR TITLE: ", item['title'], e)
+                pass
+        print(result)
+        return result
 
     def list_tv_show(self, url):
         result = []
@@ -396,6 +450,9 @@ class SosacContentProvider(ContentProvider):
                 item['title'] = '[B][COLOR yellow]*[/COLOR][/B]' + item['title']
             self.add_flag_to_url(item, flag)
         return items
+
+    def _url(self, url):
+        return self.base_url + "/" + url.lstrip('./')
 
     def list_tv_shows_by_letter(self, url):
         print("Getting shows by letter", url)
