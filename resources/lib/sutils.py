@@ -3,7 +3,7 @@ import unicodedata,os,re,time,string,datetime,urllib
 
 class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
     last_run = 0
-    sleep_time = 60
+    sleep_time = 1000 * 10 * 60
     
     def __init__(self,provider,settings,addon):
         xbmcprovider.XBMCMultiResolverContentProvider.__init__(self,provider,settings,addon)
@@ -32,7 +32,13 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     def service(self):
         util.info("Start")
-        xbmc.sleep(self.sleep_time)
+        try:
+            sleep_time = int(self.getSetting("start_sleep_time")) * 1000 * 60
+        except:
+            sleep_time = self.sleep_time
+            pass
+        
+        xbmc.sleep(sleep_time)
         try:
             self.last_run = float(self.cache.get("subscription.last_run")) #time.time()
         except:
@@ -56,29 +62,34 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         xbmcgui.Dialog().notification(self.encode(title),self.encode(message),time=time,icon=xbmc.translatePath(self.addon_dir() + "/icon.png"),sound=False)
 
     def evalSchedules(self):
-        if not self.scanRunning() and xbmc.Player().isPlaying() == False:
+        if self.scanRunning() == False and self.isPlaying() == False:
             self.showNotification('Subscription','Chcecking')
             util.info("Spustam co mam naplanovane")
             subs = self.get_subs()
             new_items = False
             for url, name in subs.iteritems():
                 if self.provider.is_tv_shows_url(url):
-                    new = self.run_custom({'action': 'add-to-library', 'name': name, 'url': url, 'update': True})
-                    if new:
-                        new_items = True
+                    if self.scanRunning() or self.isPlaying():
+                        self.cache.delete("subscription.last_run")
+                        return
+                    new_items |= self.run_custom({'action': 'add-to-library', 'name': name, 'url': url, 'update': True})
+                    xbmc.sleep(3000)
             if new_items:
                 xbmc.executebuiltin('UpdateLibrary(video)')
         else:
             util.info("Nieco srotuje, tak nic nerobim")
-        
+    
+    def isPlaying(self):
+        return xbmc.Player().isPlaying() == True
+    
     def scanRunning(self):
         if(xbmc.getCondVisibility('Library.IsScanningVideo') or xbmc.getCondVisibility('Library.IsScanningMusic')):
-            return True            
+            return True
         else:
             return False
     
     def getBBDB(self, name):
-        name = util.request('http://csfd.bbaron.sk/find.php?sosac=1;' + urllib.urlencode({'name': name}))
+        name = util.request('http://csfd.bbaron.sk/find.php?' + urllib.urlencode({'sosac': 1, 'name': name}))
         if name != '':
             return self.getTVDB(name, 1)
         return None
@@ -101,9 +112,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         print("item: ", item_url, params)
         new_items = False
         #self.showNotification('Linking', params['name'])
-        if self.scanRunning():
-            self.showNotification('Library scan or subscription update in progress.', 'Please wait for it to complete.', 5000)
-            return
+        
         if "movie" in params['url']:
             item_dir = self.getSetting('library-movies')
             (error, new_items) = self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(params['name']), self.normalize_filename(params['name'])) + '.strm', item_url)
