@@ -108,7 +108,7 @@ class SosacContentProvider(ContentProvider):
         if XML_LETTER in url:
             return True
         return False
-    
+
     @staticmethod
     def is_base_url(url):
         if url in [MOVIES_BASE_URL, TV_SHOWS_BASE_URL]:
@@ -189,7 +189,7 @@ class SosacContentProvider(ContentProvider):
 
         if self.has_tv_show_flag(url):
             return self.list_tv_show(self.remove_flags(url))
-        
+
         if self.is_xml_letter(url):
             print("xml letter")
             if "movie" in url:
@@ -200,12 +200,12 @@ class SosacContentProvider(ContentProvider):
     def list_xml_letter(self, url):
         result = []
         data = util.request(url)
-        print(data);
+        print(data)
         tree = ET.fromstring(data)
         titles = []
         num = 0
         turl = 'http://csfd.bbaron.sk/find.php'
-        #for film in tree.findall('film'):
+        # for film in tree.findall('film'):
         #    titles.append(film.findtext('nazeven').encode('utf-8'))
         #    num = num + 1
         #    if num > 5:
@@ -214,7 +214,7 @@ class SosacContentProvider(ContentProvider):
         #        print(stdata)
         #        num = 0
         #        titles = []
-        
+
         for film in tree.findall('film'):
             item = self.video_item()
             try:
@@ -222,7 +222,7 @@ class SosacContentProvider(ContentProvider):
                     title = film.findtext('nazevcs')
                 else:
                     title = film.findtext('nazeven')
-                item['title'] = '%s (%s)' % (title , film.findtext('rokvydani'))
+                item['title'] = '%s (%s)' % (title, film.findtext('rokvydani'))
                 item['name'] = item['title'].encode('utf-8')
                 item['img'] = film.findtext('obrazekmaly')
                 item['url'] = self.base_url + '/player/' + self.parent.make_name(
