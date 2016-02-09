@@ -26,7 +26,6 @@ import urllib2
 import cookielib
 import xml.etree.ElementTree as ET
 import sys
-from bs4 import BeautifulSoup
 
 import util
 from provider import ContentProvider, cached, ResolveException
@@ -480,13 +479,9 @@ class SosacContentProvider(ContentProvider):
     def get_subs(self):
         return self.parent.get_subs()
 
-    @staticmethod
-    def parse_html(url):
-        return BeautifulSoup(util.request(url))
-
     def list_search(self, url):
         result = []
-        html_tree = self.parse_html(url)
+        html_tree = util.parse_html(url)
         for entry in html_tree.select('ul.content li'):
             item = self.video_item()
             entry.p.strong.extract()
