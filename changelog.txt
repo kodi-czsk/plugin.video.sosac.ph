@@ -1,3 +1,5 @@
+[B]1.2.4:[/B] 28. 02. 2016
+- Opravené vyhľadanie na systémoch s nainštalovanou knižnicou lxml
 [B]1.2.3:[/B] 20. 10. 2015
 - opraveno stahování videí
 [B]1.2.2:[/B] 06. 07. 2015
