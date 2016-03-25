@@ -51,7 +51,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             sleep_time = self.sleep_time
             pass
 
-        xbmc.sleep(sleep_time)
+        self.sleep(sleep_time)
+
         try:
             self.last_run = float(self.cache.get("subscription.last_run"))  # time.time()
         except:
@@ -62,13 +63,12 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         if time.time() > self.last_run + 24 * 3600:
             self.evalSchedules()
 
-        while(not xbmc.abortRequested):
+        while not xbmc.abortRequested:
             if(time.time() > self.last_run + 24 * 3600):
                 self.evalSchedules()
                 self.last_run = time.time()
                 self.cache.set("subscription.last_run", str(self.last_run))
-
-            xbmc.sleep(self.sleep_time)
+            self.sleep(self.sleep_time)
         util.info("Koncim")
 
     def showNotification(self, title, message, time=1000):
@@ -263,3 +263,9 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     def getString(self, string_id):
         return self.addon.getLocalizedString(string_id)
+
+    @staticmethod
+    def sleep(sleep_time):
+        while not xbmc.abortRequested and sleep_time > 0:
+            sleep_time -= 1
+            xbmc.sleep(1)
