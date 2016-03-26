@@ -1,3 +1,5 @@
+[B]1.2.5:[/B] 26. 03. 2016
+- Oprava #41 Kdy plugin blokoval kodi v ukonční (Kuci)
 [B]1.2.4:[/B] 28. 02. 2016
 - Opravené vyhľadanie na systémoch s nainštalovanou knižnicou lxml
 [B]1.2.3:[/B] 20. 10. 2015
