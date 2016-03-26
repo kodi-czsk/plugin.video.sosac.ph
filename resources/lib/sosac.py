@@ -34,6 +34,60 @@ sys.setrecursionlimit(10000)
 
 MOVIES_BASE_URL = "http://movies.prehraj.me"
 TV_SHOWS_BASE_URL = "http://tv.prehraj.me"
+CHANNEL_SHOWS_action_BASE_URL = "http://tv.prehraj.me/cs/channel/action"
+CHANNEL_SHOWS_adventure_BASE_URL = "http://tv.prehraj.me/cs/channel/adventure"
+CHANNEL_SHOWS_animation_BASE_URL = "http://tv.prehraj.me/cs/channel/animation"
+CHANNEL_SHOWS_biography_BASE_URL = "http://tv.prehraj.me/cs/channel/biography"
+CHANNEL_SHOWS_cartoons_BASE_URL = "http://tv.prehraj.me/cs/channel/cartoons"
+CHANNEL_SHOWS_comedy_BASE_URL = "http://tv.prehraj.me/cs/channel/comedy"
+CHANNEL_SHOWS_crime_BASE_URL = "http://tv.prehraj.me/cs/channel/crime"
+CHANNEL_SHOWS_disaster_BASE_URL = "http://tv.prehraj.me/cs/channel/disaster"
+CHANNEL_SHOWS_documentary_BASE_URL = "http://tv.prehraj.me/cs/channel/documentary"
+CHANNEL_SHOWS_drama_BASE_URL = "http://tv.prehraj.me/cs/channel/drama"
+CHANNEL_SHOWS_fairytales_BASE_URL = "http://tv.prehraj.me/cs/channel/fairytales"
+CHANNEL_SHOWS_family_BASE_URL = "http://tv.prehraj.me/cs/channel/family"
+CHANNEL_SHOWS_fantasy_BASE_URL = "http://tv.prehraj.me/cs/channel/fantasy"
+CHANNEL_SHOWS_history_BASE_URL = "http://tv.prehraj.me/cs/channel/history"
+CHANNEL_SHOWS_horror_BASE_URL = "http://tv.prehraj.me/cs/channel/horror"
+CHANNEL_SHOWS_krimi_BASE_URL = "http://tv.prehraj.me/cs/channel/krimi"
+CHANNEL_SHOWS_music_BASE_URL = "http://tv.prehraj.me/cs/channel/music"
+CHANNEL_SHOWS_mystery_BASE_URL = "http://tv.prehraj.me/cs/channel/mystery"
+CHANNEL_SHOWS_psychological_BASE_URL = "http://tv.prehraj.me/cs/channel/psychological"
+CHANNEL_SHOWS_realitytv_BASE_URL = "http://tv.prehraj.me/cs/channel/realitytv"
+CHANNEL_SHOWS_romance_BASE_URL = "http://tv.prehraj.me/cs/channel/romance"
+CHANNEL_SHOWS_scifi_BASE_URL = "http://tv.prehraj.me/cs/channel/sci-fi"
+CHANNEL_SHOWS_sport_BASE_URL = "http://tv.prehraj.me/cs/channel/sport"
+CHANNEL_SHOWS_thriller_BASE_URL = "http://tv.prehraj.me/cs/channel/thriller"
+CHANNEL_SHOWS_war_BASE_URL = "http://tv.prehraj.me/cs/channel/war"
+CHANNEL_SHOWS_western_BASE_URL = "http://tv.prehraj.me/cs/channel/western"
+CHANNEL_MOVIES_action_BASE_URL = "http://movies.prehraj.me/cs/channel/action"
+CHANNEL_MOVIES_adventure_BASE_URL = "http://movies.prehraj.me/cs/channel/adventure"
+CHANNEL_MOVIES_animation_BASE_URL = "http://movies.prehraj.me/cs/channel/animation"
+CHANNEL_MOVIES_biography_BASE_URL = "http://movies.prehraj.me/cs/channel/biography"
+CHANNEL_MOVIES_comedy_BASE_URL = "http://movies.prehraj.me/cs/channel/comedy"
+CHANNEL_MOVIES_crime_BASE_URL = "http://movies.prehraj.me/cs/channel/crime"
+CHANNEL_MOVIES_disaster_BASE_URL = "http://movies.prehraj.me/cs/channel/disaster"
+CHANNEL_MOVIES_documentary_BASE_URL = "http://movies.prehraj.me/cs/channel/documentary"
+CHANNEL_MOVIES_drama_BASE_URL = "http://movies.prehraj.me/cs/channel/drama"
+CHANNEL_MOVIES_erotic_BASE_URL = "http://movies.prehraj.me/cs/channel/erotic"
+CHANNEL_MOVIES_fairytales_BASE_URL = "http://movies.prehraj.me/cs/channel/fairytales"
+CHANNEL_MOVIES_family_BASE_URL = "http://movies.prehraj.me/cs/channel/family"
+CHANNEL_MOVIES_fantasy_BASE_URL = "http://movies.prehraj.me/cs/channel/fantasy"
+CHANNEL_MOVIES_history_BASE_URL = "http://movies.prehraj.me/cs/channel/history"
+CHANNEL_MOVIES_horror_BASE_URL = "http://movies.prehraj.me/cs/channel/horror"
+CHANNEL_MOVIES_imax_BASE_URL = "http://movies.prehraj.me/cs/channel/imax"
+CHANNEL_MOVIES_krimi_BASE_URL = "http://movies.prehraj.me/cs/channel/krimi"
+CHANNEL_MOVIES_music_BASE_URL = "http://movies.prehraj.me/cs/channel/music"
+CHANNEL_MOVIES_mystery_BASE_URL = "http://movies.prehraj.me/cs/channel/mystery"
+CHANNEL_MOVIES_psychological_BASE_URL = "http://movies.prehraj.me/cs/channel/psychological"
+CHANNEL_MOVIES_publicistic_BASE_URL = "http://movies.prehraj.me/cs/channel/publicistic"
+CHANNEL_MOVIES_realitytv_BASE_URL = "http://movies.prehraj.me/cs/channel/realitytv"
+CHANNEL_MOVIES_romance_BASE_URL = "http://movies.prehraj.me/cs/channel/romance"
+CHANNEL_MOVIES_sport_BASE_URL = "http://movies.prehraj.me/cs/channel/sport"
+CHANNEL_MOVIES_talkshow_BASE_URL = "http://movies.prehraj.me/cs/channel/talkshow"
+CHANNEL_MOVIES_thriller_BASE_URL = "http://movies.prehraj.me/cs/channel/thriller"
+CHANNEL_MOVIES_war_BASE_URL = "http://movies.prehraj.me/cs/channel/war"
+CHANNEL_MOVIES_western_BASE_URL = "http://movies.prehraj.me/cs/channel/western"
 MOVIES_A_TO_Z_TYPE = "movies-a-z"
 TV_SHOWS_A_TO_Z_TYPE = "tv-shows-a-z"
 XML_LETTER = "xmlpismeno"
@@ -67,6 +121,60 @@ class SosacContentProvider(ContentProvider):
         for title, url in [
             ("Movies", MOVIES_BASE_URL),
             ("TV Shows", TV_SHOWS_BASE_URL),
+            ("MOVIES - Akcni",  CHANNEL_MOVIES_action_BASE_URL),
+            ("MOVIES - Animovane",  CHANNEL_MOVIES_animation_BASE_URL),
+            ("MOVIES - Biografie",  CHANNEL_MOVIES_biography_BASE_URL),
+            ("MOVIES - Dobrodruzne",  CHANNEL_MOVIES_adventure_BASE_URL),
+            ("MOVIES - Dokumentarni",  CHANNEL_MOVIES_documentary_BASE_URL),
+            ("MOVIES - Drama",  CHANNEL_MOVIES_drama_BASE_URL),
+            ("MOVIES - Eroticke",  CHANNEL_MOVIES_erotic_BASE_URL),
+            ("MOVIES - Fantasy",  CHANNEL_MOVIES_fantasy_BASE_URL),
+            ("MOVIES - Historicke",  CHANNEL_MOVIES_history_BASE_URL),
+            ("MOVIES - Horor",  CHANNEL_MOVIES_horror_BASE_URL),
+            ("MOVIES - Hudebni",  CHANNEL_MOVIES_music_BASE_URL),
+            ("MOVIES - IMAX",  CHANNEL_MOVIES_imax_BASE_URL),
+            ("MOVIES - Katastroficky",  CHANNEL_MOVIES_disaster_BASE_URL),
+            ("MOVIES - Komedie",  CHANNEL_MOVIES_comedy_BASE_URL),
+            ("MOVIES - Krimi",  CHANNEL_MOVIES_krimi_BASE_URL),
+            ("MOVIES - Krimi (Crime)",  CHANNEL_MOVIES_crime_BASE_URL),            
+            ("MOVIES - Mysteriozni",  CHANNEL_MOVIES_mystery_BASE_URL),
+            ("MOVIES - Pohadky",  CHANNEL_MOVIES_fairytales_BASE_URL),
+            ("MOVIES - Psychologicke",  CHANNEL_MOVIES_psychological_BASE_URL),
+            ("MOVIES - Publicisticke",  CHANNEL_MOVIES_publicistic_BASE_URL),
+            ("MOVIES - Reality-TV",  CHANNEL_MOVIES_realitytv_BASE_URL),
+            ("MOVIES - Rodinne",  CHANNEL_MOVIES_family_BASE_URL),
+            ("MOVIES - Romanticke",  CHANNEL_MOVIES_romance_BASE_URL),
+            ("MOVIES - Sportovni",  CHANNEL_MOVIES_sport_BASE_URL),
+            ("MOVIES - Talk-Show",  CHANNEL_MOVIES_talkshow_BASE_URL),
+            ("MOVIES - Thriller",  CHANNEL_MOVIES_thriller_BASE_URL),
+            ("MOVIES - Valecne",  CHANNEL_MOVIES_war_BASE_URL),
+            ("MOVIES - Western",  CHANNEL_MOVIES_western_BASE_URL),
+            ("TV Shows - Akcni",  CHANNEL_SHOWS_action_BASE_URL),
+            ("TV Shows - Animovane",  CHANNEL_SHOWS_animation_BASE_URL),
+            ("TV Shows - Biografie",  CHANNEL_SHOWS_biography_BASE_URL),
+            ("TV Shows - Dobrodruzne",  CHANNEL_SHOWS_adventure_BASE_URL),
+            ("TV Shows - Dokumentarni",  CHANNEL_SHOWS_documentary_BASE_URL),
+            ("TV Shows - Drama",  CHANNEL_SHOWS_drama_BASE_URL),
+            ("TV Shows - Fantasy",  CHANNEL_SHOWS_fantasy_BASE_URL),
+            ("TV Shows - Historicke",  CHANNEL_SHOWS_history_BASE_URL),
+            ("TV Shows - Horor",  CHANNEL_SHOWS_horror_BASE_URL),
+            ("TV Shows - Hudebni",  CHANNEL_SHOWS_music_BASE_URL),
+            ("TV Shows - Katastroficky",  CHANNEL_SHOWS_disaster_BASE_URL),
+            ("TV Shows - Komedie",  CHANNEL_SHOWS_comedy_BASE_URL),
+            ("TV Shows - Kreslene",  CHANNEL_SHOWS_cartoons_BASE_URL),
+            ("TV Shows - Krimi",  CHANNEL_SHOWS_krimi_BASE_URL),
+            ("TV Shows - Krimi (Crime)",  CHANNEL_SHOWS_crime_BASE_URL),            
+            ("TV Shows - Mysteriozni",  CHANNEL_SHOWS_mystery_BASE_URL),
+            ("TV Shows - Pohadky",  CHANNEL_SHOWS_fairytales_BASE_URL),
+            ("TV Shows - Psychologicke",  CHANNEL_SHOWS_psychological_BASE_URL),
+            ("TV Shows - Reality-TV",  CHANNEL_SHOWS_realitytv_BASE_URL),
+            ("TV Shows - Rodinne",  CHANNEL_SHOWS_family_BASE_URL),
+            ("TV Shows - Romanticke",  CHANNEL_SHOWS_romance_BASE_URL),
+            ("TV Shows - Sci-Fi",  CHANNEL_SHOWS_scifi_BASE_URL),
+            ("TV Shows - Sportovni",  CHANNEL_SHOWS_sport_BASE_URL),
+            ("TV Shows - Thriller",  CHANNEL_SHOWS_thriller_BASE_URL),
+            ("TV Shows - Valecne",  CHANNEL_SHOWS_war_BASE_URL),
+            ("TV Shows - Western",  CHANNEL_SHOWS_western_BASE_URL),
             ("Movies - Most popular",
              MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE),
             ("TV Shows - Most popular",
@@ -98,6 +206,16 @@ class SosacContentProvider(ContentProvider):
             result.append(item)
         return result
 
+    def genres_a_to_z(self, url_type):
+        result = []
+        for letter in ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'e', 'h', 'i', 'j', 'k', 'l', 'm',
+                       'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']:
+            item = self.dir_item(title=letter.upper())            
+            item['url'] = self.base_url + "/" + letter            
+            result.append(item)
+        return result            
+        
+        
     @staticmethod
     def remove_flag_from_url(url, flag):
         return url.replace(flag, "", count=1)
@@ -110,7 +228,10 @@ class SosacContentProvider(ContentProvider):
 
     @staticmethod
     def is_base_url(url):
-        if url in [MOVIES_BASE_URL, TV_SHOWS_BASE_URL]:
+        if url in [MOVIES_BASE_URL, TV_SHOWS_BASE_URL, 
+                  CHANNEL_MOVIES_action_BASE_URL, CHANNEL_MOVIES_animation_BASE_URL, CHANNEL_MOVIES_biography_BASE_URL, CHANNEL_MOVIES_adventure_BASE_URL, CHANNEL_MOVIES_documentary_BASE_URL, CHANNEL_MOVIES_drama_BASE_URL, CHANNEL_MOVIES_erotic_BASE_URL, CHANNEL_MOVIES_fantasy_BASE_URL, CHANNEL_MOVIES_history_BASE_URL, CHANNEL_MOVIES_horror_BASE_URL, CHANNEL_MOVIES_music_BASE_URL, CHANNEL_MOVIES_imax_BASE_URL, CHANNEL_MOVIES_disaster_BASE_URL, CHANNEL_MOVIES_comedy_BASE_URL, CHANNEL_MOVIES_crime_BASE_URL, CHANNEL_MOVIES_krimi_BASE_URL, CHANNEL_MOVIES_mystery_BASE_URL, CHANNEL_MOVIES_fairytales_BASE_URL, CHANNEL_MOVIES_psychological_BASE_URL, CHANNEL_MOVIES_publicistic_BASE_URL, CHANNEL_MOVIES_realitytv_BASE_URL, CHANNEL_MOVIES_family_BASE_URL, CHANNEL_MOVIES_romance_BASE_URL, CHANNEL_MOVIES_sport_BASE_URL, CHANNEL_MOVIES_talkshow_BASE_URL, CHANNEL_MOVIES_thriller_BASE_URL, CHANNEL_MOVIES_war_BASE_URL, CHANNEL_MOVIES_western_BASE_URL,
+                  CHANNEL_SHOWS_action_BASE_URL, CHANNEL_SHOWS_animation_BASE_URL, CHANNEL_SHOWS_biography_BASE_URL, CHANNEL_SHOWS_adventure_BASE_URL, CHANNEL_SHOWS_documentary_BASE_URL, CHANNEL_SHOWS_drama_BASE_URL, CHANNEL_SHOWS_fantasy_BASE_URL, CHANNEL_SHOWS_history_BASE_URL, CHANNEL_SHOWS_horror_BASE_URL, CHANNEL_SHOWS_music_BASE_URL, CHANNEL_SHOWS_disaster_BASE_URL, CHANNEL_SHOWS_comedy_BASE_URL, CHANNEL_SHOWS_cartoons_BASE_URL, CHANNEL_SHOWS_crime_BASE_URL, CHANNEL_SHOWS_krimi_BASE_URL, CHANNEL_SHOWS_mystery_BASE_URL, CHANNEL_SHOWS_fairytales_BASE_URL, CHANNEL_SHOWS_psychological_BASE_URL, CHANNEL_SHOWS_realitytv_BASE_URL, CHANNEL_SHOWS_family_BASE_URL, CHANNEL_SHOWS_romance_BASE_URL, CHANNEL_SHOWS_scifi_BASE_URL, CHANNEL_SHOWS_sport_BASE_URL, CHANNEL_SHOWS_thriller_BASE_URL, CHANNEL_SHOWS_war_BASE_URL, CHANNEL_SHOWS_western_BASE_URL
+                  ]:
             return True
         else:
             return False
@@ -164,6 +285,7 @@ class SosacContentProvider(ContentProvider):
                 return self.list_movies_by_letter(url)
             if "tv" in url:
                 return self.list_tv_shows_by_letter(url)
+                
         if self.is_recently_added(url):
             util.debug("is recently added")
             if "movie" in url:
@@ -171,14 +293,24 @@ class SosacContentProvider(ContentProvider):
             if "tv" in url:
                 util.debug("is TV")
                 return self.list_tv_recently_added(url)
+                
         if self.is_search(url):
             return self.list_search(url)
+            
         if self.is_base_url(url):
             self.base_url = url
+            if "channel" in url:
+                return self.genres_a_to_z("")                            
             if "movie" in url:
                 return self.a_to_z(MOVIES_A_TO_Z_TYPE)
             if "tv" in url:
                 return self.a_to_z(TV_SHOWS_A_TO_Z_TYPE)
+                
+        if "channel" in url:
+            if "movie" in url:
+                return self.list_movies_by_letter(url)
+            if "tv" in url:
+                return self.list_tv_shows_by_letter(url)                        
 
         if self.particular_letter(url):
             if "movie" in url:
