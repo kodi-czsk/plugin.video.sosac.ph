@@ -26,6 +26,8 @@ import urllib2
 import cookielib
 import xml.etree.ElementTree as ET
 import sys
+import json
+from bs4 import BeautifulSoup
 
 import util
 from provider import ContentProvider, cached, ResolveException
@@ -35,6 +37,8 @@ sys.setrecursionlimit(10000)
 MOVIES_BASE_URL = "http://movies.prehraj.me"
 TV_SHOWS_BASE_URL = "http://tv.prehraj.me"
 MOVIES_A_TO_Z_TYPE = "movies-a-z"
+MOVIES_GENRE = "filmyxmlzanr.php"
+GENRE_PARAM = "zanr"
 TV_SHOWS_A_TO_Z_TYPE = "tv-shows-a-z"
 XML_LETTER = "xmlpismeno"
 TV_SHOW_FLAG = "#tvshow#"
@@ -67,6 +71,7 @@ class SosacContentProvider(ContentProvider):
         for title, url in [
             ("Movies", MOVIES_BASE_URL),
             ("TV Shows", TV_SHOWS_BASE_URL),
+            ("Movies - by Genres", MOVIES_BASE_URL + "/" + MOVIES_GENRE),
             ("Movies - Most popular",
              MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE),
             ("TV Shows - Most popular",
@@ -107,7 +112,7 @@ class SosacContentProvider(ContentProvider):
         if XML_LETTER in url:
             return True
         return False
-
+    
     @staticmethod
     def is_base_url(url):
         if url in [MOVIES_BASE_URL, TV_SHOWS_BASE_URL]:
@@ -159,6 +164,8 @@ class SosacContentProvider(ContentProvider):
 
     def list(self, url):
         print("Examining url", url)
+        if MOVIES_GENRE in url:
+            return self.list_by_genres(url)
         if self.is_most_popular(url):
             if "movie" in url:
                 return self.list_movies_by_letter(url)
@@ -188,7 +195,7 @@ class SosacContentProvider(ContentProvider):
 
         if self.has_tv_show_flag(url):
             return self.list_tv_show(self.remove_flags(url))
-
+        
         if self.is_xml_letter(url):
             print("xml letter")
             if "movie" in url:
@@ -196,24 +203,28 @@ class SosacContentProvider(ContentProvider):
 
         return [self.dir_item(title="I failed", url="fail")]
 
+    def list_by_genres(self, url):
+        if "?" + GENRE_PARAM in url:
+            return self.list_xml_letter(url)
+        else:
+            result = []
+            page = util.request(url)
+            data = util.substr(page, '<select name=\"zanr\">', '</select')
+            for s in re.finditer('<option value=\"([^\"]+)\">([^<]+)</option>', data, re.IGNORECASE | re.DOTALL):
+                item = {'url': url + "?" + GENRE_PARAM + "=" + s.group(1), 'title': s.group(2), 'type': 'dir'}
+                self._filter(result, item)
+            return result
+            
     def list_xml_letter(self, url):
         result = []
         data = util.request(url)
         print(data)
         tree = ET.fromstring(data)
         titles = []
+        info = {}
         num = 0
         turl = 'http://csfd.bbaron.sk/find.php'
-        # for film in tree.findall('film'):
-        #    titles.append(film.findtext('nazeven').encode('utf-8'))
-        #    num = num + 1
-        #    if num > 5:
-        #        print('posielam titles: %s' % (json.dumps(titles)))
-        #        stdata = json.loads(util.post(turl, {'details': 1, 'json': json.dumps(titles)}))
-        #        print(stdata)
-        #        num = 0
-        #        titles = []
-
+        
         for film in tree.findall('film'):
             item = self.video_item()
             try:
@@ -221,9 +232,9 @@ class SosacContentProvider(ContentProvider):
                     title = film.findtext('nazevcs')
                 else:
                     title = film.findtext('nazeven')
-                item['title'] = '%s (%s)' % (title, film.findtext('rokvydani'))
+                item['title'] = '%s (%s)' % (title , film.findtext('rokvydani'))
                 item['name'] = item['title'].encode('utf-8')
-                item['img'] = film.findtext('obrazekmaly')
+                    item['img'] = film.findtext('obrazekmaly')
                 item['url'] = self.base_url + '/player/' + self.parent.make_name(
                     film.findtext('nazeven').encode('utf-8') + '-' + film.findtext('rokvydani'))
                 item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
