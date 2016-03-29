@@ -16,7 +16,7 @@ import urllib
 class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
     last_run = 0
     sleep_time = 1000 * 10 * 60
-    
+
     def __init__(self, provider, settings, addon):
         xbmcprovider.XBMCMultiResolverContentProvider.__init__(self, provider, settings, addon)
         provider.parent = self
@@ -26,7 +26,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             self.cache = StorageServer.StorageServer("Downloader")
         except:
             import storageserverdummy as StorageServer
-            self.cache = StorageServer.StorageServer("Downloader") 
+            self.cache = StorageServer.StorageServer("Downloader")
 
     def make_name(self, text, lower=True):
         text = self.normalize_filename(text, "-_.' %s%s" % (string.ascii_letters, string.digits))
@@ -50,7 +50,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         except:
             sleep_time = self.sleep_time
             pass
-        
+
         self.sleep(sleep_time)
 
         try:
@@ -59,10 +59,10 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             self.last_run = time.time()
             self.cache.set("subscription.last_run", str(self.last_run))
             pass
-        
+
         if not xbmc.abortRequested and time.time() > self.last_run + 24 * 3600:
             self.evalSchedules()
-            
+
         while not xbmc.abortRequested:
             if(time.time() > self.last_run + 24 * 3600):
                 self.evalSchedules()
@@ -247,7 +247,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     def set_subs(self, subs):
         self.cache.set("subscription", repr(subs))
-    
+
     @staticmethod
     def encode(string):
         return unicodedata.normalize('NFKD', string.decode('utf-8')).encode('ascii', 'ignore')
