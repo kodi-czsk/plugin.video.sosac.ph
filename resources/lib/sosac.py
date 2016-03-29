@@ -225,7 +225,7 @@ class SosacContentProvider(ContentProvider):
                     title = film.findtext('nazevcs')
                 else:
                     title = film.findtext('nazeven')
-                item['title'] = '%s (%s)' % (title , film.findtext('rokvydani'))
+                item['title'] = '%s (%s)' % (title, film.findtext('rokvydani'))
                 item['name'] = item['title'].encode('utf-8')
                 item['img'] = film.findtext('obrazekmaly')
                 item['url'] = self.base_url + '/player/' + self.parent.make_name(

@@ -17,8 +17,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
     last_run = 0
     sleep_time = 1000 * 10 * 60
     
-    def __init__(self,provider,settings,addon):
-        xbmcprovider.XBMCMultiResolverContentProvider.__init__(self,provider,settings,addon)
+    def __init__(self, provider, settings, addon):
+        xbmcprovider.XBMCMultiResolverContentProvider.__init__(self, provider, settings, addon)
         provider.parent = self
         self.dialog = xbmcgui.DialogProgress()
         try:
@@ -36,7 +36,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         text = '-'.join(word_re.findall(text))
         return text.lower() if lower else text
 
-    def normalize_filename(self,name,validChars=None):
+    def normalize_filename(self, name, validChars=None):
         validFilenameChars = "-_.() %s%s" % (string.ascii_letters, string.digits)
         if (validChars is not None):
             validFilenameChars = validChars
@@ -71,14 +71,14 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             self.sleep(self.sleep_time)
         util.info("Koncim")
 
-    def showNotification(self,title,message,time=1000):
+    def showNotification(self, title, message, time=1000):
         xbmcgui.Dialog().notification(self.encode(title), self.encode(message), time=time,
                                       icon=xbmc.translatePath(self.addon_dir() + "/icon.png"),
                                       sound=False)
 
     def evalSchedules(self):
         if not self.scanRunning() and not self.isPlaying():
-            self.showNotification('Subscription','Chcecking')
+            self.showNotification('Subscription', 'Chcecking')
             util.info("SOSAC Spustam co mam naplanovane")
             subs = self.get_subs()
             new_items = False
@@ -178,12 +178,12 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 if new is True and not err:
                     new_items = True
         if not error and new_items and not ('update' in params) and not ('notify' in params):
-            self.showNotification(params['name'],'New content')
+            self.showNotification(params['name'], 'New content')
             xbmc.executebuiltin('UpdateLibrary(video)')
         elif not error and not ('notify' in params):
-            self.showNotification(params['name'],'No new contents')
+            self.showNotification(params['name'], 'No new contents')
         if error and not ('notify' in params):
-            self.showNotification('Failed, Please check kodi.util.info','Linking')
+            self.showNotification('Failed, Please check kodi.util.info', 'Linking')
         return new_items
 
     def run_custom(self, params):
@@ -261,7 +261,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
     def getSetting(self, name):
         return self.addon.getSetting(name)
 
-    def getString(self,string_id):
+    def getString(self, string_id):
         return self.addon.getLocalizedString(string_id)
 
     @staticmethod
