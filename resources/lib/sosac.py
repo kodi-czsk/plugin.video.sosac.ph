@@ -283,7 +283,7 @@ class SosacContentProvider(ContentProvider):
             flagged_items.append(flagged_item)
         return flagged_items
 
-    @cached(ttl=24)
+    #@cached(ttl=24)
     def get_data_cached(self, url):
         return util.request(url)
 
@@ -500,7 +500,7 @@ class SosacContentProvider(ContentProvider):
         subs = self.get_subs()
         for item in items:
             if item['url'] in subs:
-                item['title'] = '[B][COLOR yellow]*[/COLOR][/B]' + item['title']
+                item['title'] = '[B][COLOR yellow]*[/COLOR][/B] ' + item['title']
             self.add_flag_to_url(item, flag)
         return items
 
