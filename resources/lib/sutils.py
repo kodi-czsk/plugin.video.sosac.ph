@@ -203,6 +203,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 self.dialog.create('sosac', 'Add all to library')
                 self.dialog.update(0)
                 if params['title'] == 'Movies':
+                    self.provider.library_movies_all_xml()
+                elif params['title'] == 'Movies - Recently added':
                     self.provider.library_movie_recently_added_xml()
                 elif params['title'] == 'TV Shows':
                     self.provider.library_tvshows_all_xml()
