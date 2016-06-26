@@ -44,7 +44,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         return ''.join(c for c in cleanedFilename if c in validFilenameChars)
 
     def service(self):
-        util.info("Start")
+        util.info("SOSAC Service Start")
         try:
             sleep_time = int(self.getSetting("start_sleep_time")) * 1000 * 60
         except:
@@ -54,13 +54,13 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         self.sleep(sleep_time)
 
         try:
-            self.last_run = float(self.cache.get("subscription.last_run"))  # time.time()
+            self.last_run = float(self.cache.get("subscription.last_run")) #time.time()
         except:
             self.last_run = time.time()
             self.cache.set("subscription.last_run", str(self.last_run))
             pass
 
-        if time.time() > self.last_run + 24 * 3600:
+        if not xbmc.abortRequested and time.time() > self.last_run + 24 * 3600:
             self.evalSchedules()
 
         while not xbmc.abortRequested:
@@ -69,7 +69,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 self.last_run = time.time()
                 self.cache.set("subscription.last_run", str(self.last_run))
             self.sleep(self.sleep_time)
-        util.info("Koncim")
+        util.info("SOSAC Shutdown")
 
     def showNotification(self, title, message, time=1000):
         xbmcgui.Dialog().notification(self.encode(title), self.encode(message), time=time,
@@ -79,10 +79,14 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
     def evalSchedules(self):
         if not self.scanRunning() and not self.isPlaying():
             self.showNotification('Subscription', 'Chcecking')
-            util.info("Spustam co mam naplanovane")
+            util.info("SOSAC Loading subscriptions")
             subs = self.get_subs()
             new_items = False
             for url, name in subs.iteritems():
+                util.info("SOSAC SUBS URL" + url)
+                if xbmc.abortRequested:
+                    util.info("SOSAC Exitting")
+                    return
                 if self.provider.is_tv_shows_url(url):
                     if self.scanRunning() or self.isPlaying():
                         self.cache.delete("subscription.last_run")
@@ -93,7 +97,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             if new_items:
                 xbmc.executebuiltin('UpdateLibrary(video)')
         else:
-            util.info("Nieco srotuje, tak nic nerobim")
+            util.info("SOSAC Scan skipped")
 
     def isPlaying(self):
         return xbmc.Player().isPlaying()
@@ -127,7 +131,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         item_url = util._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
         print("item: ", item_url, params)
         new_items = False
-        # self.showNotification('Linking', params['name'])
+        #self.showNotification('Linking', params['name'])
 
         if "movie" in params['url']:
             item_dir = self.getSetting('library-movies')
@@ -144,7 +148,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             if not params['url'] in subs.keys():
                 subs.update({params['url']: params['name']})
                 self.set_subs(subs)
-                # self.addon.setSetting('tvshows-subs', json.dumps(subs))
+                #self.addon.setSetting('tvshows-subs', json.dumps(subs))
 
             if not xbmcvfs.exists(os.path.join(item_dir, self.normalize_filename(params['name']),
                                                'tvshow.nfo')):
@@ -179,7 +183,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         elif not error and not ('notify' in params):
             self.showNotification(params['name'], 'No new contents')
         if error and not ('notify' in params):
-            self.showNotification('Failed, Please check kodi.util.info', 'Linking')
+            self.showNotification('Failed, Please check kodi logs', 'Linking')
         return new_items
 
     def run_custom(self, params):
@@ -199,6 +203,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 self.dialog.create('sosac', 'Add all to library')
                 self.dialog.update(0)
                 if params['title'] == 'Movies':
+                    self.provider.library_movies_all_xml()
+                elif params['title'] == 'Movies - Recently added':
                     self.provider.library_movie_recently_added_xml()
                 elif params['title'] == 'TV Shows':
                     self.provider.library_tvshows_all_xml()
@@ -209,7 +215,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         error = False
         new = False
         if item_path:
-            item_path = xbmc.translatePath(item_path)
+            item_path = xbmc.translatePath( item_path )
             dir = os.path.dirname(item_path)
             if not xbmcvfs.exists(dir):
                 try:
@@ -217,10 +223,6 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 except Exception, e:
                     error = True
                     print('Failed to create directory 1', dir)
-
-            if not xbmcvfs.exists(dir):
-                error = True
-                print('Failed to create directory 2', dir)
 
             if not xbmcvfs.exists(item_path):
                 try:
