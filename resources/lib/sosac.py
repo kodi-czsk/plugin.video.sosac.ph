@@ -56,6 +56,8 @@ class SosacContentProvider(ContentProvider):
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.LWPCookieJar()))
         urllib2.install_opener(opener)
         self.reverse_eps = reverse_eps
+
+    def on_init(self):
         kodilang = self.lang or 'cs'
         if kodilang == ISO_639_1_CZECH:
             self.ISO_639_1_CZECH = ISO_639_1_CZECH + '/'
@@ -500,7 +502,7 @@ class SosacContentProvider(ContentProvider):
         subs = self.get_subs()
         for item in items:
             if item['url'] in subs:
-                item['title'] = '[B][COLOR yellow]*[/COLOR][/B]' + item['title']
+                item['title'] = '[B][COLOR yellow]*[/COLOR][/B] ' + item['title']
             self.add_flag_to_url(item, flag)
         return items
 
