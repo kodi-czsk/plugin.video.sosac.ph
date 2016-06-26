@@ -26,7 +26,6 @@ import urllib2
 import cookielib
 import xml.etree.ElementTree as ET
 import sys
-import xbmc
 
 import util
 from provider import ContentProvider, cached, ResolveException
@@ -57,10 +56,7 @@ class SosacContentProvider(ContentProvider):
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.LWPCookieJar()))
         urllib2.install_opener(opener)
         self.reverse_eps = reverse_eps
-        try:
-            kodilang = xbmc.getLanguage(xbmc.ISO_639_1)
-        except:
-            kodilang = 'cs'
+        kodilang = self.lang or 'cs'
         if kodilang == ISO_639_1_CZECH:
             self.ISO_639_1_CZECH = ISO_639_1_CZECH + '/'
         else:
