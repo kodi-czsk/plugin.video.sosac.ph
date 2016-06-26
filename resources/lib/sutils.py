@@ -140,7 +140,6 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             params['refresh'] = str(self.getSetting("refresh_time"))
         sub = {'name':params['name'],'refresh':params['refresh']}
         sub['last_run'] = time.time()
-        util.info(sub)
         arg = {"play": params['url'], 'cp': 'sosac.ph', "title": sub['name']}
         item_url = util._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
         print("item: ", item_url, params)
