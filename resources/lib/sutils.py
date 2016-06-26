@@ -44,7 +44,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         return ''.join(c for c in cleanedFilename if c in validFilenameChars)
 
     def service(self):
-        util.info("SOSAC Start")
+        util.info("SOSAC Service Start")
         try:
             sleep_time = int(self.getSetting("start_sleep_time")) * 1000 * 60
         except:
@@ -69,7 +69,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 self.last_run = time.time()
                 self.cache.set("subscription.last_run", str(self.last_run))
             self.sleep(self.sleep_time)
-        util.info("Koncim")
+        util.info("SOSAC Shutdown")
 
     def showNotification(self, title, message, time=1000):
         xbmcgui.Dialog().notification(self.encode(title), self.encode(message), time=time,
@@ -79,13 +79,13 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
     def evalSchedules(self):
         if not self.scanRunning() and not self.isPlaying():
             self.showNotification('Subscription', 'Chcecking')
-            util.info("SOSAC Spustam co mam naplanovane")
+            util.info("SOSAC Loading subscriptions")
             subs = self.get_subs()
             new_items = False
             for url, name in subs.iteritems():
                 util.info("SOSAC SUBS URL" + url)
                 if xbmc.abortRequested:
-                    util.info("SOSAC Mam zdochnut!")
+                    util.info("SOSAC Exitting")
                     return
                 if self.provider.is_tv_shows_url(url):
                     if self.scanRunning() or self.isPlaying():
@@ -97,7 +97,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             if new_items:
                 xbmc.executebuiltin('UpdateLibrary(video)')
         else:
-            util.info("SOSAC Nieco srotuje, tak nic nerobim")
+            util.info("SOSAC Scan skipped")
 
     def isPlaying(self):
         return xbmc.Player().isPlaying()
@@ -183,7 +183,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         elif not error and not ('notify' in params):
             self.showNotification(params['name'], 'No new contents')
         if error and not ('notify' in params):
-            self.showNotification('Failed, Please check kodi.util.info', 'Linking')
+            self.showNotification('Failed, Please check kodi logs', 'Linking')
         return new_items
 
     def run_custom(self, params):
