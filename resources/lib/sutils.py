@@ -54,7 +54,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         self.sleep(sleep_time)
 
         try:
-            self.last_run = float(self.cache.get("subscription.last_run")) #time.time()
+            self.last_run = float(self.cache.get("subscription.last_run"))  # time.time()
         except:
             self.last_run = time.time()
             self.cache.set("subscription.last_run", str(self.last_run))
@@ -131,7 +131,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         item_url = util._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
         print("item: ", item_url, params)
         new_items = False
-        #self.showNotification('Linking', params['name'])
+        # self.showNotification('Linking', params['name'])
 
         if "movie" in params['url']:
             item_dir = self.getSetting('library-movies')
@@ -148,7 +148,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             if not params['url'] in subs.keys():
                 subs.update({params['url']: params['name']})
                 self.set_subs(subs)
-                #self.addon.setSetting('tvshows-subs', json.dumps(subs))
+                # self.addon.setSetting('tvshows-subs', json.dumps(subs))
 
             if not xbmcvfs.exists(os.path.join(item_dir, self.normalize_filename(params['name']),
                                                'tvshow.nfo')):
@@ -215,7 +215,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         error = False
         new = False
         if item_path:
-            item_path = xbmc.translatePath( item_path )
+            item_path = xbmc.translatePath(item_path)
             dir = os.path.dirname(item_path)
             if not xbmcvfs.exists(dir):
                 try:
