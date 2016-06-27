@@ -20,15 +20,11 @@
 #  *
 #  */
 
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), 'resources', 'lib'))
-
-import re
 import xbmcaddon
 import xbmcutil
 import util
-from sosac import SosacContentProvider
-from sutils import XBMCSosac
+from resources.lib.sosac import SosacContentProvider
+from resources.lib.sutils import XBMCSosac
 
 __scriptid__ = 'plugin.video.sosac.ph'
 __scriptname__ = 'sosac.ph'
