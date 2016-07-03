@@ -209,8 +209,10 @@ class SosacContentProvider(ContentProvider):
             result = []
             page = util.request(url)
             data = util.substr(page, '<select name=\"zanr\">', '</select')
-            for s in re.finditer('<option value=\"([^\"]+)\">([^<]+)</option>', data, re.IGNORECASE | re.DOTALL):
-                item = {'url': url + "?" + GENRE_PARAM + "=" + s.group(1), 'title': s.group(2), 'type': 'dir'}
+            for s in re.finditer('<option value=\"([^\"]+)\">([^<]+)</option>', data,
+                                 re.IGNORECASE | re.DOTALL):
+                item = {'url': url + "?" + GENRE_PARAM + "=" +
+                        s.group(1), 'title': s.group(2), 'type': 'dir'}
                 self._filter(result, item)
             return result
 
@@ -360,11 +362,11 @@ class SosacContentProvider(ContentProvider):
     def library_movies_all_xml(self):
         page = util.request('http://tv.prehraj.me/filmyxml.php')
         pagedata = util.substr(page, '<select name=\"rok\">', '</select>')
-        pageitems = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', pagedata,
-                                re.IGNORECASE | re.DOTALL)
+        pageitems = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>',
+                                pagedata, re.IGNORECASE | re.DOTALL)
         pagetotal = float(len(list(pageitems)))
-        pageitems = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', pagedata,
-                                re.IGNORECASE | re.DOTALL)
+        pageitems = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>',
+                                pagedata, re.IGNORECASE | re.DOTALL)
         print("PocetRoku: ", pagetotal)
         pagenum = 0
         for m in pageitems:
@@ -373,7 +375,8 @@ class SosacContentProvider(ContentProvider):
                 return
             pageperc = float(pagenum / pagetotal) * 100
             print("Rokpercento: ", int(pageperc))
-            data = util.request('http://tv.prehraj.me/filmyxml.php?rok=' + m.group('url') + '&sirka=670&vyska=377&affid=0#')
+            data = util.request('http://tv.prehraj.me/filmyxml.php?rok=' +
+                                m.group('url') + '&sirka=670&vyska=377&affid=0#')
             tree = ET.fromstring(data)
             total = float(len(list(tree.findall('film'))))
             print("TOTAL: ", total)
@@ -390,10 +393,13 @@ class SosacContentProvider(ContentProvider):
                         title = film.findtext('nazevcs').encode('utf-8')
                     else:
                         title = film.findtext('nazeven').encode('utf-8')
-                    self.parent.dialog.update(int(perc), title + '\n' + str(pagenum) + '/' + str(int(pagetotal)) + '  [' + m.group('url') + ']' + '\n\n')
+                    self.parent.dialog.update(int(perc), title + '\n' + str(pagenum) + '/' +
+                                              str(int(pagetotal)) + '  [' + m.group('url') + ']' +
+                                              '\n\n')
                     item['title'] = '%s (%s)' % (title, film.findtext('rokvydani'))
                     item['name'] = item['title']
-                    item['url'] = 'http://movies.prehraj.me/' + self.ISO_639_1_CZECH + 'player/' + self.parent.make_name(title + '-' + film.findtext('rokvydani'))
+                    item['url'] = 'http://movies.prehraj.me/' + self.ISO_639_1_CZECH + \
+                        'player/' + self.parent.make_name(title + '-' + film.findtext('rokvydani'))
                     item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
                         'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
                     item['update'] = True
@@ -417,8 +423,10 @@ class SosacContentProvider(ContentProvider):
             print("percento: ", int(perc))
             if self.parent.dialog.iscanceled():
                 return
-            self.parent.dialog.update(int(perc),
-                film.findtext('nazevcs') + ' (' + film.findtext('rokvydani') + ')\n' + film.findtext('nazeven') + ' (' + film.findtext('rokvydani') + ')\n\n\n')
+            self.parent.dialog.update(int(perc), film.findtext('nazevcs') + ' (' +
+                                      film.findtext('rokvydani') + ')\n' +
+                                      film.findtext('nazeven') + ' (' +
+                                      film.findtext('rokvydani') + ')\n\n\n')
             item = self.video_item()
             try:
                 if ISO_639_1_CZECH in self.ISO_639_1_CZECH:
@@ -427,7 +435,8 @@ class SosacContentProvider(ContentProvider):
                     title = film.findtext('nazeven').encode('utf-8')
                 item['title'] = '%s (%s)' % (title, film.findtext('rokvydani'))
                 item['name'] = item['title']
-                item['url'] = 'http://movies.prehraj.me/' + self.ISO_639_1_CZECH + 'player/' + self.parent.make_name(title + '-' + film.findtext('rokvydani'))
+                item['url'] = 'http://movies.prehraj.me/' + self.ISO_639_1_CZECH + \
+                    'player/' + self.parent.make_name(title + '-' + film.findtext('rokvydani'))
                 item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
                     'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
                 item['update'] = True
@@ -505,7 +514,8 @@ class SosacContentProvider(ContentProvider):
         return items
 
     def _url(self, url):
-# DirtyFix nefunkcniho downloadu: Neznam kod tak se toho zkusenejsi chopte a prepiste to lepe :)
+        # DirtyFix nefunkcniho downloadu: Neznam kod tak se toho zkusenejsi chopte
+        # a prepiste to lepe :)
         if '&authorize=' in url:
             return url
         else:
