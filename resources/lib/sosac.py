@@ -164,13 +164,12 @@ class SosacContentProvider(ContentProvider):
         return url.replace(TV_SHOW_FLAG, "", 1)
 
     def list(self, url):
-        print("Examining url", url)
         if MOVIES_GENRE in url:
             return self.list_by_genres(url)
-        if self.is_most_popular(url):
-            if "movie" in url:
+        if self.is_most_popular(url) or self.particular_letter(url):
+            if self.is_movie_url(url):
                 return self.list_movies_by_letter(url)
-            if "tv" in url:
+            elif self.is_tv_shows_url(url):
                 return self.list_tv_shows_by_letter(url)
         if self.is_recently_added(url):
             util.debug("is recently added")
@@ -187,21 +186,12 @@ class SosacContentProvider(ContentProvider):
                 return self.a_to_z(MOVIES_A_TO_Z_TYPE)
             if "tv" in url:
                 return self.a_to_z(TV_SHOWS_A_TO_Z_TYPE)
-
-        if self.particular_letter(url):
-            if "movie" in url:
-                return self.list_movies_by_letter(url)
-            if "tv" in url:
-                return self.list_tv_shows_by_letter(url)
-
         if self.has_tv_show_flag(url):
             return self.list_tv_show(self.remove_flags(url))
-
         if self.is_xml_letter(url):
             print("xml letter")
             if "movie" in url:
                 return self.list_xml_letter(url)
-
         return [self.dir_item(title="I failed", url="fail")]
 
     def list_by_genres(self, url):
