@@ -224,8 +224,7 @@ class SosacContentProvider(ContentProvider):
                 item['img'] = film.findtext('obrazekmaly')
                 item['url'] = self.base_url + '/player/' + self.parent.make_name(
                     film.findtext('nazeven').encode('utf-8') + '-' + film.findtext('rokvydani'))
-                item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                    'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
+                item['menu'] = self._create_item_menu(item['url'], item['title'])
                 self._filter(result, item)
             except Exception, e:
                 print("ERR TITLE: ", item['title'], e)
@@ -285,17 +284,10 @@ class SosacContentProvider(ContentProvider):
         result = []
         page = self.get_data_cached(url)
         data = util.substr(page, '<ul class=\"content', '</ul>')
-        subs = self.get_subs()
         for m in re.finditer('<a class=\"title\" href=\"(?P<url>[^\"]+)[^>]+>(?P<name>[^<]+)', data,
                              re.IGNORECASE | re.DOTALL):
-            item = {'url': m.group('url'), 'title': m.group('name')}
-            if item['url'] in subs:
-                item['menu'] = {"[B][COLOR red]Remove from subscription[/COLOR][/B]": {
-                    'url': m.group('url'), 'action': 'remove-subscription', 'name': m.group('name')}
-                }
-            else:
-                item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                    'url': m.group('url'), 'action': 'add-to-library', 'name': m.group('name')}}
+            item = {'url': m.group('url'), 'title': m.group('name'),
+                    'menu': self._create_item_menu(m.group('url'), m.group('name'))}
             self._filter(result, item)
         paging = util.substr(page, '<div class=\"pagination\"', '</div')
         next = re.search('<li class=\"next[^<]+<a href=\"\?page=(?P<page>\d+)', paging,
@@ -317,23 +309,15 @@ class SosacContentProvider(ContentProvider):
         result = []
         page = self.get_data_cached(url)
         data = util.substr(page, '<div class=\"content\"', '</ul>')
-        subs = self.get_subs()
         for m in re.finditer('<a href=\"(?P<url>[^\"]+)[^>]+((?!<strong).)*<strong>S(?P<serie>\d+) '
                              '/ E(?P<epizoda>\d+)</strong>((?!<a href).)*<a href=\"(?P<surl>[^\"]+)'
                              '[^>]+class=\"mini\">((?!<span>).)*<span>\((?P<name>[^)]+)\)<',
                              data, re.IGNORECASE | re.DOTALL):
             item = self.video_item()
             item['url'] = m.group('url')
-            item['title'] = "Rada " + m.group('serie') + " Epizoda " + m.group(
-                'epizoda') + " - " + m.group('name')
-            if item['url'] in subs:
-                item['menu'] = {"[B][COLOR red]Remove from subscription[/COLOR][/B]": {
-                    'url': m.group('url'), 'action': 'remove-subscription',
-                    'name': m.group('name') + " S" + m.group('serie') + 'E' + m.group('epizoda')}}
-            else:
-                item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                    'url': m.group('url'), 'action': 'add-to-library',
-                    'name': m.group('name') + " S" + m.group('serie') + 'E' + m.group('epizoda')}}
+            item['title'] = '{0} S{1}E{2}'.format(m.group('name'), m.group('serie'),
+                                                  m.group('epizoda'))
+            item['menu'] = self._create_item_menu(item['url'], item['title'])
             self._filter(result, item)
         paging = util.substr(page, '<div class=\"pagination\"', '</div')
         next = re.search('<li class=\"next[^<]+<a href=\"\?page_1=(?P<page>\d+)', paging,
@@ -391,8 +375,7 @@ class SosacContentProvider(ContentProvider):
                     item['name'] = item['title']
                     item['url'] = 'http://movies.prehraj.me/' + self.ISO_639_1_CZECH + \
                         'player/' + self.parent.make_name(title + '-' + film.findtext('rokvydani'))
-                    item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                        'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
+                    item['menu'] = self._create_item_menu(item['url'], item['title'])
                     item['update'] = True
                     item['notify'] = False
                     self.parent.add_item(item)
@@ -428,8 +411,7 @@ class SosacContentProvider(ContentProvider):
                 item['name'] = item['title']
                 item['url'] = 'http://movies.prehraj.me/' + self.ISO_639_1_CZECH + \
                     'player/' + self.parent.make_name(title + '-' + film.findtext('rokvydani'))
-                item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                    'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
+                item['menu'] = self._create_item_menu(item['url'], item['title'])
                 item['update'] = True
                 item['notify'] = False
                 self.parent.add_item(item)
@@ -473,8 +455,7 @@ class SosacContentProvider(ContentProvider):
             item = self.video_item()
             item['url'] = m.group('url')
             item['title'] = m.group('name')
-            item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                'url': m.group('url'), 'action': 'add-to-library', 'name': m.group('name')}}
+            item['menu'] = self._create_item_menu(item['url'], item['title'])
             self._filter(result, item)
         paging = util.substr(page, '<div class=\"pagination\"', '</div')
         next = re.search('<li class=\"next[^<]+<a href=\"\?page=(?P<page>\d+)', paging,
@@ -548,8 +529,7 @@ class SosacContentProvider(ContentProvider):
             item['title'] = entry.h4.a.text
             item['img'] = MOVIES_BASE_URL + entry.img.get('src')
             item['plot'] = entry.p.text.strip()
-            item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
+            item['menu'] = self._create_item_menu(item['url'], item['title'])
             self._filter(result, item)
         # Process next 4 pages, so we'll get 20 items per page instead of 4
         for next_page in html_tree.select('.pagination ul li.next a'):
@@ -574,3 +554,21 @@ class SosacContentProvider(ContentProvider):
                 result.append(item)
             break
         return result
+
+    def _create_item_menu(self, url, title):
+        menu = {}
+
+        library_item = ''
+        library_action = ''
+        if url not in self.get_subs():
+            library_item = 'Add to library'
+            library_action = 'add-to-library'
+        else:
+            library_item = 'Remove from subscription'
+            library_action = 'remove-subscription'
+
+        menu['[B][COLOR red]' + library_item + '[/COLOR][/B]'] = {
+            'url': url, 'action': library_action, 'name': title
+        }
+
+        return menu
