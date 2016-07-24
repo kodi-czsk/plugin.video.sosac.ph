@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <settings>
-    <setting label="30000" type="text" id="keep-searches" default="20" />
-    <setting label="30063" id="subs" type="bool" default="true" />
-    <setting label="30057" id="order-episodes" type="enum" lvalues="30058|30059" default="0" />
-    <setting label="30050" id="quality" type="enum" lvalues="30051|30052|30053|30054|30055|30056" default="0" />
-    <setting label="30030" id="downloads" type="folder" default="" />
-    <setting label="30032" id="download-notify" type="bool" default="true" />
-    <setting label="30033" id="download-notify-every" type="enum" lvalues="30034|30035|30036" default="0" visible="eq(-1,true)" />
-    <setting label="30100" id="library-movies" type="folder" default="special://profile/addon_data/plugin.video.sosac.ph/Movies/" />
-    <setting label="30101" id="library-tvshows" type="folder" default="special://profile/addon_data/plugin.video.sosac.ph/TVShows/" />
-    <setting label="30102" id="start_sleep_time" type="slider" default="10" range="0,60" option="int" />
+    <category label="30103">
+        <setting label="30000" type="text" id="keep-searches" default="20" />
+        <setting label="30063" id="subs" type="bool" default="true" />
+        <setting label="30057" id="order-episodes" type="enum" lvalues="30058|30059" default="0" />
+        <setting label="30050" id="quality" type="enum" lvalues="30051|30052|30053|30054|30055|30056" default="0" />
+        <setting label="30030" id="downloads" type="folder" default="" />
+        <setting label="30032" id="download-notify" type="bool" default="true" />
+        <setting label="30033" id="download-notify-every" type="enum" lvalues="30034|30035|30036" default="0" visible="eq(-1,true)" />
+    </category>
+    <category label="30104">
+        <setting label="30100" id="library-movies" type="folder" default="special://profile/addon_data/plugin.video.sosac.ph/Movies/" />
+        <setting label="30101" id="library-tvshows" type="folder" default="special://profile/addon_data/plugin.video.sosac.ph/TVShows/" />
+        <setting label="30102" id="start_sleep_time" type="slider" default="10" range="0,60" option="int" />
+        <setting label="30105" id="refresh_time" type="slider" default="1" range="0,60" option="int" />
+    </category>
 </settings>
