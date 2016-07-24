@@ -12,10 +12,12 @@ import string
 import datetime
 import urllib
 
+
 class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
     last_run = 0
     sleep_time = 1000 * 1 * 60
     subs = None
+
     def __init__(self, provider, settings, addon):
         xbmcprovider.XBMCMultiResolverContentProvider.__init__(self, provider, settings, addon)
         provider.parent = self
@@ -63,7 +65,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             self.evalSchedules()
 
         while not xbmc.abortRequested:
-            #evaluate subsciptions every 10 minutes
+            # evaluate subsciptions every 10 minutes
             if(time.time() > self.last_run + 600):
                 self.evalSchedules()
                 self.last_run = time.time()
@@ -97,12 +99,18 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                             if not notified:
                                 self.showNotification('Subscription', 'Chcecking')
                                 notified = True
-                            util.debug("SOSAC Refreshing "+ url)
-                            new_items |= self.run_custom({'action': 'add-to-library', 'update': True, 'url':url, 'name':sub['name'],'refresh':sub['refresh']})
+                            util.debug("SOSAC Refreshing " + url)
+                            new_items |= self.run_custom({
+                                'action': 'add-to-library',
+                                'update': True,
+                                'url': url,
+                                'name': sub['name'],
+                                'refresh': sub['refresh']
+                            })
                             self.sleep(3000)
                         else:
                             n = (next_check - time.time()) / 3600
-                            util.debug("SOSAC Skipping "+ url+" , next check in %dh" % n)
+                            util.debug("SOSAC Skipping " + url + " , next check in %dh" % n)
             if new_items:
                 xbmc.executebuiltin('UpdateLibrary(video)')
             notified = False
@@ -139,13 +147,13 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         error = False
         if not 'refresh' in params:
             params['refresh'] = str(self.getSetting("refresh_time"))
-        sub = {'name':params['name'],'refresh':params['refresh']}
+        sub = {'name': params['name'], 'refresh': params['refresh']}
         sub['last_run'] = time.time()
         arg = {"play": params['url'], 'cp': 'sosac.ph', "title": sub['name']}
         item_url = util._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
         print("item: ", item_url, params)
         new_items = False
-        #self.showNotification('Linking', params['name'])
+        # self.showNotification('Linking', params['name'])
 
         if "movie" in params['url']:
             item_dir = self.getSetting('library-movies')
@@ -159,8 +167,10 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             subs = self.get_subs()
             item_dir = self.getSetting('library-tvshows')
 
-            subs[params['url']] = sub
-            self.set_subs(subs)
+            if not params['url'] in subs.keys():
+                subs.update({params['url']: params['name']})
+                self.set_subs(subs)
+                # self.addon.setSetting('tvshows-subs', json.dumps(subs))
 
             if not xbmcvfs.exists(os.path.join(item_dir, self.normalize_filename(params['name']),
                                                'tvshow.nfo')):
@@ -232,7 +242,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         error = False
         new = False
         if item_path:
-            item_path = xbmc.translatePath( item_path )
+            item_path = xbmc.translatePath(item_path)
             dir = os.path.dirname(item_path)
             if not xbmcvfs.exists(dir):
                 try:
@@ -272,7 +282,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 util.info('Migrating subscriptions to new DB format')
                 new_subs = {}
                 for url, name in subs.iteritems():
-                    new_subs[url] = {'name': name,'refresh':'1','last_run':-1}
+                    new_subs[url] = {'name': name, 'refresh': '1', 'last_run': -1}
                 self.set_subs(new_subs)
                 subs = new_subs
             self.subs = subs
