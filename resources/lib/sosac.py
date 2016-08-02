@@ -395,9 +395,8 @@ class SosacContentProvider(ContentProvider):
                         title = film.findtext('nazevcs').encode('utf-8')
                     else:
                         title = film.findtext('nazeven').encode('utf-8')
-                    self.parent.dialog.update(int(perc), title + '\n' + str(pagenum) + '/' +
-                                              str(int(pagetotal)) + '  [' + m.group('url') + ']' +
-                                              '\n\n')
+                    self.parent.dialog.update(int(perc), str(pagenum) + '/' + str(int(pagetotal)) +
+                                              ' [' + m.group('url') + '] ->  ' + title)
                     item['title'] = '%s (%s)' % (title, film.findtext('rokvydani'))
                     item['name'] = item['title']
                     item['url'] = 'http://movies.prehraj.me/' + self.ISO_639_1_CZECH + \
