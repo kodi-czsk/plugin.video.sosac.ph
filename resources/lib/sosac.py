@@ -59,7 +59,7 @@ class SosacContentProvider(ContentProvider):
 
     def on_init(self):
         kodilang = self.lang or 'cs'
-        if kodilang == ISO_639_1_CZECH:
+        if kodilang == ISO_639_1_CZECH or kodilang == 'sk':
             self.ISO_639_1_CZECH = ISO_639_1_CZECH + '/'
         else:
             self.ISO_639_1_CZECH = ''
