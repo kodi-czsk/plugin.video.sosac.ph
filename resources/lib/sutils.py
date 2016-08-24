@@ -273,18 +273,11 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             if data == '':
                 return {}
             subs = eval(data)
-            migrate = False
-            for val in subs.values():
-                if not isinstance(val, dict):
-                    migrate = True
-                break
-            if migrate:
-                util.info('Migrating subscriptions to new DB format')
-                new_subs = {}
-                for url, name in subs.iteritems():
-                    new_subs[url] = {'name': name, 'refresh': '1', 'last_run': -1}
-                self.set_subs(new_subs)
-                subs = new_subs
+            for url, name in subs.iteritems():
+                if not isinstance(name, dict):
+                    subs[url] = {'name': name,
+                                 'refresh': '1', 'last_run': -1}
+            self.set_subs(subs)
             self.subs = subs
         except Exception, e:
             util.error(e)
