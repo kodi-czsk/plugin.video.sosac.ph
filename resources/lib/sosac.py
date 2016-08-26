@@ -231,7 +231,8 @@ class SosacContentProvider(ContentProvider):
                     title = film.findtext('nazeven')
                 item['title'] = '%s (%s)' % (title, film.findtext('rokvydani'))
                 item['name'] = item['title'].encode('utf-8')
-                item['img'] = film.findtext('obrazekmaly')
+                f = {'name':item['title'], 'o': film.findtext('obrazekmaly')}
+                item['img'] = 'http://csfd.bbaron.sk/xbmc.php?img=1;%s' % (urllib.urlencode(f))
                 item['url'] = self.base_url + '/player/' + self.parent.make_name(
                     film.findtext('nazeven').encode('utf-8') + '-' + film.findtext('rokvydani'))
                 item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
