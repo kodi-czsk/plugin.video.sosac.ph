@@ -150,7 +150,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         sub = {'name': params['name'], 'refresh': params['refresh']}
         sub['last_run'] = time.time()
         arg = {"play": params['url'], 'cp': 'sosac.ph', "title": sub['name']}
-        item_url = util._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
+        item_url = xbmcutil._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
         print("item: ", item_url, params)
         new_items = False
         # self.showNotification('Linking', params['name'])
@@ -185,13 +185,13 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 nfo = re.search('[^\d+](?P<season>\d+)[^\d]+(?P<episode>\d+)',
                                 itm['title'], re.IGNORECASE | re.DOTALL)
                 arg = {"play": itm['url'], 'cp': 'sosac.ph',
-                       "title": self.normalize_filename(itm['epname'])}
+                       "title": itm['epname']}
                 """
                 info = ''.join(('<episodedetails><season>', nfo.group('season'),
                                 '</season><episode>', nfo.group('episode'),
                                 '</episode></episodedetails>'))
                 """
-                item_url = util._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
+                item_url = xbmcutil._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
                 (err, new) = self.add_item_to_library(os.path.join(
                     item_dir, self.normalize_filename(params['name']), 'Season ' +
                     nfo.group('season'), "S" + nfo.group('season') + "E" + nfo.group('episode') +
