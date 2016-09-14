@@ -150,8 +150,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         sub = {'name': params['name'], 'refresh': params['refresh']}
         sub['last_run'] = time.time()
         arg = {"play": params['url'], 'cp': 'sosac.ph', "title": sub['name']}
-        item_url = xbmcutil._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
-        #print("item: ", item_url, params)
+        item_url = util._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
         new_items = False
         # self.showNotification('Linking', params['name'])
 
