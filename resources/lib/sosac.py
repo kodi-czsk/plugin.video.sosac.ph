@@ -230,9 +230,12 @@ class SosacContentProvider(ContentProvider):
                 title = film.findtext('nazevcs').encode('utf-8')
             else:
                 title = film.findtext('nazeven').encode('utf-8')
-            item['title'] = '%s (%s) - %s' % (title, film.findtext('rokvydani'), film.findtext('kvalita'))
+            item['title'] = '%s (%s) - %s' % (title, 
+                film.findtext('rokvydani'), film.findtext('kvalita'))
             item['name'] = item['title'].encode('utf-8')
-            f = {'name': '%s %s' % (title, film.findtext('rokvydani')), 'o': film.findtext('obrazekmaly')}
+            f = {'name': '%s %s' % (title, 
+                film.findtext('rokvydani')), 
+                'o': film.findtext('obrazekmaly')}
             item['img'] = 'http://csfd.bbaron.sk/xbmc.php?img=1;%s' % (urllib.urlencode(f))
             item['url'] = self.base_url + '/player/' + self.parent.make_name(
                 film.findtext('nazeven').encode('utf-8') + '-' + film.findtext('rokvydani'))
@@ -242,7 +245,6 @@ class SosacContentProvider(ContentProvider):
             item['art'] = {'fanart': 'http://csfd.bbaron.sk/xbmc.php?%s' % (urllib.urlencode(f))}
 
             self._filter(result, item)
-        #print(result)
         return result
 
     def list_tv_show(self, url):
@@ -388,7 +390,6 @@ class SosacContentProvider(ContentProvider):
             for film in tree.findall('film'):
                 num += 1
                 perc = float(num / total) * 100
-                #print("percento: ", int(perc))
                 if self.parent.dialog.iscanceled():
                     return
                 item = self.video_item()
