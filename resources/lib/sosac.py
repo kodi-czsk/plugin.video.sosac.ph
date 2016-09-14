@@ -30,7 +30,9 @@ import sys
 import util
 from provider import ContentProvider, cached, ResolveException
 
+reload(sys)
 sys.setrecursionlimit(10000)
+sys.setdefaultencoding('utf-8')
 
 MOVIES_BASE_URL = "http://movies.prehraj.me"
 TV_SHOWS_BASE_URL = "http://tv.prehraj.me"
@@ -224,24 +226,25 @@ class SosacContentProvider(ContentProvider):
         tree = ET.fromstring(data)
         for film in tree.findall('film'):
             item = self.video_item()
-            try:
-                if ISO_639_1_CZECH in self.ISO_639_1_CZECH:
-                    title = film.findtext('nazevcs')
-                else:
-                    title = film.findtext('nazeven')
-                item['title'] = '%s (%s)' % (title, film.findtext('rokvydani'))
-                item['name'] = item['title'].encode('utf-8')
-                f = {'name': item['title'], 'o': film.findtext('obrazekmaly')}
-                item['img'] = 'http://csfd.bbaron.sk/xbmc.php?img=1;%s' % (urllib.urlencode(f))
-                item['url'] = self.base_url + '/player/' + self.parent.make_name(
-                    film.findtext('nazeven').encode('utf-8') + '-' + film.findtext('rokvydani'))
-                item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                    'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
-                self._filter(result, item)
-            except Exception, e:
-                print("ERR TITLE: ", item['title'], e)
-                pass
-        print(result)
+            if ISO_639_1_CZECH in self.ISO_639_1_CZECH:
+                title = film.findtext('nazevcs').encode('utf-8')
+            else:
+                title = film.findtext('nazeven').encode('utf-8')
+            item['title'] = '%s (%s) - %s' % (title, 
+                film.findtext('rokvydani'), film.findtext('kvalita'))
+            item['name'] = item['title'].encode('utf-8')
+            f = {'name': '%s %s' % (title, 
+                film.findtext('rokvydani')), 
+                'o': film.findtext('obrazekmaly')}
+            item['img'] = 'http://csfd.bbaron.sk/xbmc.php?img=1;%s' % (urllib.urlencode(f))
+            item['url'] = self.base_url + '/player/' + self.parent.make_name(
+                film.findtext('nazeven').encode('utf-8') + '-' + film.findtext('rokvydani'))
+            item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
+                'url': item['url'], 'action': 'add-to-library', 'name': item['title'].encode('utf-8')}}
+            f = {'name': '%s %s' % (title, film.findtext('rokvydani')), 'fan': '1'}
+            item['art'] = {'fanart': 'http://csfd.bbaron.sk/xbmc.php?%s' % (urllib.urlencode(f))}
+
+            self._filter(result, item)
         return result
 
     def list_tv_show(self, url):
@@ -387,29 +390,24 @@ class SosacContentProvider(ContentProvider):
             for film in tree.findall('film'):
                 num += 1
                 perc = float(num / total) * 100
-                print("percento: ", int(perc))
                 if self.parent.dialog.iscanceled():
                     return
                 item = self.video_item()
-                try:
-                    if ISO_639_1_CZECH in self.ISO_639_1_CZECH:
-                        title = film.findtext('nazevcs').encode('utf-8')
-                    else:
-                        title = film.findtext('nazeven').encode('utf-8')
-                    self.parent.dialog.update(int(perc), str(pagenum) + '/' + str(int(pagetotal)) +
-                                              ' [' + m.group('url') + '] ->  ' + title)
-                    item['title'] = '%s (%s)' % (title, film.findtext('rokvydani'))
-                    item['name'] = item['title']
-                    item['url'] = 'http://movies.prehraj.me/' + self.ISO_639_1_CZECH + \
-                        'player/' + self.parent.make_name(title + '-' + film.findtext('rokvydani'))
-                    item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                        'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
-                    item['update'] = True
-                    item['notify'] = False
-                    self.parent.add_item(item)
-                except Exception, e:
-                    print("ERR TITLE: ", item['title'], e)
-                    pass
+                if ISO_639_1_CZECH in self.ISO_639_1_CZECH:
+                    title = film.findtext('nazevcs').encode('utf-8')
+                else:
+                    title = film.findtext('nazeven').encode('utf-8')
+                self.parent.dialog.update(int(perc), str(pagenum) + '/' + str(int(pagetotal)) +
+                                          ' [' + m.group('url') + '] ->  ' + title)
+                item['title'] = '%s (%s)' % (title, film.findtext('rokvydani'))
+                item['name'] = item['title']
+                item['url'] = 'http://movies.prehraj.me/' + self.ISO_639_1_CZECH + \
+                    'player/' + self.parent.make_name(title + '-' + film.findtext('rokvydani'))
+                item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
+                    'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
+                item['update'] = True
+                item['notify'] = False
+                self.parent.add_item(item)
 #        self.parent.dialog.close()
 
     def library_movie_recently_added_xml(self):
