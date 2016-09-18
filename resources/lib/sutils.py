@@ -34,12 +34,12 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     @staticmethod
     def executeJSON(request):
-         # =====================================================================
-         # Execute JSON-RPC Command
-         # Args:
-         # request: Dictionary with JSON-RPC Commands
-         # Found code in xbmc-addon-service-watchedlist
-         # =====================================================================
+        # =====================================================================
+        # Execute JSON-RPC Command
+        # Args:
+        # request: Dictionary with JSON-RPC Commands
+        # Found code in xbmc-addon-service-watchedlist
+        # =====================================================================
         rpccmd = json.dumps(request)    # create string from dict
         json_query = xbmc.executeJSONRPC(rpccmd)
         json_query = unicode(json_query, 'utf-8', errors='ignore')
@@ -107,7 +107,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                                                       "originaltitle", "lastplayed", "writer",
                                                       "thumbnail", "file",
                                                       "userrating",
-                                                      "dateadded", "art", "fanart", "genre", "cast"]},
+                                                      "dateadded", "art", "fanart", "genre",
+                                                      "cast"]},
                             "id": "1"}
                 JSON_result = self.executeJSON(JSON_req)
                 # for cast list of tuples needed

@@ -22,12 +22,12 @@ class MyPlayer(xbmc.Player):
 
     @staticmethod
     def executeJSON(request):
-         # =================================================================
-         # Execute JSON-RPC Command
-         # Args:
-         # request: Dictionary with JSON-RPC Commands
-         # Found code in xbmc-addon-service-watchedlist
-         # =================================================================
+        # =================================================================
+        # Execute JSON-RPC Command
+        # Args:
+        # request: Dictionary with JSON-RPC Commands
+        # Found code in xbmc-addon-service-watchedlist
+        # =================================================================
         rpccmd = json.dumps(request)  # create string from dict
         json_query = xbmc.executeJSONRPC(rpccmd)
         json_query = unicode(json_query, 'utf-8', errors='ignore')
