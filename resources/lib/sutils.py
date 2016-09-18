@@ -34,12 +34,12 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     @staticmethod
     def executeJSON(request):
-         #=====================================================================
+         # =====================================================================
          # Execute JSON-RPC Command
          # Args:
-         #   request: Dictionary with JSON-RPC Commands
+         # request: Dictionary with JSON-RPC Commands
          # Found code in xbmc-addon-service-watchedlist
-         #=====================================================================
+         # =====================================================================
         rpccmd = json.dumps(request)    # create string from dict
         json_query = xbmc.executeJSONRPC(rpccmd)
         json_query = unicode(json_query, 'utf-8', errors='ignore')
@@ -61,9 +61,9 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         return result
 
     def play(self, item):
-        #======================================================================
+        # ======================================================================
         # Override from xbmcprovider
-        #======================================================================
+        # ======================================================================
         if 'title' in item['info'].keys():
             pomTitle = xbmc.translatePath(item['info']['title'])
             JSON_req = {"jsonrpc": "2.0",
@@ -101,10 +101,12 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                             "params": {"movieid": pomItemDBID,
                                        "properties": ["title", "plot", "votes", "rating",
                                                       "studio", "playcount", "runtime", "director",
-                                                      "trailer", "tagline", "plotoutline", "streamdetails",
+                                                      "trailer", "tagline", "plotoutline",
+                                                      "streamdetails",
                                                       "mpaa", "imdbnumber", "sorttitle", "setid",
                                                       "originaltitle", "lastplayed", "writer",
-                                                      "thumbnail", "file", "userrating",
+                                                      "thumbnail", "file",
+                                                      "userrating",
                                                       "dateadded", "art", "fanart", "genre", "cast"]},
                             "id": "1"}
                 JSON_result = self.executeJSON(JSON_req)
@@ -118,9 +120,9 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             super(XBMCSosac, self).play(item)
             mujPlayer = myPlayer.MyPlayer(
                 itemType=pomItemType, itemDBID=pomItemDBID)
-            while mujPlayer.isPlaying() == False:
+            while mujPlayer.isPlaying() is False:
                 xbmc.sleep(2000)
-            while mujPlayer.isPlaying() == True:
+            while mujPlayer.isPlaying() is True:
                 xbmc.sleep(2000)
         else:
             super(XBMCSosac, self).play(item)
