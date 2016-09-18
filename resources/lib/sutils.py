@@ -64,7 +64,6 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         #=======================================================================
         # Override from xbmcprovider
         #=======================================================================
-        # xbmc.log(json.dumps(item,indent=2))
         if 'title' in item['info'].keys():
             pomTitle = xbmc.translatePath(item['info']['title'])
             JSON_req = {"jsonrpc": "2.0",
@@ -72,9 +71,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                             "params": {"file": pomTitle,
                                          "media": "video",},
                             "id": "1"}
-            xbmc.log('JSON_req string:  %s' % json.dumps(JSON_req,indent=2))
             JSON_result = self.executeJSON(JSON_req)
-            xbmc.log('JSON_result:  %s' % json.dumps(JSON_result,indent=2))
             pomItemType = JSON_result["result"]["filedetails"]["type"]
             pomItemDBID = JSON_result["result"]["filedetails"]["id"]
             if pomItemType == u'episode':
@@ -90,10 +87,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                                 "thumbnail", "file", "tvshowid",
                                 "dateadded", "uniqueid", "art", "fanart"]},
                     "id": "1"}
-                xbmc.log('JSON_req string = %s' % json.dumps(JSON_req,indent=2))
                 JSON_result = self.executeJSON(JSON_req)
-                xbmc.log('JSON GetEpisodeDetails result %s'
-                         % json.dumps(JSON_result,indent=2))
                 # tvshowtitle in listitem info vs showtitle in database !!!
                 JSON_result['result']['episodedetails']['tvshowtitle'] = \
                     JSON_result['result']['episodedetails']['showtitle']
@@ -101,7 +95,6 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 JSON_result['result']['episodedetails']['cast'] = self.adjustCast(
                     JSON_result['result']['episodedetails']['cast'])
                 item['info'] = JSON_result['result']['episodedetails']
-#               xbmc.log(json.dumps(item['info'],indent=2))
             elif pomItemType == u'movie':
                 JSON_req = {"jsonrpc": "2.0",
                     "method": "VideoLibrary.GetMovieDetails",
@@ -114,10 +107,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                                 "thumbnail", "file", "userrating",
                                 "dateadded", "art", "fanart","genre","cast"]}, 
                     "id": "1"}
-                xbmc.log('JSON_req string = %s' % json.dumps(JSON_req,indent=2))
                 JSON_result = self.executeJSON(JSON_req)
-                xbmc.log('JSON GetMovieDetails result = %s' 
-                        % json.dumps(JSON_result,indent=2))
                 # for cast list of tuples needed
                 JSON_result['result']['moviedetails']['cast'] = self.adjustCast(
                     JSON_result['result']['moviedetails']['cast'])
@@ -125,14 +115,11 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 JSON_result['result']['moviedetails']['genre'] = self.adjustGenre(
                     JSON_result['result']['moviedetails']['genre'])
                 item['info'] = JSON_result['result']['moviedetails']
-                xbmc.log(json.dumps(item['info'],indent=2))
             super(XBMCSosac,self).play(item)
             mujPlayer = myPlayer.MyPlayer(itemType=pomItemType,itemDBID=pomItemDBID)
             while mujPlayer.isPlaying() == False:
-                xbmc.log('"Neprehravam a cekam az zacnu"')
                 xbmc.sleep(2000)
             while mujPlayer.isPlaying() == True:
-                xbmc.log('"Ted prehravam a cekam az zkoncim"')
                 xbmc.sleep(2000)
         else:
             super(XBMCSosac,self).play(item)

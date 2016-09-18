@@ -15,7 +15,6 @@ class MyPlayer(xbmc.Player):
 	
 	def __init__(self,itemType=None,itemDBID=None):
 		xbmc.Player.__init__(self)
-		xbmc.log('"přehrávač __init__ v myPlayer.py :-)"')
 		self.estimateFinishTime = 0
 		self.realFinishTime = 0
 		self.itemDuration = 0
@@ -46,52 +45,26 @@ class MyPlayer(xbmc.Player):
 			t = datetime(*(time.strptime(time_str,"%H:%M:%S")[0:6]))
 		return timedelta(hours=t.hour,minutes=t.minute,seconds=t.second)
 
-	def onPlayBackStarted(self):	# tiskne do logu
-		xbmc.log('"Playback started :-)"')
-		#pokusy :-)
-		pokus = xbmc.getInfoLabel('VideoPlayer.Genre')
-		xbmc.log('"VideoPlayer.Genre " ' + pokus)
-		xbmc.log('"self.itemType" ' + str(self.itemType))
-		xbmc.log('"self.itemDBID" ' + str(self.itemDBID))
-		# uchovat délku trvání položky ListItem.Duration je z databáze bývá
-		# nepřesná v řádech minut
-		# uchovat délku trvání položky Player.TimeRemaining je přesnější v řádu
-		# minut
-		pom = xbmc.getInfoLabel('Player.TimeRemaining(hh:mm:ss)')
-		xbmc.log('"Player.TimeRemaining jako str v onPlayBackStarted :-)"' + pom)
+	def onPlayBackStarted(self):
+		# ListItem.Duration je z databáze, bývá nepřesná v řádech minut
+		# Player.TimeRemaining je přesnější
 		self.itemDuration = self.get_sec(
 				xbmc.getInfoLabel('Player.TimeRemaining(hh:mm:ss)'))
-		xbmc.log("'Player.TimeRemaining jako timedelta  v onPlayBackStarted :-)'" +
-				str(self.itemDuration))
-		# uchovat plánovaný čas dokončení 100 % přehrání
+		# plánovaný čas dokončení 100 % přehrání
 		self.estimateFinishTime = xbmc.getInfoLabel('Player.FinishTime(hh:mm:ss)')
-		xbmc.log('"Player.FinishTime v onPlayBackStarted :-)" ' +
-				str(self.estimateFinishTime))
 
 	def onPlayBackEnded(self):
-		xbmc.log('"Playback ended :-)"')
 		self.onPlayBackStopped()
 
-	# OBROVSKÁ chyba !!! onPlaybackStopped(self) opravdu nemohlo fungovat!!!
 	def onPlayBackStopped(self):
-		xbmc.log('"Playback stopped :-)"')
 		# Player.TimeRemaining	- už zde nemá hodnotu
 		# Player.FinishTime - kdy přehrávání skutečně zkončilo
-		self.realFinishTime = xbmc.getInfoLabel(
-			'Player.FinishTime(hh:mm:ss)')
-		xbmc.log("'Player.FinishTime	 ' v onPlayBackStopped :-)" +
-				str(self.realFinishTime))
-		xbmc.log("'self.estimateFinishTime	 ' v onPlayBackStopped :-)" +
-				str(self.estimateFinishTime))
+		self.realFinishTime = xbmc.getInfoLabel('Player.FinishTime(hh:mm:ss)')
 		timeDifference = self.get_sec(self.estimateFinishTime) - \
 							self.get_sec(self.realFinishTime)
-		xbmc.log('"Rozdíl je : "' + str(timeDifference))
-		xbmc.log('" timeDifference.seconds " ' +str(timeDifference.seconds ))
-		xbmc.log('" (self.itemDuration).seconds " '+ str((self.itemDuration).seconds))
 		timeRatio = timeDifference.seconds / float((self.itemDuration).seconds)
-		xbmc.log('"Podíl je : "' + str(timeRatio))
 		# upravit podmínku na 0.05 tj. zbývá shlédnout 5% 
-		if abs(timeRatio) < 1:
+		if abs(timeRatio) < 0.1:
 			if self.itemType == u'episode' :
 				metaReq = {	"jsonrpc": "2.0",
 							"method": "VideoLibrary.SetEpisodeDetails",
@@ -99,7 +72,6 @@ class MyPlayer(xbmc.Player):
 										"playcount": 1},
 							"id": 1}
 				self.executeJSON(metaReq)
-				xbmc.log('"Proběhlo nastavení SHLÉDNUTO u EPIZODY :-) "')
 			elif self.itemType == u'movie':
 				metaReq = {	"jsonrpc": "2.0",
 							"method": "VideoLibrary.SetMovieDetails",
@@ -107,34 +79,15 @@ class MyPlayer(xbmc.Player):
 										"playcount": 1},
 							"id": 1}
 				self.executeJSON(metaReq)
-				xbmc.log('"Proběhlo nastavení SHLÉDNUTO u FILMU :-) "')
-			
-	def onPlayBackPaused(self):	# tiskne do logu
-		xbmc.log('"Playback paused :-)"')
-		# stačí uložit plánovaný konec přehrávání v onPlayBackResumed
 
 	def onPlayBackResumed(self):
-		xbmc.log('"Playback resumed :-)"')
-		# stačí uložit plánovaný konec přehrávání
 		self.estimateFinishTime = xbmc.getInfoLabel(
 			'Player.FinishTime(hh:mm:ss)')
-		xbmc.log("'Player.FinishTime	 ' v OnPlayBackResumed :-)" +
-				str(self.estimateFinishTime))
 
 	def onPlayBackSpeedChanged(self, speed):
-		xbmc.log('"Playback speed changed :-)"' + str(speed))
 		self.estimateFinishTime = xbmc.getInfoLabel(
 			'Player.FinishTime(hh:mm:ss)')
-		# stačí uložit plánovaný konec přehrávání
-		xbmc.log("'Player.FinishTime	 ' v onPlayBackSpeedChange :-)" +
-				str(self.estimateFinishTime))
-
+		
 	def onPlayBackSeek(self, time, seekOffset):
-		# stačí uložit plánovaný konec přehrávání
 		self.estimateFinishTime = xbmc.getInfoLabel(
 			'Player.FinishTime(hh:mm:ss)')
-		xbmc.log("'Player.FinishTime	 ' v onPlayBackSeek :-)" +
-				str(self.estimateFinishTime))
-
-	def __del__(self):
-		xbmc.log('"přehrávač __del__ v myPlayer.py :-)"')
