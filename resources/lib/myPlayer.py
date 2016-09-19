@@ -19,6 +19,11 @@ class MyPlayer(xbmc.Player):
         self.itemDuration = 0
         self.itemDBID = itemDBID
         self.itemType = itemType
+        # dummy call to fix weird error see: http://bugs.python.org/issue7980
+        try:
+            datetime.strptime('2012-01-01', )
+        except TypeError:
+            datetime(*(time.strptime('2012-01-01', '%Y-%m-%d')[0:6]))
 
     @staticmethod
     def executeJSON(request):
@@ -85,9 +90,11 @@ class MyPlayer(xbmc.Player):
             'Player.FinishTime(hh:mm:ss)')
 
     def onPlayBackSpeedChanged(self, speed):
+        xbmc.sleep(1000)
         self.estimateFinishTime = xbmc.getInfoLabel(
             'Player.FinishTime(hh:mm:ss)')
 
     def onPlayBackSeek(self, time, seekOffset):
+        xbmc.sleep(1000)
         self.estimateFinishTime = xbmc.getInfoLabel(
             'Player.FinishTime(hh:mm:ss)')
