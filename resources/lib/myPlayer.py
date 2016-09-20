@@ -49,6 +49,22 @@ class MyPlayer(xbmc.Player):
             t = datetime(*(time.strptime(time_str, "%H:%M:%S")[0:6]))
         return timedelta(hours=t.hour, minutes=t.minute, seconds=t.second)
 
+    def setWatched(self):
+        if self.itemType == u'episode':
+            metaReq = {"jsonrpc": "2.0",
+                       "method": "VideoLibrary.SetEpisodeDetails",
+                       "params": {"episodeid": self.itemDBID,
+                                  "playcount": 1},
+                       "id": 1}
+            self.executeJSON(metaReq)
+        elif self.itemType == u'movie':
+            metaReq = {"jsonrpc": "2.0",
+                       "method": "VideoLibrary.SetMovieDetails",
+                       "params": {"movieid": self.itemDBID,
+                                  "playcount": 1},
+                       "id": 1}
+            self.executeJSON(metaReq)
+
     def onPlayBackStarted(self):
         # ListItem.Duration je z databáze, bývá nepřesná v řádech minut
         # Player.TimeRemaining je přesnější
@@ -59,7 +75,7 @@ class MyPlayer(xbmc.Player):
             'Player.FinishTime(hh:mm:ss)')
 
     def onPlayBackEnded(self):
-        self.onPlayBackStopped()
+        self.setWatched()
 
     def onPlayBackStopped(self):
         # Player.TimeRemaining	- už zde nemá hodnotu
@@ -70,31 +86,22 @@ class MyPlayer(xbmc.Player):
         timeRatio = timeDifference.seconds / float((self.itemDuration).seconds)
         # upravit podmínku na 0.05 tj. zbývá shlédnout 5%
         if abs(timeRatio) < 0.1:
-            if self.itemType == u'episode':
-                metaReq = {	"jsonrpc": "2.0",
-                            "method": "VideoLibrary.SetEpisodeDetails",
-                            "params": {	"episodeid": self.itemDBID,
-                                        "playcount": 1},
-                            "id": 1}
-                self.executeJSON(metaReq)
-            elif self.itemType == u'movie':
-                metaReq = {	"jsonrpc": "2.0",
-                            "method": "VideoLibrary.SetMovieDetails",
-                            "params": {	"movieid": self.itemDBID,
-                                        "playcount": 1},
-                            "id": 1}
-                self.executeJSON(metaReq)
+            self.setWatched()
+
+    def waitForChange(self):
+        xbmc.sleep(1000)
+        while True:
+            pom = xbmc.getInfoLabel('Player.FinishTime(hh:mm:ss)')
+            if pom != self.estimateFinishTime:
+                self.estimateFinishTime = pom
+                break
+            xbmc.sleep(100)
 
     def onPlayBackResumed(self):
-        self.estimateFinishTime = xbmc.getInfoLabel(
-            'Player.FinishTime(hh:mm:ss)')
+        self.waitForChange()
 
     def onPlayBackSpeedChanged(self, speed):
-        xbmc.sleep(1000)
-        self.estimateFinishTime = xbmc.getInfoLabel(
-            'Player.FinishTime(hh:mm:ss)')
+        self.waitForChange()
 
     def onPlayBackSeek(self, time, seekOffset):
-        xbmc.sleep(1000)
-        self.estimateFinishTime = xbmc.getInfoLabel(
-            'Player.FinishTime(hh:mm:ss)')
+        self.waitForChange()
