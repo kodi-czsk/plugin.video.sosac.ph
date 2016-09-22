@@ -17,6 +17,7 @@ import sys
 if sys.executable.endswith("pythonw.exe"):
     sys.stdout = sys.stdout = None
 
+
 class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
     last_run = 0
     sleep_time = 1000 * 1 * 60
