@@ -65,7 +65,10 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         # Override from xbmcprovider
         # ======================================================================
         if 'title' in item['info'].keys():
-            pomTitle = xbmc.translatePath(item['info']['title'])
+            if os.name == 'nt':
+                pomTitle = xbmc.translatePath(item['info']['title'])
+            else:
+                pomTitle = item['info']['title']
             JSON_req = {"jsonrpc": "2.0",
                         "method": "Files.GetFileDetails",
                         "params": {"file": pomTitle,
@@ -124,7 +127,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             while mujPlayer.isPlaying() is False:
                 xbmc.sleep(2000)
             while mujPlayer.isPlaying() is True:
-                xbmc.sleep(2000)
+                xbmc.sleep(5000)
         else:
             super(XBMCSosac, self).play(item)
 

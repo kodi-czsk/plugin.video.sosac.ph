@@ -89,7 +89,7 @@ class MyPlayer(xbmc.Player):
             self.setWatched()
 
     def waitForChange(self):
-        xbmc.sleep(1000)
+        xbmc.sleep(4000)
         while True:
             pom = xbmc.getInfoLabel('Player.FinishTime(hh:mm:ss)')
             if pom != self.estimateFinishTime:
