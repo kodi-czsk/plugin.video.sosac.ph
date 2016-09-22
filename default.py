@@ -20,11 +20,16 @@
 #  *
 #  */
 
+from __future__ import print_function
 import xbmcaddon
 import xbmcutil
 import util
 from resources.lib.sosac import SosacContentProvider
 from resources.lib.sutils import XBMCSosac
+import sys
+
+if sys.executable.endswith("pythonw.exe"):
+    sys.stdout = sys.stdout = None
 
 __scriptid__ = 'plugin.video.sosac.ph'
 __scriptname__ = 'sosac.ph'
