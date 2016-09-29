@@ -124,9 +124,9 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             super(XBMCSosac, self).play(item)
             mujPlayer = myPlayer.MyPlayer(
                 itemType=pomItemType, itemDBID=pomItemDBID)
-            while mujPlayer.isPlaying() is False:
+            while not mujPlayer.isPlaying():
                 xbmc.sleep(2000)
-            while mujPlayer.isPlaying() is True:
+            while mujPlayer.isPlaying():
                 xbmc.sleep(5000)
         else:
             super(XBMCSosac, self).play(item)
