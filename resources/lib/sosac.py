@@ -238,9 +238,9 @@ class SosacContentProvider(ContentProvider):
                     'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
                 self._filter(result, item)
             except Exception, e:
-                util.error("ERR TITLE: " + item['title'] + " | " + e)
+                util.error("ERR TITLE: " + item['title'] + " | " + str(e))
                 pass
-        util.info(result)
+        util.debug(result)
         return result
 
     def list_tv_show(self, url):
@@ -369,24 +369,24 @@ class SosacContentProvider(ContentProvider):
         pagetotal = float(len(list(pageitems)))
         pageitems = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>',
                                 pagedata, re.IGNORECASE | re.DOTALL)
-        util.info("PocetRoku: " + pagetotal)
+        util.info("PocetRoku: %d" % pagetotal)
         pagenum = 0
         for m in pageitems:
             pagenum += 1
             if self.parent.dialog.iscanceled():
                 return
             pageperc = float(pagenum / pagetotal) * 100
-            util.info("Rokpercento: " + int(pageperc))
+            util.info("Rokpercento: %d" % int(pageperc))
             data = util.request('http://tv.prehraj.me/filmyxml.php?rok=' +
                                 m.group('url') + '&sirka=670&vyska=377&affid=0#')
             tree = ET.fromstring(data)
             total = float(len(list(tree.findall('film'))))
-            util.info("TOTAL: " + total)
+            util.info("TOTAL: %d" % total)
             num = 0
             for film in tree.findall('film'):
                 num += 1
                 perc = float(num / total) * 100
-                util.info("percento: " + int(perc))
+                util.info("percento: %d" % int(perc))
                 if self.parent.dialog.iscanceled():
                     return
                 item = self.video_item()
@@ -407,7 +407,7 @@ class SosacContentProvider(ContentProvider):
                     item['notify'] = False
                     self.parent.add_item(item)
                 except Exception, e:
-                    util.error("ERR TITLE: " + item['title'] + " | " + e)
+                    util.error("ERR TITLE: " + item['title'] + " | " + str(e))
                     pass
 #        self.parent.dialog.close()
 
@@ -416,12 +416,12 @@ class SosacContentProvider(ContentProvider):
             'http://tv.prehraj.me/filmyxml2.php?limit=200&sirka=670&vyska=377&affid=0#')
         tree = ET.fromstring(data)
         total = float(len(list(tree.findall('film'))))
-        util.info("TOTAL: " + total)
+        util.info("TOTAL: %d" % total)
         num = 0
         for film in tree.findall('film'):
             num += 1
             perc = float(num / total) * 100
-            util.info("percento: " + int(perc))
+            util.info("percento: %d" % int(perc))
             if self.parent.dialog.iscanceled():
                 return
             self.parent.dialog.update(int(perc), film.findtext('nazevcs') + ' (' +
@@ -445,7 +445,7 @@ class SosacContentProvider(ContentProvider):
                 self.parent.add_item(item)
                 # print("TITLE: ", item['title'])
             except Exception, e:
-                util.error("ERR TITLE: " + item['title'] + " | " + e)
+                util.error("ERR TITLE: " + item['title'] + " | " + str(e))
                 pass
 #        self.parent.dialog.close()
 
@@ -457,14 +457,14 @@ class SosacContentProvider(ContentProvider):
         total = float(len(list(items)))
         items = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', data,
                             re.IGNORECASE | re.DOTALL)
-        util.info("Pocet: " + total)
+        util.info("Pocet: %d" % total)
         num = 0
         for m in items:
             num += 1
             if self.parent.dialog.iscanceled():
                 return
             perc = float(num / total) * 100
-            util.info("percento: " + int(perc))
+            util.info("percento: %d" % int(perc))
             self.parent.dialog.update(int(perc), m.group('name'))
             item = {'url': 'http://tv.prehraj.me/cs/detail/' + m.group('url'),
                     'action': 'add-to-library', 'name': m.group('name'), 'update': True,

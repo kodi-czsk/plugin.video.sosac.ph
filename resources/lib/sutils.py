@@ -151,7 +151,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         sub['last_run'] = time.time()
         arg = {"play": params['url'], 'cp': 'sosac.ph', "title": sub['name']}
         item_url = xbmcutil._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
-        util.info("item: " + item_url + " | " + params)
+        util.info("item: " + item_url + " | " + str(params))
         new_items = False
         # self.showNotification('Linking', params['name'])
 
@@ -258,7 +258,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     file_desc.close()
                     new = True
                 except Exception, e:
-                    util.error('Failed to create .strm file: ' + item_path + " | " + e)
+                    util.error('Failed to create .strm file: ' + item_path + " | " + str(e))
                     error = True
         else:
             error = True

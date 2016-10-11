@@ -43,5 +43,5 @@ params = util.params()
 if params == {}:
     xbmcutil.init_usage_reporting(__scriptid__)
 
-util.info("Running sosac provider with params: " + params)
+util.info("Running sosac provider with params: " + str(params))
 XBMCSosac(SosacContentProvider(reverse_eps=reverse_eps), settings, __addon__).run(params)
