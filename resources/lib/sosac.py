@@ -475,31 +475,29 @@ class SosacContentProvider(ContentProvider):
 
     def list_movie_recently_added(self, url):
         result = []
-        page = self.get_data_cached(url)
-        data = util.substr(page, '<div class=\"content\"', '</ul>')
-        for m in re.finditer(
-                '<a class=\"content-block\" href=\"(?P<url>[^\"]+)\" title=\"(?P<name>[^\"]+)',
-                data, re.IGNORECASE | re.DOTALL):
+        data = util.request(
+                'http://tv.prehraj.me/filmyxml2.php?limit=200&sirka=670&vyska=377&affid=0#')
+        tree = ET.fromstring(data)
+        for film in tree.findall('film'):
             item = self.video_item()
-            item['url'] = m.group('url')
-            item['title'] = m.group('name')
-            item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                'url': m.group('url'), 'action': 'add-to-library', 'name': m.group('name')}}
-            self._filter(result, item)
-        paging = util.substr(page, '<div class=\"pagination\"', '</div')
-        next = re.search('<li class=\"next[^<]+<a href=\"\?page=(?P<page>\d+)', paging,
-                         re.IGNORECASE | re.DOTALL)
-        if next:
-            next_page = int(next.group('page'))
-            current = re.search('\?page=(?P<page>\d)', url)
-            current_page = 0
-            if next_page > 5:
-                return result
-            if current:
-                current_page = int(current.group('page'))
-            if current_page < next_page:
-                url = re.sub('\?.+?$', '', url) + '?page=' + str(next_page)
-                result += self.list_movie_recently_added(url)
+            try:
+                if ISO_639_1_CZECH in self.ISO_639_1_CZECH:
+                    title = film.findtext('nazevcs').encode('utf-8')
+                else:
+                    title = film.findtext('nazeven').encode('utf-8')
+                item['title'] = '%s (%s) - %s' % (
+                    title, film.findtext('rokvydani'), film.findtext('kvalita'))
+                add2library = '%s (%s)' % (title, film.findtext('rokvydani'))
+                item['name'] = item['title']
+                item['img'] = film.findtext('obrazekmaly')
+                item['url'] = 'http://movies.prehraj.me/' + self.ISO_639_1_CZECH + \
+                    'player/' + self.parent.make_name(title + '-' + film.findtext('rokvydani'))
+                item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
+                    'url': item['url'], 'action': 'add-to-library', 'name': add2library}}
+                self._filter(result, item)
+            except Exception, e:
+                util.error("ERR TITLE: " + item['title'] + " | " + str(e))
+                pass
         return result
 
     def add_flag_to_url(self, item, flag):
