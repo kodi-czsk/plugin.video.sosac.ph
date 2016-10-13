@@ -38,10 +38,10 @@ settings = {'downloads': __set__('downloads'), 'quality': __set__(
 
 reverse_eps = __set__('order-episodes') == '0'
 
-print("URL: ", sys.argv[2])
+util.info("URL: " + sys.argv[2])
 params = util.params()
 if params == {}:
     xbmcutil.init_usage_reporting(__scriptid__)
 
-print("Running sosac provider with params:", params)
+util.info("Running sosac provider with params: " + str(params))
 XBMCSosac(SosacContentProvider(reverse_eps=reverse_eps), settings, __addon__).run(params)
