@@ -75,8 +75,13 @@ class MyPlayer(xbmc.Player):
         try:
             # ListItem.Duration je z databáze, bývá nepřesná v řádech minut
             # Player.TimeRemaining je přesnější
-            self.itemDuration = self.get_sec(
-                xbmc.getInfoLabel('Player.TimeRemaining(hh:mm:ss)'))
+            while True:
+                xbmc.sleep(1000)
+                self.itemDuration = xbmc.getInfoLabel(
+                    'Player.TimeRemaining(hh:mm:ss)')
+                if self.itemDuration != '':
+                    self.itemDuration = self.get_sec(self.itemDuration)
+                    break
             # plánovaný čas dokončení 100 % přehrání
             self.estimateFinishTime = xbmc.getInfoLabel(
                 'Player.FinishTime(hh:mm:ss)')
@@ -108,7 +113,7 @@ class MyPlayer(xbmc.Player):
                                        'timeRatio: ': timeRatio, })
 
     def waitForChange(self):
-        xbmc.sleep(4000)
+        xbmc.sleep(2000)
         while True:
             pom = xbmc.getInfoLabel('Player.FinishTime(hh:mm:ss)')
             if pom != self.estimateFinishTime:

@@ -14,6 +14,7 @@ import urllib
 import myPlayer
 import json
 import buggalo
+from urlparse import urlparse
 
 
 class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
@@ -66,7 +67,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         # Override from xbmcprovider
         # ======================================================================
         buggalo.SUBMIT_URL = 'http://sosac.comli.com/submit.php'
-        if 'title' in item['info'].keys():
+        if 'title' in item['info'].keys() and xbmcvfs.exists(item['info']['title']):
             try:
                 pomTitle = item['info']['title']
                 while True:
@@ -140,6 +141,61 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 c += 1
             while mujPlayer.isPlaying():
                 self.sleep(5000)
+        elif 'title' in item['info'].keys() and not xbmcvfs.exists(item['info']['title']):
+            dialog = xbmcgui.Dialog()
+            ret = dialog.select('Old str file format detected',
+                                ['Play video without osd enhancement and auto watched status',
+                                 'Migrate str files - choosing directories will proceed'],
+                                autoclose=5000)
+            if ret == 1:
+                dialog = xbmcgui.Dialog()
+                titulek = 'Choose directory (Movies or TVShows)'
+                vybranyAdresar = dialog.browseSingle(0, titulek, 'files', '',
+                                                     False, False,
+                                                     self.getSetting('library-movies'))
+                if vybranyAdresar != '':
+                    dirs, files = xbmcvfs.listdir(vybranyAdresar)
+                    soubory = list()
+                    vysl = 'Searching for str files: \n'
+                    for di in dirs:
+                        pom = os.path.join(vybranyAdresar, di)
+                        adr, sou = xbmcvfs.listdir(pom)
+                        for s in sou:
+                            if 'strm' in s:
+                                s = os.path.join(pom, s.decode('utf8'))
+                                soubory.append(s)
+                                vysl += s + ' \n'
+                        for aa in adr:
+                            pom1 = os.path.join(pom, aa)
+                            adr1, sou1 = xbmcvfs.listdir(pom1)
+                            for s1 in sou1:
+                                if 'strm' in s1:
+                                    s1 = os.path.join(pom1, s1.decode('utf8'))
+                                    soubory.append(s1)
+                                    vysl += s1 + ' \n'
+                    vysl += '--------------------\n Result of migration: \n'
+                    for fi in soubory:
+                        pomSoub = xbmcvfs.File(fi, 'rw')
+                        pomTxt = pomSoub.read()
+                        pomDict = util.params(urlparse(pomTxt).query)
+                        pomDict['title'] = fi
+                        item_url = xbmcutil._create_plugin_url(
+                            pomDict, 'plugin://' + self.addon_id + '/')
+                        pomSoub.close()
+                        pomSoub = xbmcvfs.File(fi, 'w')
+                        if pomSoub.write(item_url):
+                            vysl = vysl + 'file: ' + fi + ' OK \n'
+                        else:
+                            vysl = vysl + 'file: ' + fi + ' Fail !!! \n'
+                        pomSoub.close()
+
+                    vysledek = xbmcgui.Dialog()
+                    vysledek.textviewer(
+                        'The result of strm files migration: ',
+                        vysl)
+            else:
+                super(XBMCSosac, self).play(item)
+
         else:
             super(XBMCSosac, self).play(item)
 
@@ -382,7 +438,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     file_desc.close()
                     new = True
                 except Exception, e:
-                    util.error('Failed to create .strm file: ' + item_path + " | " + str(e))
+                    util.error('Failed to create .strm file: ' +
+                               item_path + " | " + str(e))
                     error = True
         else:
             error = True
