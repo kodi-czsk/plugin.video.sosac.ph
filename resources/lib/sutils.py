@@ -202,7 +202,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             new_items = False
             for url, sub in subs.iteritems():
                 if xbmc.abortRequested:
-                    util.info("SOSAC Exitting")
+                    util.info("SOSAC Exiting")
                     return
                 if self.provider.is_tv_shows_url(url):
                     if self.scanRunning() or self.isPlaying():
@@ -273,7 +273,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         arg = {"play": params['url'], 'cp': 'sosac.ph', "title": title_pom}
         item_url = xbmcutil._create_plugin_url(
             arg, 'plugin://' + self.addon_id + '/')
-        print("item: ", item_url, params)
+        util.info("item: " + item_url + " | " + str(params))
         new_items = False
         # self.showNotification('Linking', params['name'])
 
@@ -373,7 +373,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     xbmcvfs.mkdirs(dir)
                 except Exception, e:
                     error = True
-                    print('Failed to create directory 1', dir)
+                    util.error('Failed to create directory 1: ' + dir)
 
             if not xbmcvfs.exists(item_path):
                 try:
@@ -382,7 +382,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     file_desc.close()
                     new = True
                 except Exception, e:
-                    print('Failed to create .strm file: ', item_path, e)
+                    util.error('Failed to create .strm file: ' + item_path + " | " + str(e))
                     error = True
         else:
             error = True

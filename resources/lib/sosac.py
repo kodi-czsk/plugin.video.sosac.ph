@@ -164,7 +164,7 @@ class SosacContentProvider(ContentProvider):
         return url.replace(TV_SHOW_FLAG, "", 1)
 
     def list(self, url):
-        print("Examining url", url)
+        util.info("Examining url " + url)
         if MOVIES_GENRE in url:
             return self.list_by_genres(url)
         if self.is_most_popular(url):
@@ -198,7 +198,7 @@ class SosacContentProvider(ContentProvider):
             return self.list_tv_show(self.remove_flags(url))
 
         if self.is_xml_letter(url):
-            print("xml letter")
+            util.debug("xml letter")
             if "movie" in url:
                 return self.list_xml_letter(url)
 
@@ -231,17 +231,16 @@ class SosacContentProvider(ContentProvider):
                     title = film.findtext('nazeven')
                 item['title'] = '%s (%s)' % (title, film.findtext('rokvydani'))
                 item['name'] = item['title'].encode('utf-8')
-                f = {'name': item['title'], 'o': film.findtext('obrazekmaly')}
-                item['img'] = 'http://csfd.bbaron.sk/xbmc.php?img=1;%s' % (urllib.urlencode(f))
+                item['img'] = film.findtext('obrazekmaly')
                 item['url'] = self.base_url + '/player/' + self.parent.make_name(
                     film.findtext('nazeven').encode('utf-8') + '-' + film.findtext('rokvydani'))
                 item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
                     'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
                 self._filter(result, item)
             except Exception, e:
-                print("ERR TITLE: ", item['title'], e)
+                util.error("ERR TITLE: " + item['title'] + " | " + str(e))
                 pass
-        print(result)
+        util.debug(result)
         return result
 
     def list_tv_show(self, url):
@@ -370,24 +369,24 @@ class SosacContentProvider(ContentProvider):
         pagetotal = float(len(list(pageitems)))
         pageitems = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>',
                                 pagedata, re.IGNORECASE | re.DOTALL)
-        print("PocetRoku: ", pagetotal)
+        util.info("PocetRoku: %d" % pagetotal)
         pagenum = 0
         for m in pageitems:
             pagenum += 1
             if self.parent.dialog.iscanceled():
                 return
             pageperc = float(pagenum / pagetotal) * 100
-            print("Rokpercento: ", int(pageperc))
+            util.info("Rokpercento: %d" % int(pageperc))
             data = util.request('http://tv.prehraj.me/filmyxml.php?rok=' +
                                 m.group('url') + '&sirka=670&vyska=377&affid=0#')
             tree = ET.fromstring(data)
             total = float(len(list(tree.findall('film'))))
-            print("TOTAL: ", total)
+            util.info("TOTAL: %d" % total)
             num = 0
             for film in tree.findall('film'):
                 num += 1
                 perc = float(num / total) * 100
-                print("percento: ", int(perc))
+                util.info("percento: %d" % int(perc))
                 if self.parent.dialog.iscanceled():
                     return
                 item = self.video_item()
@@ -408,7 +407,7 @@ class SosacContentProvider(ContentProvider):
                     item['notify'] = False
                     self.parent.add_item(item)
                 except Exception, e:
-                    print("ERR TITLE: ", item['title'], e)
+                    util.error("ERR TITLE: " + item['title'] + " | " + str(e))
                     pass
 #        self.parent.dialog.close()
 
@@ -417,12 +416,12 @@ class SosacContentProvider(ContentProvider):
             'http://tv.prehraj.me/filmyxml2.php?limit=200&sirka=670&vyska=377&affid=0#')
         tree = ET.fromstring(data)
         total = float(len(list(tree.findall('film'))))
-        print("TOTAL: ", total)
+        util.info("TOTAL: %d" % total)
         num = 0
         for film in tree.findall('film'):
             num += 1
             perc = float(num / total) * 100
-            print("percento: ", int(perc))
+            util.info("percento: %d" % int(perc))
             if self.parent.dialog.iscanceled():
                 return
             self.parent.dialog.update(int(perc), film.findtext('nazevcs') + ' (' +
@@ -446,7 +445,7 @@ class SosacContentProvider(ContentProvider):
                 self.parent.add_item(item)
                 # print("TITLE: ", item['title'])
             except Exception, e:
-                print("ERR TITLE: ", item['title'], e)
+                util.error("ERR TITLE: " + item['title'] + " | " + str(e))
                 pass
 #        self.parent.dialog.close()
 
@@ -458,21 +457,21 @@ class SosacContentProvider(ContentProvider):
         total = float(len(list(items)))
         items = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', data,
                             re.IGNORECASE | re.DOTALL)
-        print("Pocet: ", total)
+        util.info("Pocet: %d" % total)
         num = 0
         for m in items:
             num += 1
             if self.parent.dialog.iscanceled():
                 return
             perc = float(num / total) * 100
-            print("percento: ", int(perc))
+            util.info("percento: %d" % int(perc))
             self.parent.dialog.update(int(perc), m.group('name'))
             item = {'url': 'http://tv.prehraj.me/cs/detail/' + m.group('url'),
                     'action': 'add-to-library', 'name': m.group('name'), 'update': True,
                     'notify': True}
             self.parent.add_item(item)
 
-        print("done....")
+        util.info("done....")
 
     def list_movie_recently_added(self, url):
         result = []
@@ -524,15 +523,15 @@ class SosacContentProvider(ContentProvider):
             return self.base_url + "/" + url.lstrip('./')
 
     def list_tv_shows_by_letter(self, url):
-        print("Getting shows by letter", url)
+        util.info("Getting shows by letter " + url)
         shows = self.list_by_letter(url)
-        print("Resloved shows", shows)
+        util.info("Resloved shows " + shows)
         shows = self.add_directory_flag(shows)
         return self.add_url_flag_to_items(shows, TV_SHOW_FLAG)
 
     def list_movies_by_letter(self, url):
         movies = self.list_by_letter(url)
-        print("Resolved movies", movies)
+        util.info("Resolved movies " + movies)
         return self.add_video_flag(movies)
 
     def resolve(self, item, captcha_cb=None, select_cb=None):
