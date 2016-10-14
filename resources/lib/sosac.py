@@ -485,15 +485,14 @@ class SosacContentProvider(ContentProvider):
                     title = film.findtext('nazevcs').encode('utf-8')
                 else:
                     title = film.findtext('nazeven').encode('utf-8')
-                item['title'] = '%s (%s) - %s' % (
-                    title, film.findtext('rokvydani'), film.findtext('kvalita'))
-                add2library = '%s (%s)' % (title, film.findtext('rokvydani'))
+                basetitle = '%s (%s)' % (title, film.findtext('rokvydani'))
+                item['title'] = '%s - %s' % (basetitle, film.findtext('kvalita').upper())
                 item['name'] = item['title']
                 item['img'] = film.findtext('obrazekmaly')
                 item['url'] = 'http://movies.prehraj.me/' + self.ISO_639_1_CZECH + \
                     'player/' + self.parent.make_name(title + '-' + film.findtext('rokvydani'))
                 item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                    'url': item['url'], 'action': 'add-to-library', 'name': add2library}}
+                    'url': item['url'], 'action': 'add-to-library', 'name': basetitle}}
                 self._filter(result, item)
             except Exception, e:
                 util.error("ERR TITLE: " + item['title'] + " | " + str(e))
