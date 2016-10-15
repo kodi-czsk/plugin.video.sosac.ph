@@ -226,16 +226,17 @@ class SosacContentProvider(ContentProvider):
             item = self.video_item()
             try:
                 if ISO_639_1_CZECH in self.ISO_639_1_CZECH:
-                    title = film.findtext('nazevcs')
+                    title = film.findtext('nazevcs').encode('utf-8')
                 else:
-                    title = film.findtext('nazeven')
-                item['title'] = '%s (%s)' % (title, film.findtext('rokvydani'))
-                item['name'] = item['title'].encode('utf-8')
+                    title = film.findtext('nazeven').encode('utf-8')
+                basetitle = '%s (%s)' % (title, film.findtext('rokvydani'))
+                item['title'] = '%s - %s' % (basetitle, film.findtext('kvalita').upper())
+                item['name'] = item['title']
                 item['img'] = film.findtext('obrazekmaly')
                 item['url'] = self.base_url + '/player/' + self.parent.make_name(
                     film.findtext('nazeven').encode('utf-8') + '-' + film.findtext('rokvydani'))
                 item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                    'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
+                    'url': item['url'], 'action': 'add-to-library', 'name': basetitle}}
                 self._filter(result, item)
             except Exception, e:
                 util.error("ERR TITLE: " + item['title'] + " | " + str(e))
