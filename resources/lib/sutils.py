@@ -143,23 +143,28 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 self.sleep(5000)
         elif 'title' in item['info'].keys() and not xbmcvfs.exists(item['info']['title']):
             dialog = xbmcgui.Dialog()
-            ret = dialog.select('Old str file format detected',
-                                ['Play video without osd enhancement and auto watched status',
-                                 'Migrate str files - choosing directories will proceed'],
+            ret = dialog.select(self.getString(30200),
+                                [self.getString(30201), self.getString(30202)],
                                 autoclose=5000)
             if ret == 1:
                 dialog = xbmcgui.Dialog()
-                titulek = 'Choose directory (Movies or TVShows)'
+                titulek = self.getString(30203)
                 vybranyAdresar = dialog.browseSingle(0, titulek, 'files', '',
                                                      False, False,
                                                      self.getSetting('library-movies'))
                 if vybranyAdresar != '':
                     dirs, files = xbmcvfs.listdir(vybranyAdresar)
                     soubory = list()
-                    vysl = 'Searching for str files: \n'
+                    vysl = self.getString(30204) + '\n'
+                    pDialog = xbmcgui.DialogProgress()
+                    ret = pDialog.create(self.getString(30204), '...')
+                    procenta = 1.0 / len(dirs) * 100
+                    i = 1
                     for di in dirs:
                         pom = os.path.join(vybranyAdresar, di)
                         adr, sou = xbmcvfs.listdir(pom)
+                        pDialog.update(int(procenta * i), di)
+                        i += 1
                         for s in sou:
                             if 'strm' in s:
                                 s = os.path.join(pom, s.decode('utf8'))
@@ -173,7 +178,13 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                                     s1 = os.path.join(pom1, s1.decode('utf8'))
                                     soubory.append(s1)
                                     vysl += s1 + ' \n'
-                    vysl += '--------------------\n Result of migration: \n'
+                    vysl += '--------------------\n' + \
+                        self.getString(30205) + '\n'
+                    pocetOK = 0
+                    pDialog = xbmcgui.DialogProgress()
+                    ret = pDialog.create(self.getString(30207), '...')
+                    procenta = 1.0 / len(soubory) * 100
+                    i = 1
                     for fi in soubory:
                         pomSoub = xbmcvfs.File(fi, 'rw')
                         pomTxt = pomSoub.read()
@@ -184,15 +195,16 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                         pomSoub.close()
                         pomSoub = xbmcvfs.File(fi, 'w')
                         if pomSoub.write(item_url):
-                            vysl = vysl + 'file: ' + fi + ' OK \n'
+                            pocetOK += 1
                         else:
-                            vysl = vysl + 'file: ' + fi + ' Fail !!! \n'
+                            vysl = vysl + fi + ' Error !!! \n'
                         pomSoub.close()
-
+                        pDialog.update(int(procenta * i), fi)
+                        i += 1
+                    vysl = vysl + self.getString(30206) + \
+                        str(pocetOK)
                     vysledek = xbmcgui.Dialog()
-                    vysledek.textviewer(
-                        'The result of strm files migration: ',
-                        vysl)
+                    vysledek.textviewer(self.getString(30205), vysl)
             else:
                 super(XBMCSosac, self).play(item)
 
