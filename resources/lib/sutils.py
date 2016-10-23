@@ -23,8 +23,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
     subs = None
 
     def __init__(self, provider, settings, addon):
-        xbmcprovider.XBMCMultiResolverContentProvider.__init__(
-            self, provider, settings, addon)
+        xbmcprovider.XBMCMultiResolverContentProvider.__init__(self, provider, settings, addon)
         provider.parent = self
         self.dialog = xbmcgui.DialogProgress()
         try:
@@ -212,8 +211,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             super(XBMCSosac, self).play(item)
 
     def make_name(self, text, lower=True):
-        text = self.normalize_filename(
-            text, "-_.' %s%s" % (string.ascii_letters, string.digits))
+        text = self.normalize_filename(text, "-_.' %s%s" % (string.ascii_letters, string.digits))
         word_re = re.compile(r'\b\w+\b')
         text = ''.join([c for c in text if (c.isalnum() or c == "'" or c ==
                                             '.' or c == '-' or c.isspace())]) if text else ''
@@ -258,8 +256,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     def showNotification(self, title, message, time=1000):
         xbmcgui.Dialog().notification(self.encode(title), self.encode(message), time=time,
-                                      icon=xbmc.translatePath(
-                                          self.addon_dir() + "/icon.png"),
+                                      icon=xbmc.translatePath(self.addon_dir() + "/icon.png"),
                                       sound=False)
 
     def evalSchedules(self):
@@ -281,8 +278,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                         next_check = sub['last_run'] + (refresh * 3600 * 24)
                         if next_check < time.time():
                             if not notified:
-                                self.showNotification(
-                                    'Subscription', 'Chcecking')
+                                self.showNotification('Subscription', 'Chcecking')
                                 notified = True
                             util.debug("SOSAC Refreshing " + url)
                             new_items |= self.run_custom({
@@ -295,8 +291,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                             self.sleep(3000)
                         else:
                             n = (next_check - time.time()) / 3600
-                            util.debug("SOSAC Skipping " + url +
-                                       " , next check in %dh" % n)
+                            util.debug("SOSAC Skipping " + url + " , next check in %dh" % n)
             if new_items:
                 xbmc.executebuiltin('UpdateLibrary(video)')
             notified = False
@@ -407,8 +402,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 if params['url'] in subs.keys():
                     del subs[params['url']]
                     self.set_subs(subs)
-                    self.showNotification(
-                        params['name'], 'Removed from subscription')
+                    self.showNotification(params['name'], 'Removed from subscription')
                     xbmc.executebuiltin('Container.Refresh')
                 return False
 
@@ -450,8 +444,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     file_desc.close()
                     new = True
                 except Exception, e:
-                    util.error('Failed to create .strm file: ' +
-                               item_path + " | " + str(e))
+                    util.error('Failed to create .strm file: ' + item_path + " | " + str(e))
                     error = True
         else:
             error = True
