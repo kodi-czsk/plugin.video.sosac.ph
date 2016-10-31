@@ -36,4 +36,12 @@
     <string id="30105">Default show check time (days)</string>
     <string id="30063">Load subtitles if available</string>
     <string id="31000">Usage of plugin is tracked whenever you play or download video.</string>
+    <string id="30200">Old strm file format detected</string>
+    <string id="30201">Play video without osd enhancement and auto watched status</string>
+    <string id="30202">Migrate strm files - choosing directories will proceed</string>
+    <string id="30203">Choose directory (Movies or TVShows)</string>
+    <string id="30204">Searching for strm files</string>
+    <string id="30205">Result of strm files migration: </string>
+    <string id="30206">Files migrated successfully: </string>
+    <string id="30207">Changing strm files</string>
 </strings>

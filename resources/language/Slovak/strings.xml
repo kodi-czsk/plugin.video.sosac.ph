@@ -32,4 +32,12 @@
 	<string id="30102">Uspať po štarte</string>
 	<string id="30063">Vkladať titulky, ak sú k dispozícii</string>
 	<string id="31000">Údaje o použití sú zaslané iba v okamihu, keď spustíte prehrávanie alebo sťahovanie videa doplnkom.</string>
+	<string id="30200">Zistený starý formát súborov strm</string>
+  <string id="30201">Prehrávanie videa bez vylepšenie OSD a automatického statusa PREZRETÉ</string>
+  <string id="30202">Migrovať strm súbory - dialógové okno Výber adresára bude nasledovať</string>
+  <string id="30203">Vybrať adresár (Movies or TVShows)</string>
+  <string id="30204">Hľadám strm súbory</string>
+  <string id="30205">Výsledok migrácie strm súborov: </string>
+  <string id="30206">Úspešne migrované súbory: </string>
+  <string id="30207">Zmena strm súborov</string>	
 </strings>
