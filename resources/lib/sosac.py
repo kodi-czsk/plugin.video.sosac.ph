@@ -526,13 +526,13 @@ class SosacContentProvider(ContentProvider):
     def list_tv_shows_by_letter(self, url):
         util.info("Getting shows by letter " + url)
         shows = self.list_by_letter(url)
-        util.info("Resloved shows " + shows)
+        util.info("Resolved shows " + str(shows))
         shows = self.add_directory_flag(shows)
         return self.add_url_flag_to_items(shows, TV_SHOW_FLAG)
 
     def list_movies_by_letter(self, url):
         movies = self.list_by_letter(url)
-        util.info("Resolved movies " + movies)
+        util.info("Resolved movies " + str(movies))
         return self.add_video_flag(movies)
 
     def resolve(self, item, captcha_cb=None, select_cb=None):

@@ -11,6 +11,10 @@ import time
 import string
 import datetime
 import urllib
+import myPlayer
+import json
+import buggalo
+from urlparse import urlparse
 
 
 class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
@@ -28,6 +32,183 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         except:
             import storageserverdummy as StorageServer
             self.cache = StorageServer.StorageServer("Downloader")
+
+    @staticmethod
+    def executeJSON(request):
+        # =====================================================================
+        # Execute JSON-RPC Command
+        # Args:
+        # request: Dictionary with JSON-RPC Commands
+        # Found code in xbmc-addon-service-watchedlist
+        # =====================================================================
+        rpccmd = json.dumps(request)    # create string from dict
+        json_query = xbmc.executeJSONRPC(rpccmd)
+        json_query = unicode(json_query, 'utf-8', errors='ignore')
+        json_response = json.loads(json_query)
+        return json_response
+
+    @staticmethod
+    def adjustGenre(genre):
+        result = ''
+        for g in genre:
+            result = result + g + u' / '
+        return result[:-3]
+
+    @staticmethod
+    def adjustCast(cast):
+        result = []
+        for c in cast:
+            result.append((c['name'], c['role']))
+        return result
+
+    def play(self, item):
+        # ======================================================================
+        # Override from xbmcprovider
+        # ======================================================================
+        buggalo.SUBMIT_URL = 'http://sosac.comli.com/submit.php'
+        if 'title' in item['info'].keys() and xbmcvfs.exists(item['info']['title']):
+            try:
+                pomTitle = item['info']['title']
+                while True:
+                    JSON_req = {"jsonrpc": "2.0",
+                                "method": "Files.GetFileDetails",
+                                "params": {"file": pomTitle,
+                                           "media": "video", },
+                                "id": "1"}
+                    JSON_result = self.executeJSON(JSON_req)
+                    if 'result' in JSON_result.keys() and \
+                       'id' in JSON_result["result"]["filedetails"].keys():
+                        break
+                    else:
+                        pomTitle = xbmc.translatePath(item['info']['title'])
+                pomItemType = JSON_result["result"]["filedetails"]["type"]
+                pomItemDBID = JSON_result["result"]["filedetails"]["id"]
+            except Exception:
+                buggalo.onExceptionRaised({'vstup': '%s' % json.dumps(JSON_req, indent=2),
+                                           'vystup': json.dumps(JSON_result, indent=2),
+                                           'knihovna': xbmc.translatePath('special://database')})
+            if pomItemType == u'episode':
+                JSON_req = {"jsonrpc": "2.0",
+                            "method": "VideoLibrary.GetEpisodeDetails",
+                            "params": {"episodeid": pomItemDBID,
+                                       "properties": ["title", "plot", "votes",
+                                                      "firstaired", "playcount", "runtime",
+                                                      "rating", "director", "userrating",
+                                                      "writer", "streamdetails", "cast",
+                                                      "productioncode", "season", "episode",
+                                                      "originaltitle", "showtitle", "lastplayed",
+                                                      "thumbnail", "file", "tvshowid",
+                                                      "dateadded", "uniqueid", "art", "fanart"]},
+                            "id": "1"}
+                JSON_result = self.executeJSON(JSON_req)
+                # tvshowtitle in listitem info vs showtitle in database !!!
+                JSON_result['result']['episodedetails']['tvshowtitle'] = \
+                    JSON_result['result']['episodedetails']['showtitle']
+                # for cast list of tuples needed
+                JSON_result['result']['episodedetails']['cast'] = self.adjustCast(
+                    JSON_result['result']['episodedetails']['cast'])
+                item['info'] = JSON_result['result']['episodedetails']
+            elif pomItemType == u'movie':
+                JSON_req = {"jsonrpc": "2.0",
+                            "method": "VideoLibrary.GetMovieDetails",
+                            "params": {"movieid": pomItemDBID,
+                                       "properties": ["title", "plot", "votes", "rating",
+                                                      "studio", "playcount", "runtime", "director",
+                                                      "trailer", "tagline", "plotoutline",
+                                                      "streamdetails",
+                                                      "mpaa", "imdbnumber", "sorttitle", "setid",
+                                                      "originaltitle", "lastplayed", "writer",
+                                                      "thumbnail", "file",
+                                                      "userrating",
+                                                      "dateadded", "art", "fanart", "genre",
+                                                      "cast"]},
+                            "id": "1"}
+                JSON_result = self.executeJSON(JSON_req)
+                # for cast list of tuples needed
+                JSON_result['result']['moviedetails']['cast'] = self.adjustCast(
+                    JSON_result['result']['moviedetails']['cast'])
+                # for genre one string needed
+                JSON_result['result']['moviedetails']['genre'] = self.adjustGenre(
+                    JSON_result['result']['moviedetails']['genre'])
+                item['info'] = JSON_result['result']['moviedetails']
+            super(XBMCSosac, self).play(item)
+            mujPlayer = myPlayer.MyPlayer(
+                itemType=pomItemType, itemDBID=pomItemDBID)
+            c = 0
+            while not mujPlayer.isPlaying() and c < 2:
+                self.sleep(2000)
+                c += 1
+            while mujPlayer.isPlaying():
+                self.sleep(5000)
+        elif 'title' in item['info'].keys() and not xbmcvfs.exists(item['info']['title']):
+            dialog = xbmcgui.Dialog()
+            ret = dialog.select(self.getString(30200),
+                                [self.getString(30201), self.getString(30202)],
+                                autoclose=5000)
+            if ret == 1:
+                dialog = xbmcgui.Dialog()
+                titulek = self.getString(30203)
+                vybranyAdresar = dialog.browseSingle(0, titulek, 'files', '',
+                                                     False, False,
+                                                     self.getSetting('library-movies'))
+                if vybranyAdresar != '':
+                    dirs, files = xbmcvfs.listdir(vybranyAdresar)
+                    soubory = list()
+                    vysl = self.getString(30204) + '\n'
+                    pDialog = xbmcgui.DialogProgress()
+                    ret = pDialog.create(self.getString(30204), '...')
+                    procenta = 1.0 / len(dirs) * 100
+                    i = 1
+                    for di in dirs:
+                        pom = os.path.join(vybranyAdresar, di)
+                        adr, sou = xbmcvfs.listdir(pom)
+                        pDialog.update(int(procenta * i), di)
+                        i += 1
+                        for s in sou:
+                            if 'strm' in s:
+                                s = os.path.join(pom, s.decode('utf8'))
+                                soubory.append(s)
+                                vysl += s + ' \n'
+                        for aa in adr:
+                            pom1 = os.path.join(pom, aa)
+                            adr1, sou1 = xbmcvfs.listdir(pom1)
+                            for s1 in sou1:
+                                if 'strm' in s1:
+                                    s1 = os.path.join(pom1, s1.decode('utf8'))
+                                    soubory.append(s1)
+                                    vysl += s1 + ' \n'
+                    vysl += '--------------------\n' + \
+                        self.getString(30205) + '\n'
+                    pocetOK = 0
+                    pDialog = xbmcgui.DialogProgress()
+                    ret = pDialog.create(self.getString(30207), '...')
+                    procenta = 1.0 / len(soubory) * 100
+                    i = 1
+                    for fi in soubory:
+                        pomSoub = xbmcvfs.File(fi, 'rw')
+                        pomTxt = pomSoub.read()
+                        pomDict = util.params(urlparse(pomTxt).query)
+                        pomDict['title'] = fi
+                        item_url = xbmcutil._create_plugin_url(
+                            pomDict, 'plugin://' + self.addon_id + '/')
+                        pomSoub.close()
+                        pomSoub = xbmcvfs.File(fi, 'w')
+                        if pomSoub.write(item_url):
+                            pocetOK += 1
+                        else:
+                            vysl = vysl + fi + ' Error !!! \n'
+                        pomSoub.close()
+                        pDialog.update(int(procenta * i), fi)
+                        i += 1
+                    vysl = vysl + self.getString(30206) + \
+                        str(pocetOK)
+                    vysledek = xbmcgui.Dialog()
+                    vysledek.textviewer(self.getString(30205), vysl)
+            else:
+                super(XBMCSosac, self).play(item)
+
+        else:
+            super(XBMCSosac, self).play(item)
 
     def make_name(self, text, lower=True):
         text = self.normalize_filename(text, "-_.' %s%s" % (string.ascii_letters, string.digits))
@@ -149,17 +330,19 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             params['refresh'] = str(self.getSetting("refresh_time"))
         sub = {'name': params['name'], 'refresh': params['refresh']}
         sub['last_run'] = time.time()
-        arg = {"play": params['url'], 'cp': 'sosac.ph', "title": sub['name']}
-        item_url = xbmcutil._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
+        item_dir = self.getSetting('library-movies')
+        title_pom = os.path.join(item_dir, self.normalize_filename(sub['name']),
+                                 self.normalize_filename(params['name'])) + '.strm'
+        arg = {"play": params['url'], 'cp': 'sosac.ph', "title": title_pom}
+        item_url = xbmcutil._create_plugin_url(
+            arg, 'plugin://' + self.addon_id + '/')
         util.info("item: " + item_url + " | " + str(params))
         new_items = False
         # self.showNotification('Linking', params['name'])
 
         if "movie" in params['url']:
             item_dir = self.getSetting('library-movies')
-            (error, new_items) = self.add_item_to_library(
-                os.path.join(item_dir, self.normalize_filename(sub['name']),
-                             self.normalize_filename(params['name'])) + '.strm', item_url)
+            (error, new_items) = self.add_item_to_library(title_pom, item_url)
         else:
             if not ('notify' in params):
                 self.showNotification(sub['name'], 'Checking new content')
@@ -184,18 +367,21 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             for itm in list:
                 nfo = re.search('[^\d+](?P<season>\d+)[^\d]+(?P<episode>\d+)',
                                 itm['title'], re.IGNORECASE | re.DOTALL)
+                title_pom = os.path.join(
+                    item_dir, self.normalize_filename(params['name']),
+                    'Season ' + nfo.group('season'),
+                    "S" + nfo.group('season') +
+                    "E" + nfo.group('episode') + '.strm')
                 arg = {"play": itm['url'], 'cp': 'sosac.ph',
-                       "title": itm['epname']}
+                       "title": title_pom}
                 """
                 info = ''.join(('<episodedetails><season>', nfo.group('season'),
                                 '</season><episode>', nfo.group('episode'),
                                 '</episode></episodedetails>'))
                 """
-                item_url = xbmcutil._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
-                (err, new) = self.add_item_to_library(os.path.join(
-                    item_dir, self.normalize_filename(params['name']), 'Season ' +
-                    nfo.group('season'), "S" + nfo.group('season') + "E" + nfo.group('episode') +
-                    '.strm'), item_url)
+                item_url = xbmcutil._create_plugin_url(
+                    arg, 'plugin://' + self.addon_id + '/')
+                (err, new) = self.add_item_to_library(title_pom, item_url)
                 error |= err
                 if new is True and not err:
                     new_items = True
