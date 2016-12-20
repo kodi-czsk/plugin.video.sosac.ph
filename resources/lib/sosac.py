@@ -20,15 +20,18 @@
 # *
 # */
 
+from __future__ import print_function
 import re
 import urllib
 import urllib2
 import cookielib
 import xml.etree.ElementTree as ET
-import sys
-
 import util
 from provider import ContentProvider, cached, ResolveException
+import sys
+
+if sys.executable.endswith("pythonw.exe"):
+    sys.stdout = sys.stdout = None
 
 sys.setrecursionlimit(10000)
 

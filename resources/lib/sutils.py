@@ -1,3 +1,4 @@
+from __future__ import print_function
 import util
 import xbmcprovider
 import xbmcutil
@@ -11,6 +12,10 @@ import time
 import string
 import datetime
 import urllib
+import sys
+
+if sys.executable.endswith("pythonw.exe"):
+    sys.stdout = sys.stdout = None
 
 
 class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
