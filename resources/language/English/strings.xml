@@ -28,6 +28,10 @@
     <string id="30057">Episodes order</string>
     <string id="30058">Oldest first</string>
     <string id="30059">Latest first</string>
+    <string id="30060">Autoselect language</string>
+    <string id="30061">Any</string>
+    <string id="30062">English</string>
+    <string id="30063">Czech</string>
     <string id="30100">Movies library</string>
     <string id="30101">TVShow library</string>
     <string id="30102">Subscription service sleep on start (hours)</string>

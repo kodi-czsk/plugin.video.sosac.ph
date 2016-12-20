@@ -1,3 +1,5 @@
+[B]1.2.13:[/B] 14. 12. 2016
+- Nová možnost automatického výběru videa dle jazyka
 [B]1.2.5:[/B] 26. 03. 2016
 - Oprava #41 Kdy plugin blokoval kodi v ukonční (Kuci)
 [B]1.2.4:[/B] 28. 02. 2016
