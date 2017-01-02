@@ -628,7 +628,7 @@ class SosacContentProvider(ContentProvider):
             m['search-by'] = util.replace_diacritic(' '.join(name).lower())
 
             if self.lang in m['n']:
-                m['name'] = m['n'][self.lang] + ' (%s)' %  m['y']
+                m['name'] = m['n'][self.lang] + ' (%s)' % m['y']
             else:
-                m['name'] = ' | '.join(name) + ' (%s)' %  m['y']
+                m['name'] = ' | '.join(name) + ' (%s)' % m['y']
         return json_data
