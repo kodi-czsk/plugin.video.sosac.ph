@@ -20,7 +20,8 @@
 # *
 # */
 
-import re, json
+import re
+import json
 import urllib
 import urllib2
 import cookielib
@@ -172,7 +173,6 @@ class SosacContentProvider(ContentProvider):
 
         if url.startswith(MOVIES_BY_GENRE):
             return self.list_movies_by_genre(url[len(MOVIES_BY_GENRE):])
-
 
         if self.is_most_popular(url):
             if "movie" in url:
@@ -537,8 +537,6 @@ class SosacContentProvider(ContentProvider):
         shows = self.add_directory_flag(shows)
         return self.add_url_flag_to_items(shows, TV_SHOW_FLAG)
 
-
-
     def list_genres(self):
         result = []
         json_data = self.get_movie_dump()
@@ -565,19 +563,30 @@ class SosacContentProvider(ContentProvider):
 
         return result
 
-
     def list_movies_by_letter(self, letter):
         result = []
         json_data = self.get_movie_dump()
         letter = letter.lower()
-        for m in json_data:
+        if len(letter) > 1:
+            # list movies starting by number
+            for m in json_data:
 
-            is_match = False
-            for lang in m['n']:
-                is_match |= m['n'][lang].lower().startswith(letter)
+                is_match = False
+                for lang in m['n']:
+                    is_match |= re.search('^\d', m['n'][lang], re.IGNORECASE) != None
 
-            if is_match:
-                self.create_movie_item(m, result)
+                if is_match:
+                    self.create_movie_item(m, result)
+        else:
+            # list movies starting by letter
+            for m in json_data:
+
+                is_match = False
+                for lang in m['n']:
+                    is_match |= m['n'][lang].lower().startswith(letter)
+
+                if is_match:
+                    self.create_movie_item(m, result)
 
         return result
 
@@ -598,26 +607,21 @@ class SosacContentProvider(ContentProvider):
         keyword = keyword.lower()
         for m in json_data:
 
-            is_match = False
-            for lang in m['n']:
-                is_match |= keyword in m['n'][lang].lower()
-
-            if is_match:
+            if keyword in m['search-by']:
                 self.create_movie_item(m, result)
 
         return result
 
     def create_movie_item(self,json, result):
         item = self.video_item()
-        item['url'] = 'http://streamuj.tv/video/'+ json['l'] + '?remote=1'
+        item['url'] = 'http://streamuj.tv/video/' + json['l'] + '?remote=1'
         item['title'] = json['name']
         item['img'] = 'http://movies.sosac.to/images/75x109/movie-'+json['i']
-        #util.info(item)
-        item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                        'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
+        # item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
+        #                'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
         self._filter(result, item)
 
-    @cached(ttl=84)
+    #@cached(ttl=84)
     def get_movie_dump(self):
         util.info('Retrieving movie dump')
         json_data = json.loads(util.request(MOVIE_DUMP_URL))
@@ -625,5 +629,11 @@ class SosacContentProvider(ContentProvider):
             name = []
             for lang in m['n']:
                 name.append(m['n'][lang])
-            m['name'] = ' | '.join(name)
+
+            m['search-by'] = util.replace_diacritic(' '.join(name).lower())
+
+            if self.lang in m['n']:
+                m['name'] = m['n'][self.lang]
+            else:
+                m['name'] = ' | '.join(name)
         return json_data
