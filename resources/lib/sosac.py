@@ -75,12 +75,12 @@ class SosacContentProvider(ContentProvider):
             ("Movies", MOVIES_BASE_URL),
             ("TV Shows", TV_SHOWS_BASE_URL),
             ("Movies - by Genres", GENRE_PARAM),
-            ("Movies - Most popular",
-             MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE),
+#            ("Movies - Most popular",
+#             MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE),
             ("TV Shows - Most popular",
              TV_SHOWS_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE),
-            ("Movies - Recently added",
-             MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE),
+#            ("Movies - Recently added",
+#             MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE),
             ("TV Shows - Recently added",
              TV_SHOWS_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE)]:
             item = self.dir_item(title=title, url=url)
@@ -573,7 +573,7 @@ class SosacContentProvider(ContentProvider):
 
                 is_match = False
                 for lang in m['n']:
-                    is_match |= re.search('^\d', m['n'][lang], re.IGNORECASE) != None
+                    is_match |= re.search('^\d', m['n'][lang], re.IGNORECASE) is not None
 
                 if is_match:
                     self.create_movie_item(m, result)
@@ -612,7 +612,7 @@ class SosacContentProvider(ContentProvider):
 
         return result
 
-    def create_movie_item(self,json, result):
+    def create_movie_item(self, json, result):
         item = self.video_item()
         item['url'] = 'http://streamuj.tv/video/' + json['l'] + '?remote=1'
         item['title'] = json['name']
@@ -621,7 +621,7 @@ class SosacContentProvider(ContentProvider):
         #                'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
         self._filter(result, item)
 
-    #@cached(ttl=84)
+    @cached(ttl=84)
     def get_movie_dump(self):
         util.info('Retrieving movie dump')
         json_data = json.loads(util.request(MOVIE_DUMP_URL))
