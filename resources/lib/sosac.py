@@ -597,13 +597,12 @@ class SosacContentProvider(ContentProvider):
     def get_subs(self):
         return self.parent.get_subs()
 
-    def list_search(self, keyword):
+    def list_search(self, query):
         result = []
         json_data = self.get_movie_dump()
-        keyword = keyword.lower()
+        query = query.lower()
         for m in json_data:
-
-            if keyword in m['search-by']:
+            if any(keyword in m['search-by'] for keyword in query.split()):
                 self.create_movie_item(m, result)
 
         return result
@@ -617,7 +616,7 @@ class SosacContentProvider(ContentProvider):
         #                'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
         self._filter(result, item)
 
-    @cached(ttl=84)
+    @cached(ttl=72)
     def get_movie_dump(self):
         util.info('Retrieving movie dump')
         json_data = json.loads(util.request(MOVIE_DUMP_URL))
@@ -629,7 +628,7 @@ class SosacContentProvider(ContentProvider):
             m['search-by'] = util.replace_diacritic(' '.join(name).lower())
 
             if self.lang in m['n']:
-                m['name'] = m['n'][self.lang]
+                m['name'] = m['n'][self.lang] + ' (%s)' %  m['y']
             else:
-                m['name'] = ' | '.join(name)
+                m['name'] = ' | '.join(name) + ' (%s)' %  m['y']
         return json_data
