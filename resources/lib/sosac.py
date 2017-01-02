@@ -21,6 +21,7 @@
 # */
 
 import re
+import json
 import urllib
 import urllib2
 import cookielib
@@ -32,11 +33,12 @@ from provider import ContentProvider, cached, ResolveException
 
 sys.setrecursionlimit(10000)
 
+MOVIE_DUMP_URL = "http://movies.sosac.to/vystupy5981/moviedumpnodesc.json"
 MOVIES_BASE_URL = "http://movies.prehraj.me"
 TV_SHOWS_BASE_URL = "http://tv.prehraj.me"
-MOVIES_A_TO_Z_TYPE = "movies-a-z"
-MOVIES_GENRE = "filmyxmlzanr.php"
-GENRE_PARAM = "zanr"
+MOVIES_A_TO_Z_TYPE = "#movie-by-letter#"
+MOVIES_BY_GENRE = "#movie-by-genre#"
+GENRE_PARAM = "#genre#"
 TV_SHOWS_A_TO_Z_TYPE = "tv-shows-a-z"
 XML_LETTER = "xmlpismeno"
 TV_SHOW_FLAG = "#tvshow#"
@@ -53,7 +55,8 @@ class SosacContentProvider(ContentProvider):
     def __init__(self, username=None, password=None, filter=None, reverse_eps=False):
         ContentProvider.__init__(self, name='sosac.ph', base_url=MOVIES_BASE_URL, username=username,
                                  password=password, filter=filter)
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.LWPCookieJar()))
+        opener = urllib2.build_opener(
+            urllib2.HTTPCookieProcessor(cookielib.LWPCookieJar()))
         urllib2.install_opener(opener)
         self.reverse_eps = reverse_eps
 
@@ -72,13 +75,9 @@ class SosacContentProvider(ContentProvider):
         for title, url in [
             ("Movies", MOVIES_BASE_URL),
             ("TV Shows", TV_SHOWS_BASE_URL),
-            ("Movies - by Genres", MOVIES_BASE_URL + "/" + MOVIES_GENRE),
-            ("Movies - Most popular",
-             MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE),
+            ("Movies - by Genres", GENRE_PARAM),
             ("TV Shows - Most popular",
              TV_SHOWS_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE),
-            ("Movies - Recently added",
-             MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE),
             ("TV Shows - Recently added",
              TV_SHOWS_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE)]:
             item = self.dir_item(title=title, url=url)
@@ -89,8 +88,7 @@ class SosacContentProvider(ContentProvider):
         return result
 
     def search(self, keyword):
-        return self.list_search('%s/%ssearch?%s' % (MOVIES_BASE_URL, self.ISO_639_1_CZECH,
-                                                    urllib.urlencode({'q': keyword})))
+        return self.list_search(keyword)
 
     def a_to_z(self, url_type):
         result = []
@@ -98,9 +96,10 @@ class SosacContentProvider(ContentProvider):
                        'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']:
             item = self.dir_item(title=letter.upper())
             if url_type == MOVIES_A_TO_Z_TYPE:
-                item['url'] = self.base_url + "/filmyxmlpismeno.php?pismeno=" + letter
+                item['url'] = MOVIES_A_TO_Z_TYPE + letter
             else:
-                item['url'] = self.base_url + "/" + self.ISO_639_1_CZECH + url_type + "/" + letter
+                item['url'] = self.base_url + "/" + \
+                    self.ISO_639_1_CZECH + url_type + "/" + letter
             result.append(item)
         return result
 
@@ -165,8 +164,14 @@ class SosacContentProvider(ContentProvider):
 
     def list(self, url):
         util.info("Examining url " + url)
-        if MOVIES_GENRE in url:
-            return self.list_by_genres(url)
+        if url.startswith(MOVIES_A_TO_Z_TYPE):
+            return self.list_movies_by_letter(url[len(MOVIES_A_TO_Z_TYPE):])
+        if url.startswith(GENRE_PARAM):
+            return self.list_genres()
+
+        if url.startswith(MOVIES_BY_GENRE):
+            return self.list_movies_by_genre(url[len(MOVIES_BY_GENRE):])
+
         if self.is_most_popular(url):
             if "movie" in url:
                 return self.list_movies_by_letter(url)
@@ -230,7 +235,8 @@ class SosacContentProvider(ContentProvider):
                 else:
                     title = film.findtext('nazeven').encode('utf-8')
                 basetitle = '%s (%s)' % (title, film.findtext('rokvydani'))
-                item['title'] = '%s - %s' % (basetitle, film.findtext('kvalita').upper())
+                item['title'] = '%s - %s' % (basetitle,
+                                             film.findtext('kvalita').upper())
                 item['name'] = item['title']
                 item['img'] = film.findtext('obrazekmaly')
                 item['url'] = self.base_url + '/player/' + self.parent.make_name(
@@ -398,10 +404,13 @@ class SosacContentProvider(ContentProvider):
                         title = film.findtext('nazeven').encode('utf-8')
                     self.parent.dialog.update(int(perc), str(pagenum) + '/' + str(int(pagetotal)) +
                                               ' [' + m.group('url') + '] ->  ' + title)
-                    item['title'] = '%s (%s)' % (title, film.findtext('rokvydani'))
+                    item['title'] = '%s (%s)' % (
+                        title, film.findtext('rokvydani'))
                     item['name'] = item['title']
                     item['url'] = 'http://movies.prehraj.me/' + self.ISO_639_1_CZECH + \
-                        'player/' + self.parent.make_name(title + '-' + film.findtext('rokvydani'))
+                        'player/' + \
+                        self.parent.make_name(
+                            title + '-' + film.findtext('rokvydani'))
                     item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
                         'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
                     item['update'] = True
@@ -438,7 +447,9 @@ class SosacContentProvider(ContentProvider):
                 item['title'] = '%s (%s)' % (title, film.findtext('rokvydani'))
                 item['name'] = item['title']
                 item['url'] = 'http://movies.prehraj.me/' + self.ISO_639_1_CZECH + \
-                    'player/' + self.parent.make_name(title + '-' + film.findtext('rokvydani'))
+                    'player/' + \
+                    self.parent.make_name(
+                        title + '-' + film.findtext('rokvydani'))
                 item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
                     'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
                 item['update'] = True
@@ -530,17 +541,63 @@ class SosacContentProvider(ContentProvider):
         shows = self.add_directory_flag(shows)
         return self.add_url_flag_to_items(shows, TV_SHOW_FLAG)
 
-    def list_movies_by_letter(self, url):
-        movies = self.list_by_letter(url)
-        util.info("Resolved movies " + str(movies))
-        return self.add_video_flag(movies)
+    def list_genres(self):
+        result = []
+        json_data = self.get_movie_dump()
+        genres = {}
+        for m in json_data:
+            if 'g' in m:
+                for g in m['g']:
+                    genres[g] = None
+
+        for g in genres:
+            item = self.dir_item(title=g.title(), url=MOVIES_BY_GENRE + g)
+            result.append(item)
+
+        return sorted(result)
+
+    def list_movies_by_genre(self, genre):
+        result = []
+        json_data = self.get_movie_dump()
+        for m in json_data:
+
+            is_match = False
+            if 'g' in m and genre in m['g']:
+                self.create_movie_item(m, result)
+
+        return result
+
+    def list_movies_by_letter(self, letter):
+        result = []
+        json_data = self.get_movie_dump()
+        letter = letter.lower()
+        if len(letter) > 1:
+            # list movies starting by number
+            for m in json_data:
+
+                is_match = False
+                for lang in m['n']:
+                    is_match |= re.search(
+                        '^\d', m['n'][lang], re.IGNORECASE) is not None
+
+                if is_match:
+                    self.create_movie_item(m, result)
+        else:
+            # list movies starting by letter
+            for m in json_data:
+
+                is_match = False
+                for lang in m['n']:
+                    is_match |= m['n'][lang].lower().startswith(letter)
+
+                if is_match:
+                    self.create_movie_item(m, result)
+
+        return result
 
     def resolve(self, item, captcha_cb=None, select_cb=None):
-        page = util.request(item['url'])
-        data = util.substr(page, '<div class=\"bottom-player\"', 'div>')
-        if data.find('<iframe') < 0:
-            raise ResolveException('Video is not available.')
-        result = self.findstreams(data, ['<iframe src=\"(?P<url>[^\"]+)'])
+
+        result = self.findstreams(item['url'], ['(?P<url>^.+?$)'])
         if len(result) == 1:
             return result[0]
         elif len(result) > 1 and select_cb:
@@ -549,39 +606,38 @@ class SosacContentProvider(ContentProvider):
     def get_subs(self):
         return self.parent.get_subs()
 
-    def list_search(self, url):
+    def list_search(self, query):
         result = []
-        html_tree = util.parse_html(url)
-        for entry in html_tree.select('ul.content li'):
-            item = self.video_item()
-            entry.p.strong.extract()
-            item['url'] = entry.h4.a.get('href')
-            item['title'] = entry.h4.a.text
-            item['img'] = MOVIES_BASE_URL + entry.img.get('src')
-            item['plot'] = entry.p.text.strip()
-            item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
-            self._filter(result, item)
-        # Process next 4 pages, so we'll get 20 items per page instead of 4
-        for next_page in html_tree.select('.pagination ul li.next a'):
-            next_url = '%s/%ssearch%s' % (MOVIES_BASE_URL, self.ISO_639_1_CZECH,
-                                          next_page.get('href'))
-            page_number = 1
-            page = re.search(r'\bpage=(\d+)', url)
-            if page:
-                page_number = int(page.group(1))
-            next_page_number = 1
-            page = re.search(r'\bpage=(\d+)', next_url)
-            if page:
-                next_page_number = int(page.group(1))
-            if page_number > next_page_number:
-                break
-            if page_number % 5 != 0:
-                result += self.list_search(next_url)
-            else:
-                item = self.dir_item()
-                item['type'] = 'next'
-                item['url'] = next_url
-                result.append(item)
-            break
+        json_data = self.get_movie_dump()
+        query = query.lower()
+        for m in json_data:
+            if any(keyword in m['search-by'] for keyword in query.split()):
+                self.create_movie_item(m, result)
+
         return result
+
+    def create_movie_item(self, json, result):
+        item = self.video_item()
+        item['url'] = 'http://streamuj.tv/video/' + json['l'] + '?remote=1'
+        item['title'] = json['name']
+        item['img'] = 'http://movies.sosac.to/images/75x109/movie-' + json['i']
+        # item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
+        #                'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
+        self._filter(result, item)
+
+    @cached(ttl=72)
+    def get_movie_dump(self):
+        util.info('Retrieving movie dump')
+        json_data = json.loads(util.request(MOVIE_DUMP_URL))
+        for m in json_data:
+            name = []
+            for lang in m['n']:
+                name.append(m['n'][lang])
+
+            m['search-by'] = util.replace_diacritic(' '.join(name).lower())
+
+            if self.lang in m['n']:
+                m['name'] = m['n'][self.lang] + ' (%s)' % m['y']
+            else:
+                m['name'] = ' | '.join(name) + ' (%s)' % m['y']
+        return json_data
