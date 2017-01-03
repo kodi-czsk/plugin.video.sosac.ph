@@ -26,6 +26,7 @@ import urllib2
 import cookielib
 import xml.etree.ElementTree as ET
 import sys
+import cloudflare
 
 import util
 from provider import ContentProvider, cached, ResolveException
@@ -53,7 +54,9 @@ class SosacContentProvider(ContentProvider):
     def __init__(self, username=None, password=None, filter=None, reverse_eps=False):
         ContentProvider.__init__(self, name='sosac.ph', base_url=MOVIES_BASE_URL, username=username,
                                  password=password, filter=filter)
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.LWPCookieJar()))
+        cj = cookielib.LWPCookieJar()
+        cloudflare.solve('http://tv.prehraj.me/cs/', cj, util.UA)
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
         urllib2.install_opener(opener)
         self.reverse_eps = reverse_eps
 
