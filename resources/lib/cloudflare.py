@@ -45,18 +45,12 @@ def solve_equation(equation):
     try:
         offset = (1 if equation[0] == '+' else 0)
         return int(eval(equation.replace('!+[]', '1').replace('!![]',
-                   '1').replace('[]', '0').replace('(', 'str('
-                   )[offset:]))
+                   '1').replace('[]', '0').replace('(', 'str(')[offset:]))
     except:
         pass
 
 
-def solve(
-    url,
-    cj,
-    user_agent=None,
-    wait=True,
-    ):
+def solve(url, cj, user_agent=None, wait=True):
     if user_agent is None:
         user_agent = util.UA
     headers = {'User-Agent': user_agent, 'Referer': url}
@@ -122,8 +116,8 @@ def solve(
                 util.info('Unknown operator: |%s|' % equation)
                 continue
 
-            result = int(str(eval(str(result) + operator
-                         + str(solve_equation(expression)))))
+            result = int(str(eval(str(result) + operator + str(solve_equation(
+                expression)))))
             util.info('intermediate: %s = %s' % (equation, result))
 
         scheme = urlparse.urlparse(url).scheme
