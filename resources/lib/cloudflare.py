@@ -23,14 +23,15 @@
 
 
 import re
-import urllib2
 import urllib
+import urllib2
 import urlparse
 import util
 import xbmc
 
 MAX_TRIES = 3
 COMPONENT = __name__
+
 
 class NoRedirection(urllib2.HTTPErrorProcessor):
     def http_response(self, request, response):
@@ -39,77 +40,87 @@ class NoRedirection(urllib2.HTTPErrorProcessor):
 
     https_response = http_response
 
+
 def solve_equation(equation):
     try:
         offset = 1 if equation[0] == '+' else 0
-        return int(eval(equation.replace('!+[]', '1').replace('!![]', '1').replace('[]', '0').replace('(', 'str(')[offset:]))
+        return int(eval(equation.replace('!+[]', '1')
+            .replace('!![]', '1').replace('[]', '0')
+            .replace('(', 'str(')[offset:]))
     except:
         pass
 
+
 def solve(url, cj, user_agent=None, wait=True):
-    if user_agent is None: user_agent = util.UA
+    if user_agent is None: 
+        user_agent = util.UA
     headers = {'User-Agent': user_agent, 'Referer': url}
     if cj is not None:
-        try: cj.load(ignore_discard=True)
-        except: pass
+        try: 
+            cj.load(ignore_discard=True)
+        except: 
+            pass
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
         urllib2.install_opener(opener)
 
     request = urllib2.Request(url)
-    for key in headers: request.add_header(key, headers[key])
+    for key in headers: 
+        request.add_header(key, headers[key])
     try:
         response = urllib2.urlopen(request)
         html = response.read()
     except urllib2.HTTPError as e:
         html = e.read()
-    
+
     tries = 0
     while tries < MAX_TRIES:
-        solver_pattern = 'var (?:s,t,o,p,b,r,e,a,k,i,n,g|t,r,a),f,\s*([^=]+)={"([^"]+)":([^}]+)};.+challenge-form\'\);.*?\n.*?;(.*?);a\.value'
+        solver_pattern = 'var (?:s,t,o,p,b,r,e,a,k,i,n,g|t,r,a),f,\s*([^=]+)'
+        solver_pattern += '={"([^"]+)":([^}]+)};.+challenge-form\'\);.*?\n.*?;(.*?);a\.value'
         vc_pattern = 'input type="hidden" name="jschl_vc" value="([^"]+)'
         pass_pattern = 'input type="hidden" name="pass" value="([^"]+)'
         init_match = re.search(solver_pattern, html, re.DOTALL)
         vc_match = re.search(vc_pattern, html)
         pass_match = re.search(pass_pattern, html)
-    
+
         if not init_match or not vc_match or not pass_match:
-            util.info("Couldn't find attribute: init: |%s| vc: |%s| pass: |%s| No cloudflare check?" % (init_match, vc_match, pass_match))
+            msg = "Couldn't find attribute: init: |%s| vc: |%s| pass: |%s| No cloudflare check?"
+            util.info(msg % (init_match, vc_match, pass_match))
             return False
-            
+
         init_dict, init_var, init_equation, equations = init_match.groups()
         vc = vc_match.group(1)
         password = pass_match.group(1)
-    
+
         # util.info("VC is: %s" % (vc))
         varname = (init_dict, init_var)
         result = int(solve_equation(init_equation.rstrip()))
         util.info('Initial value: |%s| Result: |%s|' % (init_equation, result))
-        
+
         for equation in equations.split(';'):
-                equation = equation.rstrip()
-                if equation[:len('.'.join(varname))] != '.'.join(varname):
-                        util.info('Equation does not start with varname |%s|' % (equation))
-                else:
-                        equation = equation[len('.'.join(varname)):]
-    
-                expression = equation[2:]
-                operator = equation[0]
-                if operator not in ['+', '-', '*', '/']:
-                    util.info('Unknown operator: |%s|' % (equation))
-                    continue
-                    
-                result = int(str(eval(str(result) + operator + str(solve_equation(expression)))))
-                util.info('intermediate: %s = %s' % (equation, result))
-        
+            equation = equation.rstrip()
+            if equation[:len('.'.join(varname))] != '.'.join(varname):
+                util.info('Equation does not start with varname |%s|' % (equation))
+            else:
+                equation = equation[len('.'.join(varname)):]
+
+            expression = equation[2:]
+            operator = equation[0]
+            if operator not in ['+', '-', '*', '/']:
+                util.info('Unknown operator: |%s|' % (equation))
+                continue
+
+            result = int(str(eval(str(result) + operator + str(solve_equation(expression)))))
+            util.info('intermediate: %s = %s' % (equation, result))
+
         scheme = urlparse.urlparse(url).scheme
         domain = urlparse.urlparse(url).hostname
         result += len(domain)
         util.info('Final Result: |%s|' % (result))
-    
+
         if wait:
-                util.info('Sleeping for 5 Seconds')
-                xbmc.sleep(5000)
-                
+            util.info('Sleeping for 5 Seconds')
+            xbmc.sleep(5000)
+
         url = '%s://%s/cdn-cgi/l/chk_jschl?jschl_vc=%s&jschl_answer=%s&pass=%s' % (scheme, domain, vc, result, urllib.quote(password))
         util.info('url: %s' % (url))
         request = urllib2.Request(url)
@@ -126,12 +137,12 @@ def solve(url, cj, user_agent=None, wait=True):
                 if not redir_url.startswith('http'):
                     base_url = '%s://%s' % (scheme, domain)
                     redir_url = urlparse.urljoin(base_url, redir_url)
-                    
+
                 request = urllib2.Request(redir_url)
                 for key in headers: request.add_header(key, headers[key])
                 if cj is not None:
                     cj.add_cookie_header(request)
-                    
+
                 response = urllib2.urlopen(request)
             final = response.read()
             if 'cf-browser-verification' in final:
@@ -149,5 +160,5 @@ def solve(url, cj, user_agent=None, wait=True):
 
     if cj is not None:
         cj.save()
-        
+
     return final
