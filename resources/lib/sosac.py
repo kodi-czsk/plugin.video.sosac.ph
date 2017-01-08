@@ -26,6 +26,7 @@ import urllib2
 import cookielib
 import xml.etree.ElementTree as ET
 import sys
+import json
 
 import util
 from provider import ContentProvider, cached, ResolveException
@@ -44,6 +45,22 @@ ISO_639_1_CZECH = "cs"
 MOST_POPULAR_TYPE = "most-popular"
 RECENTLY_ADDED_TYPE = "recently-added"
 SEARCH_TYPE = "search"
+
+#JSONs
+URL = "http://tv.sosac.to"
+J_MOVIES_A_TO_Z_TYPE = "/vystupy5981/souboryaz.json"
+J_MOVIES_GENRE = "/vystupy5981/souboryzanry.json"
+J_MOVIES_MOST_POPULAR = "/vystupy5981/moviesmostpopular.json"
+J_MOVIES_RECENTLY_ADDED = "/vystupy5981/moviesrecentlyadded.json"
+#hack missing json with a-z series 
+J_TV_SHOWS_A_TO_Z_TYPE = "/vystupy5981/tvpismenaaz/"
+J_TV_SHOWS = "/vystupy5981/tvpismena/"
+J_SERIES = "/vystupy5981/serialy/"
+J_TV_SHOWS_MOST_POPULAR = "/vystupy5981/tvshowsmostpopular.json"
+J_TV_SHOWS_RECENTLY_ADDED = "/vystupy5981/tvshowsrecentlyadded.json"
+J_SEARCH = "/jsonsearchapi.php?q="
+STREAMUJ_URL = "http://www.streamuj.tv/video/"
+IMAGE_URL = "http://movies.sosac.tv/images/75x109/"
 
 
 class SosacContentProvider(ContentProvider):
@@ -70,21 +87,17 @@ class SosacContentProvider(ContentProvider):
     def categories(self):
         result = []
         for title, url in [
-            ("Movies", MOVIES_BASE_URL),
-            ("TV Shows", TV_SHOWS_BASE_URL),
-            ("Movies - by Genres", MOVIES_BASE_URL + "/" + MOVIES_GENRE),
-            ("Movies - Most popular",
-             MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE),
-            ("TV Shows - Most popular",
-             TV_SHOWS_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE),
-            ("Movies - Recently added",
-             MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE),
-            ("TV Shows - Recently added",
-             TV_SHOWS_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE)]:
+            ("Movies", URL + J_MOVIES_A_TO_Z_TYPE),
+            ("TV Shows", URL + J_TV_SHOWS_A_TO_Z_TYPE),
+            ("Movies - by Genres", URL + J_MOVIES_GENRE),
+            ("Movies - Most popular", URL + J_MOVIES_MOST_POPULAR),
+            ("TV Shows - Most popular", URL + J_TV_SHOWS_MOST_POPULAR),
+            ("Movies - Recently added", URL + J_MOVIES_RECENTLY_ADDED),
+            ("TV Shows - Recently added", URL + J_TV_SHOWS_RECENTLY_ADDED)]:
             item = self.dir_item(title=title, url=url)
-            if title == 'Movies' or title == 'TV Shows' or title == 'Movies - Recently added':
-                item['menu'] = {"[B][COLOR red]Add all to library[/COLOR][/B]": {
-                    'action': 'add-all-to-library', 'title': title}}
+#            if title == 'Movies' or title == 'TV Shows' or title == 'Movies - Recently added':
+#                item['menu'] = {"[B][COLOR red]Add all to library[/COLOR][/B]": {
+#                    'action': 'add-all-to-library', 'title': title}}
             result.append(item)
         return result
 
@@ -92,15 +105,12 @@ class SosacContentProvider(ContentProvider):
         return self.list_search('%s/%ssearch?%s' % (MOVIES_BASE_URL, self.ISO_639_1_CZECH,
                                                     urllib.urlencode({'q': keyword})))
 
-    def a_to_z(self, url_type):
+    def a_to_z(self, url):
         result = []
         for letter in ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'e', 'h', 'i', 'j', 'k', 'l', 'm',
                        'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']:
             item = self.dir_item(title=letter.upper())
-            if url_type == MOVIES_A_TO_Z_TYPE:
-                item['url'] = self.base_url + "/filmyxmlpismeno.php?pismeno=" + letter
-            else:
-                item['url'] = self.base_url + "/" + self.ISO_639_1_CZECH + url_type + "/" + letter
+            item['url'] = URL + url + letter + ".json"
             result.append(item)
         return result
 
@@ -165,44 +175,87 @@ class SosacContentProvider(ContentProvider):
 
     def list(self, url):
         util.info("Examining url " + url)
-        if MOVIES_GENRE in url:
-            return self.list_by_genres(url)
-        if self.is_most_popular(url):
-            if "movie" in url:
-                return self.list_movies_by_letter(url)
-            if "tv" in url:
-                return self.list_tv_shows_by_letter(url)
-        if self.is_recently_added(url):
-            util.debug("is recently added")
-            if "movie" in url:
-                return self.list_movie_recently_added(url)
-            if "tv" in url:
-                util.debug("is TV")
-                return self.list_tv_recently_added(url)
-        if self.is_search(url):
-            return self.list_search(url)
-        if self.is_base_url(url):
-            self.base_url = url
-            if "movie" in url:
-                return self.a_to_z(MOVIES_A_TO_Z_TYPE)
-            if "tv" in url:
-                return self.a_to_z(TV_SHOWS_A_TO_Z_TYPE)
-
-        if self.particular_letter(url):
-            if "movie" in url:
-                return self.list_movies_by_letter(url)
-            if "tv" in url:
-                return self.list_tv_shows_by_letter(url)
-
-        if self.has_tv_show_flag(url):
-            return self.list_tv_show(self.remove_flags(url))
-
-        if self.is_xml_letter(url):
-            util.debug("xml letter")
-            if "movie" in url:
-                return self.list_xml_letter(url)
-
-        return [self.dir_item(title="I failed", url="fail")]
+        if J_MOVIES_A_TO_Z_TYPE in url:
+            return self.load_json_list(url)
+        if J_MOVIES_GENRE in url:
+            return self.load_json_list(url)
+        if J_MOVIES_MOST_POPULAR in url:
+            return self.list_videos(url)
+        if J_MOVIES_RECENTLY_ADDED in url:
+            return self.list_videos(url)
+        if J_TV_SHOWS_A_TO_Z_TYPE in url:
+            return self.a_to_z(J_TV_SHOWS)
+        if J_TV_SHOWS in url:
+            return self.list_series_letter(url)
+        if J_SERIES in url:
+            return self.list_series(url)
+        if J_TV_SHOWS_MOST_POPULAR  in url:
+            return self.list_videos(url)
+        if J_TV_SHOWS_RECENTLY_ADDED in url:
+            return self.list_videos(url)
+#        return [self.dir_item(title="I failed", url="fail")]
+        return self.list_videos(url)
+    
+    def load_json_list(self, url):
+        result = []
+        data = util.request(url)
+        json_list = json.loads(data)
+        for key, value in json_list.iteritems():
+            item = self.dir_item(title=key.upper())
+            item['url'] = value
+            result.append(item)
+        return result
+    
+    def list_videos(self, url):
+        result = []
+        data = util.request(url)
+        json_video_array = json.loads(data)
+        for video in json_video_array:
+            item = self.video_item()
+            item['title'] = video['n'][ISO_639_1_CZECH]
+            item['img'] =  IMAGE_URL + video['i']
+            item['url'] = video['l']
+            result.append(item)
+        
+#        if self.reverse_eps:
+#            result.reverse()
+        return result
+    
+    def list_series_letter(self, url):
+        result = []
+        data = util.request(url)
+        json_list = json.loads(data)
+        for serial in json_list:
+            item = self.dir_item()
+            item['title'] = serial['n'][ISO_639_1_CZECH]
+            item['img'] = IMAGE_URL + serial['i']
+            item['url'] = serial['l']
+            result.append(item)
+        
+#        if self.reverse_eps:
+#            result.reverse()
+        return result
+    
+    def list_series(self, url):
+        result = []
+        data = util.request(url)
+        json_series = json.loads(data)
+        for series in json_series:
+            for series_key, episode in series.iteritems():
+                for episode_key, video in episode.iteritems():
+                    util.debug(series_key)
+                    util.debug(episode_key)
+                    util.debug(video)
+                    item = self.video_item()
+#                    series_key + "x" + episode_key + "-" +
+                    item['title'] =  video['n']
+                    item['img'] =  IMAGE_URL + video['i']
+                    item['url'] = video['l']
+                    result.append(item)
+        
+#        if self.reverse_eps:
+#            result.reverse()
+        return result
 
     def list_by_genres(self, url):
         if "?" + GENRE_PARAM in url:
@@ -536,11 +589,10 @@ class SosacContentProvider(ContentProvider):
         return self.add_video_flag(movies)
 
     def resolve(self, item, captcha_cb=None, select_cb=None):
-        page = util.request(item['url'])
-        data = util.substr(page, '<div class=\"bottom-player\"', 'div>')
-        if data.find('<iframe') < 0:
+        data = item['url']
+        if not data:
             raise ResolveException('Video is not available.')
-        result = self.findstreams(data, ['<iframe src=\"(?P<url>[^\"]+)'])
+        result = self.findstreams([STREAMUJ_URL + data])
         if len(result) == 1:
             return result[0]
         elif len(result) > 1 and select_cb:
@@ -555,7 +607,7 @@ class SosacContentProvider(ContentProvider):
         for entry in html_tree.select('ul.content li'):
             item = self.video_item()
             entry.p.strong.extract()
-            item['url'] = entry.h4.a.get('href')
+            item['url'] = entry.h4.a.get('hpreerf')
             item['title'] = entry.h4.a.text
             item['img'] = MOVIES_BASE_URL + entry.img.get('src')
             item['plot'] = entry.p.text.strip()
