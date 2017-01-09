@@ -57,6 +57,9 @@ IMAGE_MOVIE = IMAGE_URL + "75x109/movie-"
 IMAGE_SERIES = IMAGE_URL + "558x313/serial-"
 IMAGE_EPISODE = URL
 
+RATING = 'r'
+LANG = 'd'
+QUALITY = 'q'
 
 class SosacContentProvider(ContentProvider):
     ISO_639_1_CZECH = None
@@ -97,8 +100,8 @@ class SosacContentProvider(ContentProvider):
         return result
 
     def search(self, keyword):
-        return self.list_search('%s/%ssearch?%s' % (MOVIES_BASE_URL, self.ISO_639_1_CZECH,
-                                                    urllib.urlencode({'q': keyword})))
+        util.debug("HLEDAM   : " +URL + J_SEARCH + urllib.quote_plus(keyword))
+        return self.list_search(URL + J_SEARCH + urllib.quote_plus(keyword))
 
     def a_to_z(self, url):
         result = []
@@ -164,10 +167,13 @@ class SosacContentProvider(ContentProvider):
             item['title'] = video['n'][ISO_639_1_CZECH] +" ("+ video['y']+")"
             item['img'] =  IMAGE_MOVIE + video['i']
             item['url'] = video['l']
+            if RATING in video:
+                item['rating'] = video[RATING]
+            if LANG in video:
+                item['lang'] = video[LANG]
+            if QUALITY in video:
+                item['quality'] = video[QUALITY]
             result.append(item)
-        
-#        if self.reverse_eps:
-#            result.reverse()
         return result
     
     def list_series_letter(self, url):
@@ -180,9 +186,6 @@ class SosacContentProvider(ContentProvider):
             item['img'] = IMAGE_SERIES + serial['i']
             item['url'] = serial['l']
             result.append(item)
-        
-#        if self.reverse_eps:
-#            result.reverse()
         return result
     
     def list_episodes(self, url):
@@ -197,9 +200,8 @@ class SosacContentProvider(ContentProvider):
                     item['img'] =  IMAGE_EPISODE + video['i']
                     item['url'] = video['l']
                     result.append(item)
-        
-#        if self.reverse_eps:
-#            result.reverse()
+        if not self.reverse_eps:
+            result.reverse()
         return result
 
     def list_by_genres(self, url):
@@ -420,59 +422,6 @@ class SosacContentProvider(ContentProvider):
                 pass
 #        self.parent.dialog.close()
 
-    def library_tvshows_all_xml(self):
-        page = util.request('http://tv.prehraj.me/serialyxml.php')
-        data = util.substr(page, '<select name=\"serialy\">', '</select>')
-        items = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', data,
-                            re.IGNORECASE | re.DOTALL)
-        total = float(len(list(items)))
-        items = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', data,
-                            re.IGNORECASE | re.DOTALL)
-        util.info("Pocet: %d" % total)
-        num = 0
-        for m in items:
-            num += 1
-            if self.parent.dialog.iscanceled():
-                return
-            perc = float(num / total) * 100
-            util.info("percento: %d" % int(perc))
-            self.parent.dialog.update(int(perc), m.group('name'))
-            item = {'url': 'http://tv.prehraj.me/cs/detail/' + m.group('url'),
-                    'action': 'add-to-library', 'name': m.group('name'), 'update': True,
-                    'notify': True}
-            self.parent.add_item(item)
-
-        util.info("done....")
-
-    def list_movie_recently_added(self, url):
-        result = []
-        page = self.get_data_cached(url)
-        data = util.substr(page, '<div class=\"content\"', '</ul>')
-        for m in re.finditer(
-                '<a class=\"content-block\" href=\"(?P<url>[^\"]+)\" title=\"(?P<name>[^\"]+)',
-                data, re.IGNORECASE | re.DOTALL):
-            item = self.video_item()
-            item['url'] = m.group('url')
-            item['title'] = m.group('name')
-            item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                'url': m.group('url'), 'action': 'add-to-library', 'name': m.group('name')}}
-            self._filter(result, item)
-        paging = util.substr(page, '<div class=\"pagination\"', '</div')
-        next = re.search('<li class=\"next[^<]+<a href=\"\?page=(?P<page>\d+)', paging,
-                         re.IGNORECASE | re.DOTALL)
-        if next:
-            next_page = int(next.group('page'))
-            current = re.search('\?page=(?P<page>\d)', url)
-            current_page = 0
-            if next_page > 5:
-                return result
-            if current:
-                current_page = int(current.group('page'))
-            if current_page < next_page:
-                url = re.sub('\?.+?$', '', url) + '?page=' + str(next_page)
-                result += self.list_movie_recently_added(url)
-        return result
-
     def add_flag_to_url(self, item, flag):
         item['url'] = flag + item['url']
         return item
@@ -519,38 +468,4 @@ class SosacContentProvider(ContentProvider):
         return self.parent.get_subs()
 
     def list_search(self, url):
-        result = []
-        html_tree = util.parse_html(url)
-        for entry in html_tree.select('ul.content li'):
-            item = self.video_item()
-            entry.p.strong.extract()
-            item['url'] = entry.h4.a.get('hpreerf')
-            item['title'] = entry.h4.a.text
-            item['img'] = MOVIES_BASE_URL + entry.img.get('src')
-            item['plot'] = entry.p.text.strip()
-            item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
-            self._filter(result, item)
-        # Process next 4 pages, so we'll get 20 items per page instead of 4
-        for next_page in html_tree.select('.pagination ul li.next a'):
-            next_url = '%s/%ssearch%s' % (MOVIES_BASE_URL, self.ISO_639_1_CZECH,
-                                          next_page.get('href'))
-            page_number = 1
-            page = re.search(r'\bpage=(\d+)', url)
-            if page:
-                page_number = int(page.group(1))
-            next_page_number = 1
-            page = re.search(r'\bpage=(\d+)', next_url)
-            if page:
-                next_page_number = int(page.group(1))
-            if page_number > next_page_number:
-                break
-            if page_number % 5 != 0:
-                result += self.list_search(next_url)
-            else:
-                item = self.dir_item()
-                item['type'] = 'next'
-                item['url'] = next_url
-                result.append(item)
-            break
-        return result
+        return self.list_videos(url)
