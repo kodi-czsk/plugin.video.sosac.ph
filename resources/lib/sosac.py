@@ -100,7 +100,6 @@ class SosacContentProvider(ContentProvider):
         return result
 
     def search(self, keyword):
-        util.debug("HLEDAM   : " +URL + J_SEARCH + urllib.quote_plus(keyword))
         return self.list_search(URL + J_SEARCH + urllib.quote_plus(keyword))
 
     def a_to_z(self, url):
