@@ -154,7 +154,8 @@ class SosacContentProvider(ContentProvider):
             item = self.dir_item(title=self.upper_first_letter(key))
             item['url'] = value
             result.append(item)
-        return result
+        
+        return sorted(result, key=lambda i: i['title'])
     
     def list_videos(self, url):
         result = []
