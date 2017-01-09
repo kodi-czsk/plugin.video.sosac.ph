@@ -160,7 +160,7 @@ class SosacContentProvider(ContentProvider):
         json_video_array = json.loads(data)
         for video in json_video_array:
             item = self.video_item()
-            item['title'] = video['n'][ISO_639_1_CZECH] +" ("+ video['y']+")"
+            item['title'] = video['n'][ISO_639_1_CZECH] +" ("+ video['y']+") - " + video[QUALITY].upper()
             item['img'] =  IMAGE_MOVIE + video['i']
             item['url'] = video['l']
             if RATING in video:
