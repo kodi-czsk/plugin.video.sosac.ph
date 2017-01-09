@@ -97,6 +97,8 @@ class SosacContentProvider(ContentProvider):
         return result
 
     def search(self, keyword):
+        if len(keyword) < 3 or len(keyword) > 100:
+            return [self.dir_item(title="Search query must be between 3 and 100 characters long!", url="fail")]
         return self.list_search(URL + J_SEARCH + urllib.quote_plus(keyword))
 
     def a_to_z(self, url):
