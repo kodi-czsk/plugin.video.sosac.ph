@@ -34,17 +34,9 @@ from provider import ContentProvider, cached, ResolveException
 sys.setrecursionlimit(10000)
 
 MOVIES_BASE_URL = "http://movies.prehraj.me"
-TV_SHOWS_BASE_URL = "http://tv.prehraj.me"
-MOVIES_A_TO_Z_TYPE = "movies-a-z"
-MOVIES_GENRE = "filmyxmlzanr.php"
 GENRE_PARAM = "zanr"
-TV_SHOWS_A_TO_Z_TYPE = "tv-shows-a-z"
-XML_LETTER = "xmlpismeno"
 TV_SHOW_FLAG = "#tvshow#"
 ISO_639_1_CZECH = "cs"
-MOST_POPULAR_TYPE = "most-popular"
-RECENTLY_ADDED_TYPE = "recently-added"
-SEARCH_TYPE = "search"
 
 #JSONs
 URL = "http://tv.sosac.to"
@@ -60,7 +52,10 @@ J_TV_SHOWS_MOST_POPULAR = "/vystupy5981/tvshowsmostpopular.json"
 J_TV_SHOWS_RECENTLY_ADDED = "/vystupy5981/tvshowsrecentlyadded.json"
 J_SEARCH = "/jsonsearchapi.php?q="
 STREAMUJ_URL = "http://www.streamuj.tv/video/"
-IMAGE_URL = "http://movies.sosac.tv/images/75x109/"
+IMAGE_URL = "http://movies.sosac.tv/images/"
+IMAGE_MOVIE = IMAGE_URL + "75x109/movie-"
+IMAGE_SERIES = IMAGE_URL + "558x313/serial-"
+IMAGE_EPISODE = URL
 
 
 class SosacContentProvider(ContentProvider):
@@ -119,51 +114,6 @@ class SosacContentProvider(ContentProvider):
         return url.replace(flag, "", count=1)
 
     @staticmethod
-    def is_xml_letter(url):
-        if XML_LETTER in url:
-            return True
-        return False
-
-    @staticmethod
-    def is_base_url(url):
-        if url in [MOVIES_BASE_URL, TV_SHOWS_BASE_URL]:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def is_movie_url(url):
-        if MOVIES_BASE_URL in url:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def is_tv_shows_url(url):
-        if TV_SHOWS_BASE_URL in url:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def is_most_popular(url):
-        if MOST_POPULAR_TYPE in url:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def is_recently_added(url):
-        if RECENTLY_ADDED_TYPE in url:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def is_search(url):
-        return SEARCH_TYPE in url
-
-    @staticmethod
     def particular_letter(url):
         return "a-z/" in url
 
@@ -188,12 +138,11 @@ class SosacContentProvider(ContentProvider):
         if J_TV_SHOWS in url:
             return self.list_series_letter(url)
         if J_SERIES in url:
-            return self.list_series(url)
+            return self.list_episodes(url)
         if J_TV_SHOWS_MOST_POPULAR  in url:
-            return self.list_videos(url)
+            return self.list_series_letter(url)
         if J_TV_SHOWS_RECENTLY_ADDED in url:
             return self.list_videos(url)
-#        return [self.dir_item(title="I failed", url="fail")]
         return self.list_videos(url)
     
     def load_json_list(self, url):
@@ -212,8 +161,8 @@ class SosacContentProvider(ContentProvider):
         json_video_array = json.loads(data)
         for video in json_video_array:
             item = self.video_item()
-            item['title'] = video['n'][ISO_639_1_CZECH]
-            item['img'] =  IMAGE_URL + video['i']
+            item['title'] = video['n'][ISO_639_1_CZECH] +" ("+ video['y']+")"
+            item['img'] =  IMAGE_MOVIE + video['i']
             item['url'] = video['l']
             result.append(item)
         
@@ -228,7 +177,7 @@ class SosacContentProvider(ContentProvider):
         for serial in json_list:
             item = self.dir_item()
             item['title'] = serial['n'][ISO_639_1_CZECH]
-            item['img'] = IMAGE_URL + serial['i']
+            item['img'] = IMAGE_SERIES + serial['i']
             item['url'] = serial['l']
             result.append(item)
         
@@ -236,20 +185,16 @@ class SosacContentProvider(ContentProvider):
 #            result.reverse()
         return result
     
-    def list_series(self, url):
+    def list_episodes(self, url):
         result = []
         data = util.request(url)
         json_series = json.loads(data)
         for series in json_series:
             for series_key, episode in series.iteritems():
                 for episode_key, video in episode.iteritems():
-                    util.debug(series_key)
-                    util.debug(episode_key)
-                    util.debug(video)
                     item = self.video_item()
-#                    series_key + "x" + episode_key + "-" +
-                    item['title'] =  video['n']
-                    item['img'] =  IMAGE_URL + video['i']
+                    item['title'] = series_key + "x" + episode_key + " - " + video['n']
+                    item['img'] =  IMAGE_EPISODE + video['i']
                     item['url'] = video['l']
                     result.append(item)
         
@@ -295,34 +240,6 @@ class SosacContentProvider(ContentProvider):
                 util.error("ERR TITLE: " + item['title'] + " | " + str(e))
                 pass
         util.debug(result)
-        return result
-
-    def list_tv_show(self, url):
-        result = []
-        page = util.request(url)
-        data = util.substr(page, '<div class=\"content\">', '<script')
-        for s in re.finditer('<strong.+?</ul>', data, re.IGNORECASE | re.DOTALL):
-            serie = s.group(0)
-            serie_name = re.search('<strong>([^<]+)', serie).group(1)
-            for e in re.finditer('<li.+?</li>', serie, re.IGNORECASE | re.DOTALL):
-                episode = e.group(0)
-                item = self.video_item()
-                ep_name = re.search('<a href=\"#[^<]+<span>(?P<id>[^<]+)</span>(?P<name>[^<]+)',
-                                    episode)
-                if ep_name:
-                    item['title'] = '%s %s %s' % (
-                        serie_name, ep_name.group('id'), ep_name.group('name'))
-                    item['epname'] = ep_name.group('name')
-                    item['ep'] = ep_name
-                i = re.search('<div class=\"inner-item[^<]+<img src=\"(?P<img>[^\"]+).+?<a href=\"'
-                              '(?P<url>[^\"]+)', episode, re.IGNORECASE | re.DOTALL)
-                if i:
-                    item['img'] = self._url(i.group('img'))
-                    item['url'] = i.group('url')
-                if i and ep_name:
-                    self._filter(result, item)
-        if self.reverse_eps:
-            result.reverse()
         return result
 
     def add_video_flag(self, items):
