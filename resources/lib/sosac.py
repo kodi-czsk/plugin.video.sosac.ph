@@ -151,7 +151,7 @@ class SosacContentProvider(ContentProvider):
         data = util.request(url)
         json_list = json.loads(data)
         for key, value in json_list.iteritems():
-            item = self.dir_item(title=key.upper())
+            item = self.dir_item(title=self.upper_first_letter(key))
             item['url'] = value
             result.append(item)
         return result
@@ -281,3 +281,6 @@ class SosacContentProvider(ContentProvider):
 
     def list_search(self, url):
         return self.list_videos(url)
+    
+    def upper_first_letter(self, name):
+        return name[:1].upper() + name[1:]
