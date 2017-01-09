@@ -165,7 +165,7 @@ class SosacContentProvider(ContentProvider):
             item = self.video_item()
             item['title'] = video['n'][ISO_639_1_CZECH] +" ("+ video['y']+") - " + video[QUALITY].upper()
             item['img'] =  IMAGE_MOVIE + video['i']
-            item['url'] = video['l']
+            item['url'] = video['l'] if video['l'] else ""
             if RATING in video:
                 item['rating'] = video[RATING]
             if LANG in video:
@@ -197,7 +197,7 @@ class SosacContentProvider(ContentProvider):
                     item = self.video_item()
                     item['title'] = series_key + "x" + episode_key + " - " + video['n']
                     item['img'] =  IMAGE_EPISODE + video['i']
-                    item['url'] = video['l']
+                    item['url'] = video['l'] if video['l'] else ""
                     result.append(item)
         if not self.reverse_eps:
             result.reverse()
