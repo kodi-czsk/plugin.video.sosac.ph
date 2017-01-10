@@ -11,6 +11,7 @@ import time
 import string
 import datetime
 import urllib
+import sosac
 
 
 class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
@@ -19,7 +20,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
     subs = None
 
     def __init__(self, provider, settings, addon):
-        xbmcprovider.XBMCMultiResolverContentProvider.__init__(self, provider, settings, addon)
+        xbmcprovider.XBMCMultiResolverContentProvider.__init__(
+            self, provider, settings, addon)
         provider.parent = self
         self.dialog = xbmcgui.DialogProgress()
         try:
@@ -30,7 +32,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             self.cache = StorageServer.StorageServer("Downloader")
 
     def make_name(self, text, lower=True):
-        text = self.normalize_filename(text, "-_.' %s%s" % (string.ascii_letters, string.digits))
+        text = self.normalize_filename(
+            text, "-_.' %s%s" % (string.ascii_letters, string.digits))
         word_re = re.compile(r'\b\w+\b')
         text = ''.join([c for c in text if (c.isalnum() or c == "'" or c ==
                                             '.' or c == '-' or c.isspace())]) if text else ''
@@ -75,7 +78,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     def showNotification(self, title, message, time=1000):
         xbmcgui.Dialog().notification(self.encode(title), self.encode(message), time=time,
-                                      icon=xbmc.translatePath(self.addon_dir() + "/icon.png"),
+                                      icon=xbmc.translatePath(
+                                          self.addon_dir() + "/icon.png"),
                                       sound=False)
 
     def evalSchedules(self):
@@ -88,7 +92,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 if xbmc.abortRequested:
                     util.info("SOSAC Exiting")
                     return
-                if self.provider.is_tv_shows_url(url):
+                if sub['type'] == sosac.LIBRARY_TYPE_TVSHOW:
                     if self.scanRunning() or self.isPlaying():
                         self.cache.delete("subscription.last_run")
                         return
@@ -97,11 +101,13 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                         next_check = sub['last_run'] + (refresh * 3600 * 24)
                         if next_check < time.time():
                             if not notified:
-                                self.showNotification('Subscription', 'Chcecking')
+                                self.showNotification(
+                                    'Subscription', 'Chcecking')
                                 notified = True
                             util.debug("SOSAC Refreshing " + url)
                             new_items |= self.run_custom({
-                                'action': 'add-to-library',
+                                'action': sosac.LIBRARY_ACTION_ADD,
+                                'type': sosac.LIBRARY_TYPE_TVSHOW,
                                 'update': True,
                                 'url': url,
                                 'name': sub['name'],
@@ -110,7 +116,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                             self.sleep(3000)
                         else:
                             n = (next_check - time.time()) / 3600
-                            util.debug("SOSAC Skipping " + url + " , next check in %dh" % n)
+                            util.debug("SOSAC Skipping " + url +
+                                       " , next check in %dh" % n)
             if new_items:
                 xbmc.executebuiltin('UpdateLibrary(video)')
             notified = False
@@ -147,60 +154,58 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         error = False
         if not 'refresh' in params:
             params['refresh'] = str(self.getSetting("refresh_time"))
-        sub = {'name': params['name'], 'refresh': params['refresh']}
+        sub = {'name': params['name'], 'refresh': params[
+            'refresh'], 'type': params['type']}
+
         sub['last_run'] = time.time()
         arg = {"play": params['url'], 'cp': 'sosac.ph', "title": sub['name']}
-        item_url = xbmcutil._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
+        item_url = xbmcutil._create_plugin_url(
+            arg, 'plugin://' + self.addon_id + '/')
         util.info("item: " + item_url + " | " + str(params))
         new_items = False
         # self.showNotification('Linking', params['name'])
 
-        if "movie" in params['url']:
+        if params['type'] == sosac.LIBRARY_TYPE_VIDEO:
+            # movies are not stored in subs database
             item_dir = self.getSetting('library-movies')
             (error, new_items) = self.add_item_to_library(
-                os.path.join(item_dir, self.normalize_filename(sub['name']),
-                             self.normalize_filename(params['name'])) + '.strm', item_url)
-        else:
+                os.path.join(item_dir, self.normalize_filename(sub['name']), self.normalize_filename(params['name'])) + '.strm', item_url)
+        elif params['type'] == sosac.LIBRARY_TYPE_TVSHOW:
             if not ('notify' in params):
                 self.showNotification(sub['name'], 'Checking new content')
 
             subs = self.get_subs()
             item_dir = self.getSetting('library-tvshows')
 
-            if not params['url'] in subs.keys():
-                subs.update({params['url']: params['name']})
+            if not params['url'] in subs:
+                subs.update({params['url']: sub})
                 self.set_subs(subs)
                 # self.addon.setSetting('tvshows-subs', json.dumps(subs))
 
-            if not xbmcvfs.exists(os.path.join(item_dir, self.normalize_filename(params['name']),
-                                               'tvshow.nfo')):
+            if not xbmcvfs.exists(os.path.join(item_dir, self.normalize_filename(params['name']), 'tvshow.nfo')):
                 tvid = self.getTVDB(params['name'])
                 if tvid:
                     self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(
-                        params['name']), 'tvshow.nfo'),
-                        'http://thetvdb.com/index.php?tab=series&id=' + tvid)
+                        params['name']), 'tvshow.nfo'), 'http://thetvdb.com/index.php?tab=series&id=' + tvid)
 
-            list = self.provider.list_tv_show(params['url'])
-            for itm in list:
-                nfo = re.search('[^\d+](?P<season>\d+)[^\d]+(?P<episode>\d+)',
+            episodes = self.provider.list_episodes(params['url'])
+            for itm in episodes:
+                nfo = re.search('^(?P<season>\d+)x(?P<episode>\d+)',
                                 itm['title'], re.IGNORECASE | re.DOTALL)
                 arg = {"play": itm['url'], 'cp': 'sosac.ph',
-                       "title": itm['epname']}
-                """
-                info = ''.join(('<episodedetails><season>', nfo.group('season'),
-                                '</season><episode>', nfo.group('episode'),
-                                '</episode></episodedetails>'))
-                """
-                item_url = xbmcutil._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
-                (err, new) = self.add_item_to_library(os.path.join(
-                    item_dir, self.normalize_filename(params['name']), 'Season ' +
-                    nfo.group('season'), "S" + nfo.group('season') + "E" + nfo.group('episode') +
-                    '.strm'), item_url)
+                       "title": itm['title']}
+                item_url = xbmcutil._create_plugin_url(
+                    arg, 'plugin://' + self.addon_id + '/')
+                dirname = "Season " + nfo.group('season')
+                epname = "S%02dE%02d.strm" % (int(nfo.group('season')), int(nfo.group('episode')))
+                filename = os.path.join(item_dir, self.normalize_filename(
+                    params['name']), dirname, epname)
+                (err, new) = self.add_item_to_library(filename, item_url)
                 error |= err
                 if new is True and not err:
                     new_items = True
         if not error and new_items and not ('update' in params) and not ('notify' in params):
-            self.showNotification(params['name'], 'New content')
+            self.showNotification(params['name'], 'Found new content')
             xbmc.executebuiltin('UpdateLibrary(video)')
         elif not error and not ('notify' in params):
             self.showNotification(params['name'], 'No new content')
@@ -209,32 +214,59 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         return new_items
 
     def run_custom(self, params):
-        if 'action' in params.keys():
+        if 'action' in params:
             icon = os.path.join(self.addon.getAddonInfo('path'), 'icon.png')
-            if params['action'] == 'remove-subscription':
+            if params['action'] == sosac.LIBRARY_ACTION_REMOVE_SUBSCRIPTION:
                 subs = self.get_subs()
                 if params['url'] in subs.keys():
                     del subs[params['url']]
                     self.set_subs(subs)
-                    self.showNotification(params['name'], 'Removed from subscription')
+                    self.showNotification(
+                        params['name'], 'Removed from subscriptions')
                     xbmc.executebuiltin('Container.Refresh')
                 return False
 
-            if params['action'] == 'add-to-library':
+            if params['action'] == sosac.LIBRARY_ACTION_ADD:
                 if self.add_item(params):
                     xbmc.executebuiltin('Container.Refresh')
                     return True
                 return False
-            if params['action'] == 'add-all-to-library':
-                self.dialog.create('sosac', 'Add all to library')
+            if params['action'] == sosac.LIBRARY_ACTION_ADD_ALL:
+                self.dialog.create("Sosac", "Adding All Movies to library")
                 self.dialog.update(0)
-                if params['title'] == 'Movies':
-                    self.provider.library_movies_all_xml()
-                elif params['title'] == 'Movies - Recently added':
-                    self.provider.library_movie_recently_added_xml()
-                elif params['title'] == 'TV Shows':
-                    self.provider.library_tvshows_all_xml()
-                self.dialog.close()
+                if params['type'] == sosac.LIBRARY_TYPE_ALL_VIDEOS:
+                    self.dialog.create("Sosac", "Adding All Movies to library")
+                    self.dialog.update(0)
+                    videos = self.provider.list_all_videos()
+                    for video in videos:
+                        if self.dialog.iscanceled():
+                            return
+                        if 'progress' in video:
+                            self.dialog.update(video['progress'])
+                        else:
+                            item = video['menu'][sosac.LIBRARY_MENU_ITEM_ADD]
+                            item["update"] = True
+                            item["notify"] = True
+                            item["type"] = sosac.LIBRARY_TYPE_VIDEO
+                            self.add_item(item)
+                    self.dialog.close()
+                elif params['type'] == sosac.LIBRARY_TYPE_ALL_SHOWS:
+                    self.dialog.create(
+                        "Sosac", "Adding All TV Shows to library")
+                    self.dialog.update(0)
+                    shows = self.provider.list_all_tvshows()
+                    for show in shows:
+                        if self.dialog.iscanceled():
+                            return
+                        if 'progress' in show:
+                            self.dialog.update(show['progress'])
+                        else:
+                            item = show['menu'][sosac.LIBRARY_MENU_ITEM_ADD]
+                            item["update"] = True
+                            item["notify"] = True
+                            item["type"] = sosac.LIBRARY_TYPE_TVSHOW
+                            self.add_item(item)
+
                 xbmc.executebuiltin('UpdateLibrary(video)')
         return False
 
@@ -258,7 +290,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     file_desc.close()
                     new = True
                 except Exception, e:
-                    util.error('Failed to create .strm file: ' + item_path + " | " + str(e))
+                    util.error('Failed to create .strm file: ' +
+                               item_path + " | " + str(e))
                     error = True
         else:
             error = True
@@ -268,25 +301,19 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
     def get_subs(self):
         if self.subs is not None:
             return self.subs
-        data = self.cache.get("subscription")
+        data = self.cache.get("subscription-1")
         try:
             if data == '':
                 return {}
-            subs = eval(data)
-            for url, name in subs.iteritems():
-                if not isinstance(name, dict):
-                    subs[url] = {'name': name,
-                                 'refresh': '1', 'last_run': -1}
-            self.set_subs(subs)
-            self.subs = subs
+            self.subs = eval(data)
+            return self.subs
         except Exception, e:
             util.error(e)
-            subs = {}
-        return subs
+            return {}
 
     def set_subs(self, subs):
         self.subs = subs
-        self.cache.set("subscription", repr(subs))
+        self.cache.set("subscription-1", repr(subs))
 
     @staticmethod
     def encode(string):
