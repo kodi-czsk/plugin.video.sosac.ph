@@ -73,9 +73,9 @@ class SosacContentProvider(ContentProvider):
     def on_init(self):
         kodilang = self.lang or 'cs'
         if kodilang == ISO_639_1_CZECH or kodilang == 'sk':
-            self.ISO_639_1_CZECH = ISO_639_1_CZECH + '/'
+            self.ISO_639_1_CZECH = ISO_639_1_CZECH
         else:
-            self.ISO_639_1_CZECH = ''
+            self.ISO_639_1_CZECH = 'en'
 
     def capabilities(self):
         return ['resolve', 'categories', 'search']
@@ -105,7 +105,7 @@ class SosacContentProvider(ContentProvider):
     def a_to_z(self, url):
         result = []
         for letter in ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'e', 'h', 'i', 'j', 'k', 'l', 'm',
-            'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']:
+                       'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']:
             item = self.dir_item(title=letter.upper())
             item['url'] = URL + url + letter + ".json"
             result.append(item)
@@ -182,7 +182,7 @@ class SosacContentProvider(ContentProvider):
         json_list = json.loads(data)
         for serial in json_list:
             item = self.dir_item()
-            item['title'] = serial['n'][ISO_639_1_CZECH]
+            item['title'] = self.get_localized_name(serial['n'])
             item['img'] = IMAGE_SERIES + serial['i']
             item['url'] = serial['l']
             result.append(item)
@@ -217,16 +217,16 @@ class SosacContentProvider(ContentProvider):
         return result
 
     def get_video_name(self, video):
-        name = video['n'][ISO_639_1_CZECH]
+        name = self.get_localized_name(video['n'])
         year = (" (" + video['y'] + ") ") if video['y'] else " "
         quality = ("- " + video[QUALITY].upper()) if video[QUALITY] else ""
         return name + year + quality
-        
+
     def get_episode_recently_name(self, episode):
-        serial = episode['t'][ISO_639_1_CZECH] + ' '
+        serial = self.get_localized_name(episode['t']) + ' '
         series = episode['s'] + "x"
         number = episode['e'] + " - "
-        name = episode['n'][ISO_639_1_CZECH]
+        name = self.get_localized_name(episode['n'])
         return serial + series + number + name
 
     def add_video_flag(self, items):
@@ -244,6 +244,9 @@ class SosacContentProvider(ContentProvider):
             flagged_item.update(item)
             flagged_items.append(flagged_item)
         return flagged_items
+    
+    def get_localized_name(self, names):
+        return names[self.ISO_639_1_CZECH] if self.ISO_639_1_CZECH in names else names[ISO_639_1_CZECH]
 
     @cached(ttl=24)
     def get_data_cached(self, url):
