@@ -104,7 +104,7 @@ class SosacContentProvider(ContentProvider):
     def a_to_z(self, url):
         result = []
         for letter in ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'e', 'h', 'i', 'j', 'k', 'l', 'm',
-                       'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']:
+            'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']:
             item = self.dir_item(title=letter.upper())
             item['url'] = URL + url + letter + ".json"
             result.append(item)
@@ -163,8 +163,8 @@ class SosacContentProvider(ContentProvider):
         json_video_array = json.loads(data)
         for video in json_video_array:
             item = self.video_item()
-            item['title'] = video['n'][ISO_639_1_CZECH] +" ("+ video['y']+") - " + video[QUALITY].upper()
-            item['img'] =  IMAGE_MOVIE + video['i']
+            item['title'] = self.get_video_name(video)
+            item['img'] = IMAGE_MOVIE + video['i']
             item['url'] = video['l'] if video['l'] else ""
             if RATING in video:
                 item['rating'] = video[RATING]
@@ -196,7 +196,7 @@ class SosacContentProvider(ContentProvider):
                 for episode_key, video in episode.iteritems():
                     item = self.video_item()
                     item['title'] = series_key + "x" + episode_key + " - " + video['n']
-                    item['img'] =  IMAGE_EPISODE + video['i']
+                    item['img'] = IMAGE_EPISODE + video['i']
                     item['url'] = video['l'] if video['l'] else ""
                     result.append(item)
         if not self.reverse_eps:
@@ -209,11 +209,24 @@ class SosacContentProvider(ContentProvider):
         json_series = json.loads(data)
         for episode in json_series:
             item = self.video_item()
-            item['title'] = episode['t'][ISO_639_1_CZECH] + ' ' + episode['s'] + "x" + episode['e'] + " - " + episode['n'][ISO_639_1_CZECH]
-            item['img'] =  IMAGE_EPISODE + episode['i']
+            item['title'] = self.get_episode_recently_name(episode)
+            item['img'] = IMAGE_EPISODE + episode['i']
             item['url'] = episode['l']
             result.append(item)
         return result
+    
+    def get_video_name(self, video):
+        name = video['n'][ISO_639_1_CZECH]
+        year = (" (" + video['y'] + ") ") if video['y'] else " "
+        quality = ("- " + video[QUALITY].upper()) if video[QUALITY] else ""
+        return name + year + quality
+        
+    def get_episode_recently_name(self, episode):
+        serial = episode['t'][ISO_639_1_CZECH] + ' '
+        series = episode['s'] + "x"
+        number = episode['e'] + " - "
+        name = episode['n'][ISO_639_1_CZECH]
+        return serial + series + number + name
 
     def add_video_flag(self, items):
         flagged_items = []
