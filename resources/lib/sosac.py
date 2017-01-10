@@ -35,13 +35,13 @@ MOVIES_BASE_URL = "http://movies.prehraj.me"
 TV_SHOW_FLAG = "#tvshow#"
 ISO_639_1_CZECH = "cs"
 
-#JSONs
+# JSONs
 URL = "http://tv.sosac.to"
 J_MOVIES_A_TO_Z_TYPE = "/vystupy5981/souboryaz.json"
 J_MOVIES_GENRE = "/vystupy5981/souboryzanry.json"
 J_MOVIES_MOST_POPULAR = "/vystupy5981/moviesmostpopular.json"
 J_MOVIES_RECENTLY_ADDED = "/vystupy5981/moviesrecentlyadded.json"
-#hack missing json with a-z series 
+# hack missing json with a-z series
 J_TV_SHOWS_A_TO_Z_TYPE = "/vystupy5981/tvpismenaaz/"
 J_TV_SHOWS = "/vystupy5981/tvpismena/"
 J_SERIES = "/vystupy5981/serialy/"
@@ -57,6 +57,7 @@ IMAGE_EPISODE = URL
 RATING = 'r'
 LANG = 'd'
 QUALITY = 'q'
+
 
 class SosacContentProvider(ContentProvider):
     ISO_639_1_CZECH = None
@@ -140,12 +141,12 @@ class SosacContentProvider(ContentProvider):
             return self.list_series_letter(url)
         if J_SERIES in url:
             return self.list_episodes(url)
-        if J_TV_SHOWS_MOST_POPULAR  in url:
+        if J_TV_SHOWS_MOST_POPULAR in url:
             return self.list_series_letter(url)
         if J_TV_SHOWS_RECENTLY_ADDED in url:
             return self.list_recentlyadded_episodes(url)
         return self.list_videos(url)
-    
+
     def load_json_list(self, url):
         result = []
         data = util.request(url)
@@ -154,9 +155,9 @@ class SosacContentProvider(ContentProvider):
             item = self.dir_item(title=self.upper_first_letter(key))
             item['url'] = value
             result.append(item)
-        
+
         return sorted(result, key=lambda i: i['title'])
-    
+
     def list_videos(self, url):
         result = []
         data = util.request(url)
@@ -174,7 +175,7 @@ class SosacContentProvider(ContentProvider):
                 item['quality'] = video[QUALITY]
             result.append(item)
         return result
-    
+
     def list_series_letter(self, url):
         result = []
         data = util.request(url)
@@ -186,7 +187,7 @@ class SosacContentProvider(ContentProvider):
             item['url'] = serial['l']
             result.append(item)
         return result
-    
+
     def list_episodes(self, url):
         result = []
         data = util.request(url)
@@ -202,7 +203,7 @@ class SosacContentProvider(ContentProvider):
         if not self.reverse_eps:
             result.reverse()
         return result
-    
+
     def list_recentlyadded_episodes(self, url):
         result = []
         data = util.request(url)
@@ -214,7 +215,7 @@ class SosacContentProvider(ContentProvider):
             item['url'] = episode['l']
             result.append(item)
         return result
-    
+
     def get_video_name(self, video):
         name = video['n'][ISO_639_1_CZECH]
         year = (" (" + video['y'] + ") ") if video['y'] else " "
@@ -295,6 +296,6 @@ class SosacContentProvider(ContentProvider):
 
     def list_search(self, url):
         return self.list_videos(url)
-    
+
     def upper_first_letter(self, name):
         return name[:1].upper() + name[1:]
