@@ -169,8 +169,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             # movies are not stored in subs database
             item_dir = self.getSetting('library-movies')
             (error, new_items) = self.add_item_to_library(
-                os.path.join(item_dir, self.normalize_filename(sub['name']),
-                             self.normalize_filename(params['name'])) + '.strm', item_url)
+                os.path.join(item_dir, self.normalize_filename(sub['name']), self.normalize_filename(params['name'])) + '.strm', item_url)
         elif params['type'] == sosac.LIBRARY_TYPE_TVSHOW:
             if not ('notify' in params):
                 self.showNotification(sub['name'], 'Checking new content')
@@ -183,13 +182,11 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 self.set_subs(subs)
                 # self.addon.setSetting('tvshows-subs', json.dumps(subs))
 
-            if not xbmcvfs.exists(os.path.join(item_dir, self.normalize_filename(params['name']),
-                                               'tvshow.nfo')):
+            if not xbmcvfs.exists(os.path.join(item_dir, self.normalize_filename(params['name']), 'tvshow.nfo')):
                 tvid = self.getTVDB(params['name'])
                 if tvid:
                     self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(
-                        params['name']), 'tvshow.nfo'),
-                        'http://thetvdb.com/index.php?tab=series&id=' + tvid)
+                        params['name']), 'tvshow.nfo'), 'http://thetvdb.com/index.php?tab=series&id=' + tvid)
 
             episodes = self.provider.list_episodes(params['url'])
             for itm in episodes:
@@ -200,8 +197,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 item_url = xbmcutil._create_plugin_url(
                     arg, 'plugin://' + self.addon_id + '/')
                 dirname = "Season " + nfo.group('season')
-                epname = "S%02dE%02d.strm" % (
-                    int(nfo.group('season')), int(nfo.group('episode')))
+                epname = "S%02dE%02d.strm" % (int(nfo.group('season')), int(nfo.group('episode')))
                 filename = os.path.join(item_dir, self.normalize_filename(
                     params['name']), dirname, epname)
                 (err, new) = self.add_item_to_library(filename, item_url)

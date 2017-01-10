@@ -78,8 +78,7 @@ class SosacContentProvider(ContentProvider):
     def __init__(self, username=None, password=None, filter=None, reverse_eps=False):
         ContentProvider.__init__(self, name='sosac.ph', base_url=MOVIES_BASE_URL, username=username,
                                  password=password, filter=filter)
-        opener = urllib2.build_opener(
-            urllib2.HTTPCookieProcessor(cookielib.LWPCookieJar()))
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.LWPCookieJar()))
         urllib2.install_opener(opener)
         self.reverse_eps = reverse_eps
 
@@ -96,14 +95,22 @@ class SosacContentProvider(ContentProvider):
     def categories(self):
         result = []
         item = self.dir_item(title="Movies", url=URL + J_MOVIES_A_TO_Z_TYPE)
-        item['menu'] = {LIBRARY_MENU_ITEM_ADD_ALL: {
-            'action': LIBRARY_ACTION_ADD_ALL, 'type': LIBRARY_TYPE_ALL_VIDEOS}}
+        item['menu'] = {
+            LIBRARY_MENU_ITEM_ADD_ALL: {
+                'action': LIBRARY_ACTION_ADD_ALL,
+                'type': LIBRARY_TYPE_ALL_VIDEOS
+            }
+        }
         result.append(item)
 
         item = self.dir_item(title="TV Shows", url=URL +
                              J_TV_SHOWS_A_TO_Z_TYPE)
-        item['menu'] = {LIBRARY_MENU_ITEM_ADD_ALL: {
-            'action': LIBRARY_ACTION_ADD_ALL, 'type': LIBRARY_TYPE_ALL_SHOWS}}
+        item['menu'] = {
+            LIBRARY_MENU_ITEM_ADD_ALL: {
+                'action': LIBRARY_ACTION_ADD_ALL,
+                'type': LIBRARY_TYPE_ALL_SHOWS
+            }
+        }
         result.append(item)
 
         item = self.dir_item(title="Movies - by Genres", url=URL +
@@ -197,8 +204,14 @@ class SosacContentProvider(ContentProvider):
                 item['lang'] = video[LANG]
             if QUALITY in video:
                 item['quality'] = video[QUALITY]
-            item['menu'] = {LIBRARY_MENU_ITEM_ADD: {
-                'url': item['url'], 'type': LIBRARY_TYPE_VIDEO, 'action': LIBRARY_ACTION_ADD, 'name': self.get_library_video_name(video)}}
+            item['menu'] = {
+                LIBRARY_MENU_ITEM_ADD: {
+                    'url': item['url'],
+                    'type': LIBRARY_TYPE_VIDEO,
+                    'action': LIBRARY_ACTION_ADD,
+                    'name': self.get_library_video_name(video)
+                }
+            }
 
             result.append(item)
         return result
@@ -215,11 +228,22 @@ class SosacContentProvider(ContentProvider):
             item['url'] = serial['l']
             if item['url'] in subs:
                 item['title'] = LIBRARY_FLAG_IS_PRESENT + item['title']
-                item['menu'] = {LIBRARY_MENU_ITEM_REMOVE: {
-                    'url': item['url'], 'action': LIBRARY_ACTION_REMOVE_SUBSCRIPTION, 'name': self.get_library_video_name(serial)}}
+                item['menu'] = {
+                    LIBRARY_MENU_ITEM_REMOVE: {
+                        'url': item['url'],
+                        'action': LIBRARY_ACTION_REMOVE_SUBSCRIPTION,
+                        'name': self.get_library_video_name(serial)
+                    }
+                }
             else:
-                item['menu'] = {LIBRARY_MENU_ITEM_ADD: {
-                    'url': item['url'], 'type': LIBRARY_TYPE_TVSHOW, 'action': LIBRARY_ACTION_ADD, 'name': self.get_library_video_name(serial)}}
+                item['menu'] = {
+                    LIBRARY_MENU_ITEM_ADD: {
+                        'url': item['url'],
+                        'type': LIBRARY_TYPE_TVSHOW,
+                        'action': LIBRARY_ACTION_ADD,
+                        'name': self.get_library_video_name(serial)
+                    }
+                }
             result.append(item)
         return result
 
@@ -231,8 +255,7 @@ class SosacContentProvider(ContentProvider):
             for series_key, episode in series.iteritems():
                 for episode_key, video in episode.iteritems():
                     item = self.video_item()
-                    item['title'] = series_key + "x" + \
-                        episode_key + " - " + video['n']
+                    item['title'] = series_key + "x" + episode_key + " - " + video['n']
                     if video['i'] is not None:
                         item['img'] = IMAGE_EPISODE + video['i']
                     item['url'] = video['l'] if video['l'] else ""
