@@ -231,6 +231,9 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     xbmc.executebuiltin('Container.Refresh')
                     return True
                 return False
+            if params['action'] == sosac.LIBRARY_ACTION_REMOVE_ALL:
+                self.set_subs({})
+                return True
             if params['action'] == sosac.LIBRARY_ACTION_ADD_ALL:
                 self.dialog.create("Sosac", "Adding All Movies to library")
                 self.dialog.update(0)
