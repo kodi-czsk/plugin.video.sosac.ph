@@ -57,12 +57,14 @@ IMAGE_EPISODE = URL
 LIBRARY_MENU_ITEM_ADD = "[B][COLOR red]Add to library[/COLOR][/B]"
 LIBRARY_MENU_ITEM_ADD_ALL = "[B][COLOR red]Add all to library[/COLOR][/B]"
 LIBRARY_MENU_ITEM_REMOVE = "[B][COLOR red]Remove from subscription[/COLOR][/B]"
+LIBRARY_MENU_ITEM_REMOVE_ALL = "[B][COLOR red]Remove all subscriptions[/COLOR][/B]"
 LIBRARY_TYPE_VIDEO = "video"
 LIBRARY_TYPE_TVSHOW = "tvshow"
 LIBRARY_TYPE_ALL_VIDEOS = "all-videos"
 LIBRARY_TYPE_ALL_SHOWS = "all-shows"
 LIBRARY_ACTION_ADD = "add-to-library"
 LIBRARY_ACTION_ADD_ALL = "add-all-to-library"
+LIBRARY_ACTION_REMOVE_ALL = "remove-all-from-library"
 LIBRARY_ACTION_REMOVE_SUBSCRIPTION = "remove-subscription"
 LIBRARY_FLAG_IS_PRESENT = "[B][COLOR yellow]*[/COLOR][/B] "
 
@@ -130,6 +132,13 @@ class SosacContentProvider(ContentProvider):
         item = self.dir_item(title="Movies - Recently added", url=URL +
                              J_MOVIES_RECENTLY_ADDED)
         result.append(item)
+
+        for item in result:
+            if not 'menu' in item:
+                item['menu'] = {}
+            item['menu'][LIBRARY_MENU_ITEM_REMOVE_ALL] = {
+                'action': LIBRARY_ACTION_REMOVE_ALL
+            }
 
         item = self.dir_item(title="TV Shows - Recently added", url=URL +
                              J_TV_SHOWS_RECENTLY_ADDED)
