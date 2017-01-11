@@ -69,6 +69,8 @@ LIBRARY_FLAG_IS_PRESENT = "[B][COLOR yellow]*[/COLOR][/B] "
 RATING = 'r'
 LANG = 'd'
 QUALITY = 'q'
+IMDB = 'm'
+CSFD = 'c'
 
 
 class SosacContentProvider(ContentProvider):
@@ -212,7 +214,10 @@ class SosacContentProvider(ContentProvider):
                     'name': self.get_library_video_name(video)
                 }
             }
-
+            if CSFD in video and video[CSFD] is not None:
+                item['menu'][LIBRARY_MENU_ITEM_ADD]['csfd'] = video[CSFD]
+            if IMDB in video and video[CSFD] is not None:
+                item['menu'][LIBRARY_MENU_ITEM_ADD]['imdb'] = video[IMDB]
             result.append(item)
         return result
 
@@ -244,6 +249,10 @@ class SosacContentProvider(ContentProvider):
                         'name': self.get_library_video_name(serial)
                     }
                 }
+                if CSFD in serial and serial[CSFD] is not None:
+                    item['menu'][LIBRARY_MENU_ITEM_ADD]['csfd'] = serial[CSFD]
+                if IMDB in serial and serial[IMDB] is not None:
+                    item['menu'][LIBRARY_MENU_ITEM_ADD]['imdb'] = serial[IMDB]
             result.append(item)
         return result
 
@@ -298,13 +307,13 @@ class SosacContentProvider(ContentProvider):
 
     def get_video_name(self, video):
         name = self.get_localized_name(video['n'])
-        year = (" (" + video['y'] + ") ") if video['y'] else " "
-        quality = ("- " + video[QUALITY].upper()) if video[QUALITY] else ""
+        year = (" (" + video['y'] + ")") if video['y'] else " "
+        quality = (" - " + video[QUALITY].upper()) if video[QUALITY] else ""
         return name + year + quality
 
     def get_library_video_name(self, video):
         name = self.get_localized_name(video['n'])
-        year = (" (" + video['y'] + ") ") if video['y'] else " "
+        year = (" (" + video['y'] + ")") if video['y'] else " "
         return (name + year).encode('utf-8')
 
     def get_episode_recently_name(self, episode):
