@@ -256,7 +256,23 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 if params['type'] == sosac.LIBRARY_TYPE_ALL_VIDEOS:
                     self.dialog.create("Sosac", "Adding All Movies to library")
                     self.dialog.update(0)
-                    videos = self.provider.list_all_videos()
+                    videos = self.provider.library_list_all_videos()
+                    for video in videos:
+                        if self.dialog.iscanceled():
+                            return
+                        if 'progress' in video:
+                            self.dialog.update(video['progress'])
+                        else:
+                            item = video['menu'][sosac.LIBRARY_MENU_ITEM_ADD]
+                            item["update"] = True
+                            item["notify"] = True
+                            item["type"] = sosac.LIBRARY_TYPE_VIDEO
+                            self.add_item(item)
+                    self.dialog.close()
+                if params['type'] == sosac.LIBRARY_TYPE_RECENT_VIDEOS:
+                    self.dialog.create("Sosac", "Adding Recent Movies to library")
+                    self.dialog.update(0)
+                    videos = self.provider.library_list_recent_videos()
                     for video in videos:
                         if self.dialog.iscanceled():
                             return
@@ -273,7 +289,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     self.dialog.create(
                         "Sosac", "Adding All TV Shows to library")
                     self.dialog.update(0)
-                    shows = self.provider.list_all_tvshows()
+                    shows = self.provider.library_list_all_tvshows()
                     for show in shows:
                         if self.dialog.iscanceled():
                             return

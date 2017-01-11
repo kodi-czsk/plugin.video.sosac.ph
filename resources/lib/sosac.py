@@ -61,6 +61,7 @@ LIBRARY_MENU_ITEM_REMOVE_ALL = "[B][COLOR red]Remove all subscriptions[/COLOR][/
 LIBRARY_TYPE_VIDEO = "video"
 LIBRARY_TYPE_TVSHOW = "tvshow"
 LIBRARY_TYPE_ALL_VIDEOS = "all-videos"
+LIBRARY_TYPE_RECENT_VIDEOS = "recent-videos"
 LIBRARY_TYPE_ALL_SHOWS = "all-shows"
 LIBRARY_ACTION_ADD = "add-to-library"
 LIBRARY_ACTION_ADD_ALL = "add-all-to-library"
@@ -131,6 +132,12 @@ class SosacContentProvider(ContentProvider):
 
         item = self.dir_item(title="Movies - Recently added", url=URL +
                              J_MOVIES_RECENTLY_ADDED)
+        item['menu'] = {
+            LIBRARY_MENU_ITEM_ADD_ALL: {
+                'action': LIBRARY_ACTION_ADD_ALL,
+                'type': LIBRARY_TYPE_RECENT_VIDEOS
+            }
+        }
         result.append(item)
 
         for item in result:
@@ -294,7 +301,7 @@ class SosacContentProvider(ContentProvider):
             result.append(item)
         return result
 
-    def list_all_videos(self):
+    def library_list_all_videos(self):
         letters = self.load_json_list(URL + J_MOVIES_A_TO_Z_TYPE)
         total = len(letters)
 
@@ -304,7 +311,16 @@ class SosacContentProvider(ContentProvider):
                 yield video
             yield {'progress': step * (idx + 1)}
 
-    def list_all_tvshows(self):
+    def library_list_recent_videos(self):
+        videos = self.list_videos(URL + J_MOVIES_RECENTLY_ADDED)
+        total = len(videos)
+
+        step = int(100 / len(videos))
+        for idx, video in enumerate(videos):
+            yield video
+            yield {'progress': step * (idx + 1)}
+
+    def library_list_all_tvshows(self):
         letters = self.a_to_z(J_TV_SHOWS)
         total = len(letters)
 
