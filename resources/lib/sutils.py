@@ -168,6 +168,18 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         if params['type'] == sosac.LIBRARY_TYPE_VIDEO:
             # movies are not stored in subs database
             item_dir = self.getSetting('library-movies')
+
+            nfo_file = os.path.join(item_dir, self.normalize_filename(
+                sub['name']), self.normalize_filename(params['name']) + '.nfo')
+            if not xbmcvfs.exists(nfo_file):
+                metadata = ""
+                if 'imdb' in params:
+                    metadata += "http://www.imdb.com/title/tt{0}/\n".format(params['imdb'])
+                if 'csfd' in params:
+                    metadata += "http://www.csfd.cz/film/{0}\n".format(params['csfd'])
+
+                self.add_item_to_library(nfo_file, metadata)
+
             (error, new_items) = self.add_item_to_library(
                 os.path.join(item_dir, self.normalize_filename(sub['name']), self.normalize_filename(params['name'])) + '.strm', item_url)
         elif params['type'] == sosac.LIBRARY_TYPE_TVSHOW:
@@ -177,16 +189,20 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             subs = self.get_subs()
             item_dir = self.getSetting('library-tvshows')
 
-            if not params['url'] in subs:
-                subs.update({params['url']: sub})
-                self.set_subs(subs)
-                # self.addon.setSetting('tvshows-subs', json.dumps(subs))
-
-            if not xbmcvfs.exists(os.path.join(item_dir, self.normalize_filename(params['name']), 'tvshow.nfo')):
+            subs.update({params['url']: sub})
+            self.set_subs(subs)
+            # self.addon.setSetting('tvshows-subs', json.dumps(subs))
+            nfo_file = os.path.join(item_dir, self.normalize_filename(params['name']), 'tvshow.nfo')
+            if not xbmcvfs.exists(nfo_file):
+                metadata = ""
+                if 'imdb' in params:
+                    metadata += "http://www.imdb.com/title/tt{0}/\n".format(params['imdb'])
+                if 'csfd' in params:
+                    metadata += "http://www.csfd.cz/film/{0}\n".format(params['csfd'])
                 tvid = self.getTVDB(params['name'])
                 if tvid:
-                    self.add_item_to_library(os.path.join(item_dir, self.normalize_filename(
-                        params['name']), 'tvshow.nfo'), 'http://thetvdb.com/index.php?tab=series&id=' + tvid)
+                    metadata += "http://thetvdb.com/index.php?tab=series&id={0}\n".format(tvid)
+                    self.add_item_to_library(nfo_file, metadata)
 
             episodes = self.provider.list_episodes(params['url'])
             for itm in episodes:
