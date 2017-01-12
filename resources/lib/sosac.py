@@ -74,6 +74,9 @@ LANG = 'd'
 QUALITY = 'q'
 IMDB = 'm'
 CSFD = 'c'
+DESCRIPTION = 'p'
+
+RATING_STEP = 2
 
 
 class SosacContentProvider(ContentProvider):
@@ -216,8 +219,9 @@ class SosacContentProvider(ContentProvider):
             item['title'] = self.get_video_name(video)
             item['img'] = IMAGE_MOVIE + video['i']
             item['url'] = video['l'] if video['l'] else ""
+            item['year'] = int(video['y'])
             if RATING in video:
-                item['rating'] = video[RATING]
+                item['rating'] = video[RATING] * RATING_STEP
             if LANG in video:
                 item['lang'] = video[LANG]
             if QUALITY in video:
@@ -247,6 +251,11 @@ class SosacContentProvider(ContentProvider):
             item['title'] = self.get_localized_name(serial['n'])
             item['img'] = IMAGE_SERIES + serial['i']
             item['url'] = serial['l']
+            item['year'] = int(serial['y'])
+            if DESCRIPTION in serial:
+                item['plot'] = serial[DESCRIPTION].encode('utf-8')
+            if RATING in serial:
+                item['rating'] = serial[RATING] * RATING_STEP
             if item['url'] in subs:
                 item['title'] = LIBRARY_FLAG_IS_PRESENT + item['title']
                 item['menu'] = {
@@ -281,6 +290,8 @@ class SosacContentProvider(ContentProvider):
                 for episode_key, video in episode.iteritems():
                     item = self.video_item()
                     item['title'] = series_key + "x" + episode_key + " - " + video['n']
+                    item['season'] = int(series_key)
+                    item['episode'] = int(episode_key)
                     if video['i'] is not None:
                         item['img'] = IMAGE_EPISODE + video['i']
                     item['url'] = video['l'] if video['l'] else ""
@@ -296,6 +307,8 @@ class SosacContentProvider(ContentProvider):
         for episode in json_series:
             item = self.video_item()
             item['title'] = self.get_episode_recently_name(episode)
+            item['season'] = int(episode['s'])
+            item['episode'] = int(episode['e'])
             item['img'] = IMAGE_EPISODE + episode['i']
             item['url'] = episode['l']
             result.append(item)
