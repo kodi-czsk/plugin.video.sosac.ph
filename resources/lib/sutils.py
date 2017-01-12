@@ -206,14 +206,12 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
             episodes = self.provider.list_episodes(params['url'])
             for itm in episodes:
-                nfo = re.search('^(?P<season>\d+)x(?P<episode>\d+)',
-                                itm['title'], re.IGNORECASE | re.DOTALL)
                 arg = {"play": itm['url'], 'cp': 'sosac.ph',
                        "title": itm['title']}
                 item_url = xbmcutil._create_plugin_url(
                     arg, 'plugin://' + self.addon_id + '/')
-                dirname = "Season " + nfo.group('season')
-                epname = "S%02dE%02d.strm" % (int(nfo.group('season')), int(nfo.group('episode')))
+                dirname = "Season {}".format(itm['season'])
+                epname = "S%02dE%02d.strm" % (itm['season'], itm['episode'])
                 filename = os.path.join(item_dir, self.normalize_filename(
                     params['name']), dirname, epname)
                 (err, new) = self.add_item_to_library(filename, item_url)
