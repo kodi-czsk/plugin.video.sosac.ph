@@ -293,7 +293,8 @@ class SosacContentProvider(ContentProvider):
             for series_key, episode in series.iteritems():
                 for episode_key, video in episode.iteritems():
                     item = self.video_item()
-                    item['title'] = series_key.zfill(2) + "x" + episode_key.zfill(2) + " - " + video['n']
+                    item['title'] = series_key.zfill(2) + "x" + episode_key.zfill(2) +\
+                                    " - " + video['n']
                     item['season'] = int(series_key)
                     item['episode'] = int(episode_key)
                     if video['i'] is not None:
