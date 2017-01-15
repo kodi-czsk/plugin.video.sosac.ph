@@ -210,7 +210,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                        "title": itm['title']}
                 item_url = xbmcutil._create_plugin_url(
                     arg, 'plugin://' + self.addon_id + '/')
-                dirname = "Season {}".format(itm['season'])
+                dirname = "Season " + str(itm['season'])
                 epname = "S%02dE%02d.strm" % (itm['season'], itm['episode'])
                 filename = os.path.join(item_dir, self.normalize_filename(
                     params['name']), dirname, epname)
