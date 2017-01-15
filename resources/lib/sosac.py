@@ -75,6 +75,7 @@ QUALITY = 'q'
 IMDB = 'm'
 CSFD = 'c'
 DESCRIPTION = 'p'
+GENRE = 'g'
 
 RATING_STEP = 2
 
@@ -226,6 +227,8 @@ class SosacContentProvider(ContentProvider):
                 item['lang'] = video[LANG]
             if QUALITY in video:
                 item['quality'] = video[QUALITY]
+            if GENRE in video:
+                item['plot'] = ' '.join(video[GENRE])
             item['menu'] = {
                 LIBRARY_MENU_ITEM_ADD: {
                     'url': item['url'],
@@ -289,7 +292,7 @@ class SosacContentProvider(ContentProvider):
             for series_key, episode in series.iteritems():
                 for episode_key, video in episode.iteritems():
                     item = self.video_item()
-                    item['title'] = series_key + "x" + episode_key + " - " + video['n']
+                    item['title'] = series_key.zfill(2) + "x" + episode_key.zfill(2) + " - " + video['n']
                     item['season'] = int(series_key)
                     item['episode'] = int(episode_key)
                     if video['i'] is not None:
@@ -355,9 +358,9 @@ class SosacContentProvider(ContentProvider):
         return (name + year).encode('utf-8')
 
     def get_episode_recently_name(self, episode):
-        serial = self.get_localized_name(episode['t']) + ' '
-        series = episode['s'] + "x"
-        number = episode['e'] + " - "
+        serial = self.get_localized_name(episode['t']) + ': '
+        series = episode['s'].zfill(2) + "x"
+        number = episode['e'].zfill(2) + " - "
         name = self.get_localized_name(episode['n'])
         return serial + series + number + name
 
