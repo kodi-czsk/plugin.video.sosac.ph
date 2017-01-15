@@ -145,7 +145,7 @@ class SosacContentProvider(ContentProvider):
         result.append(item)
 
         for item in result:
-            if not 'menu' in item:
+            if 'menu' not in item:
                 item['menu'] = {}
             item['menu'][LIBRARY_MENU_ITEM_REMOVE_ALL] = {
                 'action': LIBRARY_ACTION_REMOVE_ALL
@@ -159,7 +159,8 @@ class SosacContentProvider(ContentProvider):
 
     def search(self, keyword):
         if len(keyword) < 3 or len(keyword) > 100:
-            return [self.dir_item(title="Search query must be between 3 and 100 characters long!", url="fail")]
+            return [self.dir_item(title="Search query must be between 3 and 100 characters long!",
+                                  url="fail")]
         return self.list_videos(URL + J_SEARCH + urllib.quote_plus(keyword))
 
     def a_to_z(self, url):
@@ -365,7 +366,9 @@ class SosacContentProvider(ContentProvider):
         return serial + series + number + name
 
     def get_localized_name(self, names):
-        return names[self.ISO_639_1_CZECH] if self.ISO_639_1_CZECH in names else names[ISO_639_1_CZECH]
+        if self.ISO_639_1_CZECH in names:
+            return names[self.ISO_639_1_CZECH]
+        return names[ISO_639_1_CZECH]
 
     def _url(self, url):
         # DirtyFix nefunkcniho downloadu: Neznam kod tak se toho zkusenejsi chopte

@@ -181,7 +181,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 self.add_item_to_library(nfo_file, metadata)
 
             (error, new_items) = self.add_item_to_library(
-                os.path.join(item_dir, self.normalize_filename(sub['name']), self.normalize_filename(params['name'])) + '.strm', item_url)
+                os.path.join(item_dir, self.normalize_filename(sub['name']), 
+                             self.normalize_filename(params['name'])) + '.strm', item_url)
         elif params['type'] == sosac.LIBRARY_TYPE_TVSHOW:
             if not ('notify' in params):
                 self.showNotification(sub['name'], 'Checking new content')
