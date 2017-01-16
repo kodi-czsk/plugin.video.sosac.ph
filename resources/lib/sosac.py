@@ -20,12 +20,11 @@
 # *
 # */
 
-import re
 import urllib
 import urllib2
 import cookielib
-import xml.etree.ElementTree as ET
 import sys
+import json
 
 import util
 from provider import ContentProvider, cached, ResolveException
@@ -33,17 +32,52 @@ from provider import ContentProvider, cached, ResolveException
 sys.setrecursionlimit(10000)
 
 MOVIES_BASE_URL = "http://movies.prehraj.me"
-TV_SHOWS_BASE_URL = "http://tv.prehraj.me"
-MOVIES_A_TO_Z_TYPE = "movies-a-z"
-MOVIES_GENRE = "filmyxmlzanr.php"
-GENRE_PARAM = "zanr"
-TV_SHOWS_A_TO_Z_TYPE = "tv-shows-a-z"
-XML_LETTER = "xmlpismeno"
 TV_SHOW_FLAG = "#tvshow#"
 ISO_639_1_CZECH = "cs"
-MOST_POPULAR_TYPE = "most-popular"
-RECENTLY_ADDED_TYPE = "recently-added"
-SEARCH_TYPE = "search"
+
+# JSONs
+URL = "http://tv.sosac.to"
+J_MOVIES_A_TO_Z_TYPE = "/vystupy5981/souboryaz.json"
+J_MOVIES_GENRE = "/vystupy5981/souboryzanry.json"
+J_MOVIES_MOST_POPULAR = "/vystupy5981/moviesmostpopular.json"
+J_MOVIES_RECENTLY_ADDED = "/vystupy5981/moviesrecentlyadded.json"
+# hack missing json with a-z series
+J_TV_SHOWS_A_TO_Z_TYPE = "/vystupy5981/tvpismenaaz/"
+J_TV_SHOWS = "/vystupy5981/tvpismena/"
+J_SERIES = "/vystupy5981/serialy/"
+J_TV_SHOWS_MOST_POPULAR = "/vystupy5981/tvshowsmostpopular.json"
+J_TV_SHOWS_RECENTLY_ADDED = "/vystupy5981/tvshowsrecentlyadded.json"
+J_SEARCH = "/jsonsearchapi.php?q="
+STREAMUJ_URL = "http://www.streamuj.tv/video/"
+IMAGE_URL = "http://movies.sosac.tv/images/"
+IMAGE_MOVIE = IMAGE_URL + "75x109/movie-"
+IMAGE_SERIES = IMAGE_URL + "558x313/serial-"
+IMAGE_EPISODE = URL
+
+LIBRARY_MENU_ITEM_ADD = "[B][COLOR red]Add to library[/COLOR][/B]"
+LIBRARY_MENU_ITEM_ADD_ALL = "[B][COLOR red]Add all to library[/COLOR][/B]"
+LIBRARY_MENU_ITEM_REMOVE = "[B][COLOR red]Remove from subscription[/COLOR][/B]"
+LIBRARY_MENU_ITEM_REMOVE_ALL = "[B][COLOR red]Remove all subscriptions[/COLOR][/B]"
+LIBRARY_TYPE_VIDEO = "video"
+LIBRARY_TYPE_TVSHOW = "tvshow"
+LIBRARY_TYPE_ALL_VIDEOS = "all-videos"
+LIBRARY_TYPE_RECENT_VIDEOS = "recent-videos"
+LIBRARY_TYPE_ALL_SHOWS = "all-shows"
+LIBRARY_ACTION_ADD = "add-to-library"
+LIBRARY_ACTION_ADD_ALL = "add-all-to-library"
+LIBRARY_ACTION_REMOVE_ALL = "remove-all-from-library"
+LIBRARY_ACTION_REMOVE_SUBSCRIPTION = "remove-subscription"
+LIBRARY_FLAG_IS_PRESENT = "[B][COLOR yellow]*[/COLOR][/B] "
+
+RATING = 'r'
+LANG = 'd'
+QUALITY = 'q'
+IMDB = 'm'
+CSFD = 'c'
+DESCRIPTION = 'p'
+GENRE = 'g'
+
+RATING_STEP = 2
 
 
 class SosacContentProvider(ContentProvider):
@@ -60,98 +94,83 @@ class SosacContentProvider(ContentProvider):
     def on_init(self):
         kodilang = self.lang or 'cs'
         if kodilang == ISO_639_1_CZECH or kodilang == 'sk':
-            self.ISO_639_1_CZECH = ISO_639_1_CZECH + '/'
+            self.ISO_639_1_CZECH = ISO_639_1_CZECH
         else:
-            self.ISO_639_1_CZECH = ''
+            self.ISO_639_1_CZECH = 'en'
 
     def capabilities(self):
         return ['resolve', 'categories', 'search']
 
     def categories(self):
         result = []
-        for title, url in [
-            ("Movies", MOVIES_BASE_URL),
-            ("TV Shows", TV_SHOWS_BASE_URL),
-            ("Movies - by Genres", MOVIES_BASE_URL + "/" + MOVIES_GENRE),
-            ("Movies - Most popular",
-             MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE),
-            ("TV Shows - Most popular",
-             TV_SHOWS_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE),
-            ("Movies - Recently added",
-             MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE),
-            ("TV Shows - Recently added",
-             TV_SHOWS_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE)]:
-            item = self.dir_item(title=title, url=url)
-            if title == 'Movies' or title == 'TV Shows' or title == 'Movies - Recently added':
-                item['menu'] = {"[B][COLOR red]Add all to library[/COLOR][/B]": {
-                    'action': 'add-all-to-library', 'title': title}}
-            result.append(item)
+        item = self.dir_item(title="Movies", url=URL + J_MOVIES_A_TO_Z_TYPE)
+        item['menu'] = {
+            LIBRARY_MENU_ITEM_ADD_ALL: {
+                'action': LIBRARY_ACTION_ADD_ALL,
+                'type': LIBRARY_TYPE_ALL_VIDEOS
+            }
+        }
+        result.append(item)
+
+        item = self.dir_item(title="TV Shows", url=URL +
+                             J_TV_SHOWS_A_TO_Z_TYPE)
+        item['menu'] = {
+            LIBRARY_MENU_ITEM_ADD_ALL: {
+                'action': LIBRARY_ACTION_ADD_ALL,
+                'type': LIBRARY_TYPE_ALL_SHOWS
+            }
+        }
+        result.append(item)
+
+        item = self.dir_item(title="Movies - by Genres", url=URL +
+                             J_MOVIES_GENRE)
+        result.append(item)
+
+        item = self.dir_item(title="Movies - Most popular", url=URL +
+                             J_MOVIES_MOST_POPULAR)
+        result.append(item)
+
+        item = self.dir_item(title="TV Shows - Most popular", url=URL +
+                             J_TV_SHOWS_MOST_POPULAR)
+        result.append(item)
+
+        item = self.dir_item(title="Movies - Recently added", url=URL +
+                             J_MOVIES_RECENTLY_ADDED)
+        item['menu'] = {
+            LIBRARY_MENU_ITEM_ADD_ALL: {
+                'action': LIBRARY_ACTION_ADD_ALL,
+                'type': LIBRARY_TYPE_RECENT_VIDEOS
+            }
+        }
+        result.append(item)
+
+        for item in result:
+            if 'menu' not in item:
+                item['menu'] = {}
+            item['menu'][LIBRARY_MENU_ITEM_REMOVE_ALL] = {
+                'action': LIBRARY_ACTION_REMOVE_ALL
+            }
+
+        item = self.dir_item(title="TV Shows - Recently added", url=URL +
+                             J_TV_SHOWS_RECENTLY_ADDED)
+        result.append(item)
+
         return result
 
     def search(self, keyword):
-        return self.list_search('%s/%ssearch?%s' % (MOVIES_BASE_URL, self.ISO_639_1_CZECH,
-                                                    urllib.urlencode({'q': keyword})))
+        if len(keyword) < 3 or len(keyword) > 100:
+            return [self.dir_item(title="Search query must be between 3 and 100 characters long!",
+                                  url="fail")]
+        return self.list_videos(URL + J_SEARCH + urllib.quote_plus(keyword))
 
-    def a_to_z(self, url_type):
+    def a_to_z(self, url):
         result = []
         for letter in ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'e', 'h', 'i', 'j', 'k', 'l', 'm',
                        'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']:
             item = self.dir_item(title=letter.upper())
-            if url_type == MOVIES_A_TO_Z_TYPE:
-                item['url'] = self.base_url + "/filmyxmlpismeno.php?pismeno=" + letter
-            else:
-                item['url'] = self.base_url + "/" + self.ISO_639_1_CZECH + url_type + "/" + letter
+            item['url'] = URL + url + letter + ".json"
             result.append(item)
         return result
-
-    @staticmethod
-    def remove_flag_from_url(url, flag):
-        return url.replace(flag, "", count=1)
-
-    @staticmethod
-    def is_xml_letter(url):
-        if XML_LETTER in url:
-            return True
-        return False
-
-    @staticmethod
-    def is_base_url(url):
-        if url in [MOVIES_BASE_URL, TV_SHOWS_BASE_URL]:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def is_movie_url(url):
-        if MOVIES_BASE_URL in url:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def is_tv_shows_url(url):
-        if TV_SHOWS_BASE_URL in url:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def is_most_popular(url):
-        if MOST_POPULAR_TYPE in url:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def is_recently_added(url):
-        if RECENTLY_ADDED_TYPE in url:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def is_search(url):
-        return SEARCH_TYPE in url
 
     @staticmethod
     def particular_letter(url):
@@ -160,360 +179,197 @@ class SosacContentProvider(ContentProvider):
     def has_tv_show_flag(self, url):
         return TV_SHOW_FLAG in url
 
-    def remove_flags(self, url):
-        return url.replace(TV_SHOW_FLAG, "", 1)
-
     def list(self, url):
         util.info("Examining url " + url)
-        if MOVIES_GENRE in url:
-            return self.list_by_genres(url)
-        if self.is_most_popular(url):
-            if "movie" in url:
-                return self.list_movies_by_letter(url)
-            if "tv" in url:
-                return self.list_tv_shows_by_letter(url)
-        if self.is_recently_added(url):
-            util.debug("is recently added")
-            if "movie" in url:
-                return self.list_movie_recently_added(url)
-            if "tv" in url:
-                util.debug("is TV")
-                return self.list_tv_recently_added(url)
-        if self.is_search(url):
-            return self.list_search(url)
-        if self.is_base_url(url):
-            self.base_url = url
-            if "movie" in url:
-                return self.a_to_z(MOVIES_A_TO_Z_TYPE)
-            if "tv" in url:
-                return self.a_to_z(TV_SHOWS_A_TO_Z_TYPE)
+        if J_MOVIES_A_TO_Z_TYPE in url:
+            return self.load_json_list(url)
+        if J_MOVIES_GENRE in url:
+            return self.load_json_list(url)
+        if J_MOVIES_MOST_POPULAR in url:
+            return self.list_videos(url)
+        if J_MOVIES_RECENTLY_ADDED in url:
+            return self.list_videos(url)
+        if J_TV_SHOWS_A_TO_Z_TYPE in url:
+            return self.a_to_z(J_TV_SHOWS)
+        if J_TV_SHOWS in url:
+            return self.list_series_letter(url)
+        if J_SERIES in url:
+            return self.list_episodes(url)
+        if J_TV_SHOWS_MOST_POPULAR in url:
+            return self.list_series_letter(url)
+        if J_TV_SHOWS_RECENTLY_ADDED in url:
+            return self.list_recentlyadded_episodes(url)
+        return self.list_videos(url)
 
-        if self.particular_letter(url):
-            if "movie" in url:
-                return self.list_movies_by_letter(url)
-            if "tv" in url:
-                return self.list_tv_shows_by_letter(url)
-
-        if self.has_tv_show_flag(url):
-            return self.list_tv_show(self.remove_flags(url))
-
-        if self.is_xml_letter(url):
-            util.debug("xml letter")
-            if "movie" in url:
-                return self.list_xml_letter(url)
-
-        return [self.dir_item(title="I failed", url="fail")]
-
-    def list_by_genres(self, url):
-        if "?" + GENRE_PARAM in url:
-            return self.list_xml_letter(url)
-        else:
-            result = []
-            page = util.request(url)
-            data = util.substr(page, '<select name=\"zanr\">', '</select')
-            for s in re.finditer('<option value=\"([^\"]+)\">([^<]+)</option>', data,
-                                 re.IGNORECASE | re.DOTALL):
-                item = {'url': url + "?" + GENRE_PARAM + "=" +
-                        s.group(1), 'title': s.group(2), 'type': 'dir'}
-                self._filter(result, item)
-            return result
-
-    def list_xml_letter(self, url):
+    def load_json_list(self, url):
         result = []
         data = util.request(url)
-        tree = ET.fromstring(data)
-        for film in tree.findall('film'):
+        json_list = json.loads(data)
+        for key, value in json_list.iteritems():
+            item = self.dir_item(title=key.title())
+            item['url'] = value
+            result.append(item)
+
+        return sorted(result, key=lambda i: i['title'])
+
+    def list_videos(self, url):
+        result = []
+        data = util.request(url)
+        json_video_array = json.loads(data)
+        for video in json_video_array:
             item = self.video_item()
-            try:
-                if ISO_639_1_CZECH in self.ISO_639_1_CZECH:
-                    title = film.findtext('nazevcs').encode('utf-8')
-                else:
-                    title = film.findtext('nazeven').encode('utf-8')
-                basetitle = '%s (%s)' % (title, film.findtext('rokvydani'))
-                item['title'] = '%s - %s' % (basetitle, film.findtext('kvalita').upper())
-                item['name'] = item['title']
-                item['img'] = film.findtext('obrazekmaly')
-                item['url'] = self.base_url + '/player/' + self.parent.make_name(
-                    film.findtext('nazeven').encode('utf-8') + '-' + film.findtext('rokvydani'))
-                item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                    'url': item['url'], 'action': 'add-to-library', 'name': basetitle}}
-                self._filter(result, item)
-            except Exception, e:
-                util.error("ERR TITLE: " + item['title'] + " | " + str(e))
-                pass
-        util.debug(result)
+            item['title'] = self.get_video_name(video)
+            item['img'] = IMAGE_MOVIE + video['i']
+            item['url'] = video['l'] if video['l'] else ""
+            item['year'] = int(video['y'])
+            if RATING in video:
+                item['rating'] = video[RATING] * RATING_STEP
+            if LANG in video:
+                item['lang'] = video[LANG]
+            if QUALITY in video:
+                item['quality'] = video[QUALITY]
+            if GENRE in video:
+                item['plot'] = ' '.join(video[GENRE])
+            item['menu'] = {
+                LIBRARY_MENU_ITEM_ADD: {
+                    'url': item['url'],
+                    'type': LIBRARY_TYPE_VIDEO,
+                    'action': LIBRARY_ACTION_ADD,
+                    'name': self.get_library_video_name(video)
+                }
+            }
+            if CSFD in video and video[CSFD] is not None:
+                item['menu'][LIBRARY_MENU_ITEM_ADD]['csfd'] = video[CSFD]
+            if IMDB in video and video[CSFD] is not None:
+                item['menu'][LIBRARY_MENU_ITEM_ADD]['imdb'] = video[IMDB]
+            result.append(item)
         return result
 
-    def list_tv_show(self, url):
+    def list_series_letter(self, url, load_subs=True):
         result = []
-        page = util.request(url)
-        data = util.substr(page, '<div class=\"content\">', '<script')
-        for s in re.finditer('<strong.+?</ul>', data, re.IGNORECASE | re.DOTALL):
-            serie = s.group(0)
-            serie_name = re.search('<strong>([^<]+)', serie).group(1)
-            for e in re.finditer('<li.+?</li>', serie, re.IGNORECASE | re.DOTALL):
-                episode = e.group(0)
-                item = self.video_item()
-                ep_name = re.search('<a href=\"#[^<]+<span>(?P<id>[^<]+)</span>(?P<name>[^<]+)',
-                                    episode)
-                if ep_name:
-                    item['title'] = '%s %s %s' % (
-                        serie_name, ep_name.group('id'), ep_name.group('name'))
-                    item['epname'] = ep_name.group('name')
-                    item['ep'] = ep_name
-                i = re.search('<div class=\"inner-item[^<]+<img src=\"(?P<img>[^\"]+).+?<a href=\"'
-                              '(?P<url>[^\"]+)', episode, re.IGNORECASE | re.DOTALL)
-                if i:
-                    item['img'] = self._url(i.group('img'))
-                    item['url'] = i.group('url')
-                if i and ep_name:
-                    self._filter(result, item)
-        if self.reverse_eps:
+        data = util.request(url)
+        json_list = json.loads(data)
+        subs = self.get_subscriptions() if load_subs else {}
+        for serial in json_list:
+            item = self.dir_item()
+            item['title'] = self.get_localized_name(serial['n'])
+            item['img'] = IMAGE_SERIES + serial['i']
+            item['url'] = serial['l']
+            item['year'] = int(serial['y'])
+            if DESCRIPTION in serial:
+                item['plot'] = serial[DESCRIPTION].encode('utf-8')
+            if RATING in serial:
+                item['rating'] = serial[RATING] * RATING_STEP
+            if item['url'] in subs:
+                item['title'] = LIBRARY_FLAG_IS_PRESENT + item['title']
+                item['menu'] = {
+                    LIBRARY_MENU_ITEM_REMOVE: {
+                        'url': item['url'],
+                        'action': LIBRARY_ACTION_REMOVE_SUBSCRIPTION,
+                        'name': self.get_library_video_name(serial)
+                    }
+                }
+            else:
+                item['menu'] = {
+                    LIBRARY_MENU_ITEM_ADD: {
+                        'url': item['url'],
+                        'type': LIBRARY_TYPE_TVSHOW,
+                        'action': LIBRARY_ACTION_ADD,
+                        'name': self.get_library_video_name(serial)
+                    }
+                }
+                if CSFD in serial and serial[CSFD] is not None:
+                    item['menu'][LIBRARY_MENU_ITEM_ADD]['csfd'] = serial[CSFD]
+                if IMDB in serial and serial[IMDB] is not None:
+                    item['menu'][LIBRARY_MENU_ITEM_ADD]['imdb'] = serial[IMDB]
+            result.append(item)
+        return result
+
+    def list_episodes(self, url):
+        result = []
+        data = util.request(url)
+        json_series = json.loads(data)
+        for series in json_series:
+            for series_key, episode in series.iteritems():
+                for episode_key, video in episode.iteritems():
+                    item = self.video_item()
+                    item['title'] = (series_key.zfill(2) + "x" + episode_key.zfill(2) +
+                                     " - " + video['n'])
+                    item['season'] = int(series_key)
+                    item['episode'] = int(episode_key)
+                    if video['i'] is not None:
+                        item['img'] = IMAGE_EPISODE + video['i']
+                    item['url'] = video['l'] if video['l'] else ""
+                    result.append(item)
+        if not self.reverse_eps:
             result.reverse()
         return result
 
-    def add_video_flag(self, items):
-        flagged_items = []
-        for item in items:
-            flagged_item = self.video_item()
-            flagged_item.update(item)
-            flagged_items.append(flagged_item)
-        return flagged_items
-
-    def add_directory_flag(self, items):
-        flagged_items = []
-        for item in items:
-            flagged_item = self.dir_item()
-            flagged_item.update(item)
-            flagged_items.append(flagged_item)
-        return flagged_items
-
-    @cached(ttl=24)
-    def get_data_cached(self, url):
-        return util.request(url)
-
-    def list_by_letter(self, url):
+    def list_recentlyadded_episodes(self, url):
         result = []
-        page = self.get_data_cached(url)
-        data = util.substr(page, '<ul class=\"content', '</ul>')
-        subs = self.get_subs()
-        for m in re.finditer('<a class=\"title\" href=\"(?P<url>[^\"]+)[^>]+>(?P<name>[^<]+)', data,
-                             re.IGNORECASE | re.DOTALL):
-            item = {'url': m.group('url'), 'title': m.group('name')}
-            if item['url'] in subs:
-                item['menu'] = {"[B][COLOR red]Remove from subscription[/COLOR][/B]": {
-                    'url': m.group('url'), 'action': 'remove-subscription', 'name': m.group('name')}
-                }
-            else:
-                item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                    'url': m.group('url'), 'action': 'add-to-library', 'name': m.group('name')}}
-            self._filter(result, item)
-        paging = util.substr(page, '<div class=\"pagination\"', '</div')
-        next = re.search('<li class=\"next[^<]+<a href=\"\?page=(?P<page>\d+)', paging,
-                         re.IGNORECASE | re.DOTALL)
-        if next:
-            next_page = int(next.group('page'))
-            current = re.search('\?page=(?P<page>\d)', url)
-            current_page = 0
-            if self.is_most_popular(url) and next_page > 10:
-                return result
-            if current:
-                current_page = int(current.group('page'))
-            if current_page < next_page:
-                url = re.sub('\?.+?$', '', url) + '?page=' + str(next_page)
-                result += self.list_by_letter(url)
+        data = util.request(url)
+        json_series = json.loads(data)
+        for episode in json_series:
+            item = self.video_item()
+            item['title'] = self.get_episode_recently_name(episode)
+            item['season'] = int(episode['s'])
+            item['episode'] = int(episode['e'])
+            item['img'] = IMAGE_EPISODE + episode['i']
+            item['url'] = episode['l']
+            result.append(item)
         return result
 
-    def list_tv_recently_added(self, url):
-        result = []
-        page = self.get_data_cached(url)
-        data = util.substr(page, '<div class=\"content\"', '</ul>')
-        subs = self.get_subs()
-        for m in re.finditer('<a href=\"(?P<url>[^\"]+)[^>]+((?!<strong).)*<strong>S(?P<serie>\d+) '
-                             '/ E(?P<epizoda>\d+)</strong>((?!<a href).)*<a href=\"(?P<surl>[^\"]+)'
-                             '[^>]+class=\"mini\">((?!<span>).)*<span>\((?P<name>[^)]+)\)<',
-                             data, re.IGNORECASE | re.DOTALL):
-            item = self.video_item()
-            item['url'] = m.group('url')
-            item['title'] = "Rada " + m.group('serie') + " Epizoda " + m.group(
-                'epizoda') + " - " + m.group('name')
-            if item['url'] in subs:
-                item['menu'] = {"[B][COLOR red]Remove from subscription[/COLOR][/B]": {
-                    'url': m.group('url'), 'action': 'remove-subscription',
-                    'name': m.group('name') + " S" + m.group('serie') + 'E' + m.group('epizoda')}}
-            else:
-                item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                    'url': m.group('url'), 'action': 'add-to-library',
-                    'name': m.group('name') + " S" + m.group('serie') + 'E' + m.group('epizoda')}}
-            self._filter(result, item)
-        paging = util.substr(page, '<div class=\"pagination\"', '</div')
-        next = re.search('<li class=\"next[^<]+<a href=\"\?page_1=(?P<page>\d+)', paging,
-                         re.IGNORECASE | re.DOTALL)
-        if next:
-            next_page = int(next.group('page'))
-            current = re.search('\?page_1=(?P<page>\d)', url)
-            current_page = 0
-            if next_page > 30:
-                return result
-            if current:
-                current_page = int(current.group('page'))
-            if current_page < next_page:
-                url = re.sub('\?.+?$', '', url) + '?page_1=' + str(next_page)
-                result += self.list_tv_recently_added(url)
-        return result
+    def library_list_all_videos(self):
+        letters = self.load_json_list(URL + J_MOVIES_A_TO_Z_TYPE)
+        total = len(letters)
 
-    def library_movies_all_xml(self):
-        page = util.request('http://tv.prehraj.me/filmyxml.php')
-        pagedata = util.substr(page, '<select name=\"rok\">', '</select>')
-        pageitems = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>',
-                                pagedata, re.IGNORECASE | re.DOTALL)
-        pagetotal = float(len(list(pageitems)))
-        pageitems = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>',
-                                pagedata, re.IGNORECASE | re.DOTALL)
-        util.info("PocetRoku: %d" % pagetotal)
-        pagenum = 0
-        for m in pageitems:
-            pagenum += 1
-            if self.parent.dialog.iscanceled():
-                return
-            pageperc = float(pagenum / pagetotal) * 100
-            util.info("Rokpercento: %d" % int(pageperc))
-            data = util.request('http://tv.prehraj.me/filmyxml.php?rok=' +
-                                m.group('url') + '&sirka=670&vyska=377&affid=0#')
-            tree = ET.fromstring(data)
-            total = float(len(list(tree.findall('film'))))
-            util.info("TOTAL: %d" % total)
-            num = 0
-            for film in tree.findall('film'):
-                num += 1
-                perc = float(num / total) * 100
-                util.info("percento: %d" % int(perc))
-                if self.parent.dialog.iscanceled():
-                    return
-                item = self.video_item()
-                try:
-                    if ISO_639_1_CZECH in self.ISO_639_1_CZECH:
-                        title = film.findtext('nazevcs').encode('utf-8')
-                    else:
-                        title = film.findtext('nazeven').encode('utf-8')
-                    self.parent.dialog.update(int(perc), str(pagenum) + '/' + str(int(pagetotal)) +
-                                              ' [' + m.group('url') + '] ->  ' + title)
-                    item['title'] = '%s (%s)' % (title, film.findtext('rokvydani'))
-                    item['name'] = item['title']
-                    item['url'] = 'http://movies.prehraj.me/' + self.ISO_639_1_CZECH + \
-                        'player/' + self.parent.make_name(title + '-' + film.findtext('rokvydani'))
-                    item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                        'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
-                    item['update'] = True
-                    item['notify'] = False
-                    self.parent.add_item(item)
-                except Exception, e:
-                    util.error("ERR TITLE: " + item['title'] + " | " + str(e))
-                    pass
-#        self.parent.dialog.close()
+        step = int(100 / len(letters))
+        for idx, letter in enumerate(letters):
+            for video in self.list_videos(letter['url']):
+                yield video
+            yield {'progress': step * (idx + 1)}
 
-    def library_movie_recently_added_xml(self):
-        data = util.request(
-            'http://tv.prehraj.me/filmyxml2.php?limit=200&sirka=670&vyska=377&affid=0#')
-        tree = ET.fromstring(data)
-        total = float(len(list(tree.findall('film'))))
-        util.info("TOTAL: %d" % total)
-        num = 0
-        for film in tree.findall('film'):
-            num += 1
-            perc = float(num / total) * 100
-            util.info("percento: %d" % int(perc))
-            if self.parent.dialog.iscanceled():
-                return
-            self.parent.dialog.update(int(perc), film.findtext('nazevcs') + ' (' +
-                                      film.findtext('rokvydani') + ')\n' +
-                                      film.findtext('nazeven') + ' (' +
-                                      film.findtext('rokvydani') + ')\n\n\n')
-            item = self.video_item()
-            try:
-                if ISO_639_1_CZECH in self.ISO_639_1_CZECH:
-                    title = film.findtext('nazevcs').encode('utf-8')
-                else:
-                    title = film.findtext('nazeven').encode('utf-8')
-                item['title'] = '%s (%s)' % (title, film.findtext('rokvydani'))
-                item['name'] = item['title']
-                item['url'] = 'http://movies.prehraj.me/' + self.ISO_639_1_CZECH + \
-                    'player/' + self.parent.make_name(title + '-' + film.findtext('rokvydani'))
-                item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                    'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
-                item['update'] = True
-                item['notify'] = False
-                self.parent.add_item(item)
-                # print("TITLE: ", item['title'])
-            except Exception, e:
-                util.error("ERR TITLE: " + item['title'] + " | " + str(e))
-                pass
-#        self.parent.dialog.close()
+    def library_list_recent_videos(self):
+        videos = self.list_videos(URL + J_MOVIES_RECENTLY_ADDED)
+        total = len(videos)
 
-    def library_tvshows_all_xml(self):
-        page = util.request('http://tv.prehraj.me/serialyxml.php')
-        data = util.substr(page, '<select name=\"serialy\">', '</select>')
-        items = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', data,
-                            re.IGNORECASE | re.DOTALL)
-        total = float(len(list(items)))
-        items = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', data,
-                            re.IGNORECASE | re.DOTALL)
-        util.info("Pocet: %d" % total)
-        num = 0
-        for m in items:
-            num += 1
-            if self.parent.dialog.iscanceled():
-                return
-            perc = float(num / total) * 100
-            util.info("percento: %d" % int(perc))
-            self.parent.dialog.update(int(perc), m.group('name'))
-            item = {'url': 'http://tv.prehraj.me/cs/detail/' + m.group('url'),
-                    'action': 'add-to-library', 'name': m.group('name'), 'update': True,
-                    'notify': True}
-            self.parent.add_item(item)
+        step = int(100 / len(videos))
+        for idx, video in enumerate(videos):
+            yield video
+            yield {'progress': step * (idx + 1)}
 
-        util.info("done....")
+    def library_list_all_tvshows(self):
+        letters = self.a_to_z(J_TV_SHOWS)
+        total = len(letters)
 
-    def list_movie_recently_added(self, url):
-        result = []
-        page = self.get_data_cached(url)
-        data = util.substr(page, '<div class=\"content\"', '</ul>')
-        for m in re.finditer(
-                '<a class=\"content-block\" href=\"(?P<url>[^\"]+)\" title=\"(?P<name>[^\"]+)',
-                data, re.IGNORECASE | re.DOTALL):
-            item = self.video_item()
-            item['url'] = m.group('url')
-            item['title'] = m.group('name')
-            item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                'url': m.group('url'), 'action': 'add-to-library', 'name': m.group('name')}}
-            self._filter(result, item)
-        paging = util.substr(page, '<div class=\"pagination\"', '</div')
-        next = re.search('<li class=\"next[^<]+<a href=\"\?page=(?P<page>\d+)', paging,
-                         re.IGNORECASE | re.DOTALL)
-        if next:
-            next_page = int(next.group('page'))
-            current = re.search('\?page=(?P<page>\d)', url)
-            current_page = 0
-            if next_page > 5:
-                return result
-            if current:
-                current_page = int(current.group('page'))
-            if current_page < next_page:
-                url = re.sub('\?.+?$', '', url) + '?page=' + str(next_page)
-                result += self.list_movie_recently_added(url)
-        return result
+        step = int(100 / len(letters))
+        for idx, letter in enumerate(letters):
+            for video in self.list_series_letter(letter['url'], False):
+                yield video
+            yield {'progress': step * (idx + 1)}
 
-    def add_flag_to_url(self, item, flag):
-        item['url'] = flag + item['url']
-        return item
+    def get_video_name(self, video):
+        name = self.get_localized_name(video['n'])
+        year = (" (" + video['y'] + ")") if video['y'] else " "
+        quality = (" - " + video[QUALITY].upper()) if video[QUALITY] else ""
+        return name + year + quality
 
-    def add_url_flag_to_items(self, items, flag):
-        subs = self.get_subs()
-        for item in items:
-            if item['url'] in subs:
-                item['title'] = '[B][COLOR yellow]*[/COLOR][/B] ' + item['title']
-            self.add_flag_to_url(item, flag)
-        return items
+    def get_library_video_name(self, video):
+        name = self.get_localized_name(video['n'])
+        year = (" (" + video['y'] + ")") if video['y'] else " "
+        return (name + year).encode('utf-8')
+
+    def get_episode_recently_name(self, episode):
+        serial = self.get_localized_name(episode['t']) + ': '
+        series = episode['s'].zfill(2) + "x"
+        number = episode['e'].zfill(2) + " - "
+        name = self.get_localized_name(episode['n'])
+        return serial + series + number + name
+
+    def get_localized_name(self, names):
+        if self.ISO_639_1_CZECH in names:
+            return names[self.ISO_639_1_CZECH]
+        return names[ISO_639_1_CZECH]
 
     def _url(self, url):
         # DirtyFix nefunkcniho downloadu: Neznam kod tak se toho zkusenejsi chopte
@@ -523,65 +379,15 @@ class SosacContentProvider(ContentProvider):
         else:
             return self.base_url + "/" + url.lstrip('./')
 
-    def list_tv_shows_by_letter(self, url):
-        util.info("Getting shows by letter " + url)
-        shows = self.list_by_letter(url)
-        util.info("Resolved shows " + str(shows))
-        shows = self.add_directory_flag(shows)
-        return self.add_url_flag_to_items(shows, TV_SHOW_FLAG)
-
-    def list_movies_by_letter(self, url):
-        movies = self.list_by_letter(url)
-        util.info("Resolved movies " + str(movies))
-        return self.add_video_flag(movies)
-
     def resolve(self, item, captcha_cb=None, select_cb=None):
-        page = util.request(item['url'])
-        data = util.substr(page, '<div class=\"bottom-player\"', 'div>')
-        if data.find('<iframe') < 0:
+        data = item['url']
+        if not data:
             raise ResolveException('Video is not available.')
-        result = self.findstreams(data, ['<iframe src=\"(?P<url>[^\"]+)'])
+        result = self.findstreams([STREAMUJ_URL + data])
         if len(result) == 1:
             return result[0]
         elif len(result) > 1 and select_cb:
             return select_cb(result)
 
-    def get_subs(self):
+    def get_subscriptions(self):
         return self.parent.get_subs()
-
-    def list_search(self, url):
-        result = []
-        html_tree = util.parse_html(url)
-        for entry in html_tree.select('ul.content li'):
-            item = self.video_item()
-            entry.p.strong.extract()
-            item['url'] = entry.h4.a.get('href')
-            item['title'] = entry.h4.a.text
-            item['img'] = MOVIES_BASE_URL + entry.img.get('src')
-            item['plot'] = entry.p.text.strip()
-            item['menu'] = {"[B][COLOR red]Add to library[/COLOR][/B]": {
-                'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
-            self._filter(result, item)
-        # Process next 4 pages, so we'll get 20 items per page instead of 4
-        for next_page in html_tree.select('.pagination ul li.next a'):
-            next_url = '%s/%ssearch%s' % (MOVIES_BASE_URL, self.ISO_639_1_CZECH,
-                                          next_page.get('href'))
-            page_number = 1
-            page = re.search(r'\bpage=(\d+)', url)
-            if page:
-                page_number = int(page.group(1))
-            next_page_number = 1
-            page = re.search(r'\bpage=(\d+)', next_url)
-            if page:
-                next_page_number = int(page.group(1))
-            if page_number > next_page_number:
-                break
-            if page_number % 5 != 0:
-                result += self.list_search(next_url)
-            else:
-                item = self.dir_item()
-                item['type'] = 'next'
-                item['url'] = next_url
-                result.append(item)
-            break
-        return result
