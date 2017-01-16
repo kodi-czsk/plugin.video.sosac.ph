@@ -74,6 +74,10 @@ LANG = 'd'
 QUALITY = 'q'
 IMDB = 'm'
 CSFD = 'c'
+DESCRIPTION = 'p'
+GENRE = 'g'
+
+RATING_STEP = 2
 
 
 class SosacContentProvider(ContentProvider):
@@ -141,7 +145,7 @@ class SosacContentProvider(ContentProvider):
         result.append(item)
 
         for item in result:
-            if not 'menu' in item:
+            if 'menu' not in item:
                 item['menu'] = {}
             item['menu'][LIBRARY_MENU_ITEM_REMOVE_ALL] = {
                 'action': LIBRARY_ACTION_REMOVE_ALL
@@ -155,7 +159,8 @@ class SosacContentProvider(ContentProvider):
 
     def search(self, keyword):
         if len(keyword) < 3 or len(keyword) > 100:
-            return [self.dir_item(title="Search query must be between 3 and 100 characters long!", url="fail")]
+            return [self.dir_item(title="Search query must be between 3 and 100 characters long!",
+                                  url="fail")]
         return self.list_videos(URL + J_SEARCH + urllib.quote_plus(keyword))
 
     def a_to_z(self, url):
@@ -216,12 +221,15 @@ class SosacContentProvider(ContentProvider):
             item['title'] = self.get_video_name(video)
             item['img'] = IMAGE_MOVIE + video['i']
             item['url'] = video['l'] if video['l'] else ""
+            item['year'] = int(video['y'])
             if RATING in video:
-                item['rating'] = video[RATING]
+                item['rating'] = video[RATING] * RATING_STEP
             if LANG in video:
                 item['lang'] = video[LANG]
             if QUALITY in video:
                 item['quality'] = video[QUALITY]
+            if GENRE in video:
+                item['plot'] = ' '.join(video[GENRE])
             item['menu'] = {
                 LIBRARY_MENU_ITEM_ADD: {
                     'url': item['url'],
@@ -247,6 +255,11 @@ class SosacContentProvider(ContentProvider):
             item['title'] = self.get_localized_name(serial['n'])
             item['img'] = IMAGE_SERIES + serial['i']
             item['url'] = serial['l']
+            item['year'] = int(serial['y'])
+            if DESCRIPTION in serial:
+                item['plot'] = serial[DESCRIPTION].encode('utf-8')
+            if RATING in serial:
+                item['rating'] = serial[RATING] * RATING_STEP
             if item['url'] in subs:
                 item['title'] = LIBRARY_FLAG_IS_PRESENT + item['title']
                 item['menu'] = {
@@ -280,7 +293,10 @@ class SosacContentProvider(ContentProvider):
             for series_key, episode in series.iteritems():
                 for episode_key, video in episode.iteritems():
                     item = self.video_item()
-                    item['title'] = series_key + "x" + episode_key + " - " + video['n']
+                    item['title'] = (series_key.zfill(2) + "x" + episode_key.zfill(2) +
+                                     " - " + video['n'])
+                    item['season'] = int(series_key)
+                    item['episode'] = int(episode_key)
                     if video['i'] is not None:
                         item['img'] = IMAGE_EPISODE + video['i']
                     item['url'] = video['l'] if video['l'] else ""
@@ -296,6 +312,8 @@ class SosacContentProvider(ContentProvider):
         for episode in json_series:
             item = self.video_item()
             item['title'] = self.get_episode_recently_name(episode)
+            item['season'] = int(episode['s'])
+            item['episode'] = int(episode['e'])
             item['img'] = IMAGE_EPISODE + episode['i']
             item['url'] = episode['l']
             result.append(item)
@@ -342,14 +360,16 @@ class SosacContentProvider(ContentProvider):
         return (name + year).encode('utf-8')
 
     def get_episode_recently_name(self, episode):
-        serial = self.get_localized_name(episode['t']) + ' '
-        series = episode['s'] + "x"
-        number = episode['e'] + " - "
+        serial = self.get_localized_name(episode['t']) + ': '
+        series = episode['s'].zfill(2) + "x"
+        number = episode['e'].zfill(2) + " - "
         name = self.get_localized_name(episode['n'])
         return serial + series + number + name
 
     def get_localized_name(self, names):
-        return names[self.ISO_639_1_CZECH] if self.ISO_639_1_CZECH in names else names[ISO_639_1_CZECH]
+        if self.ISO_639_1_CZECH in names:
+            return names[self.ISO_639_1_CZECH]
+        return names[ISO_639_1_CZECH]
 
     def _url(self, url):
         # DirtyFix nefunkcniho downloadu: Neznam kod tak se toho zkusenejsi chopte
