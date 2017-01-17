@@ -1,5 +1,6 @@
-[B]1.3.0:[/B] xx. 01. 2017
+[B]1.3.0:[/B] 17. 01. 2017
 - Přepsání a použití JSON souborů od sosac (Saljack)
+- Nová verze knihovny - je nutné nejprve smazat včechny dříve vytovřené .strm soubory, následně pak všechen obsah do knihovny přidat znovu (bude se jevit jako prázdná). Nakonec pak vyčisti KODI knihovnu, aby se smazali odkazy na právě smazané .strm soubory
 [B]1.2.13:[/B] 14. 12. 2016
 - Nová možnost automatického výběru videa dle jazyka
 [B]1.2.5:[/B] 26. 03. 2016
