@@ -2,6 +2,7 @@
 <strings>
 	<string id="30000">Počet zapamätaných hľadaní</string>
 	<string id="30001">Video nie je dostupné, skontrolujte,[CR]či funguje prehrávanie na webe.</string>
+	<string id="30002">Prehrávanie tohto videa[CR]nie je zatiaľ podporované.</string>
 	<string id="30003">[B]Najnovšie epizódy[/B]</string>
 	<string id="30004">Vyberte zdroj</string>
 	<string id="30005">Podľa dátumu</string>
@@ -27,9 +28,15 @@
 	<string id="30057">Radenie epizód</string>
 	<string id="30058">Od najstarších</string>
 	<string id="30059">Od najnovších</string>
+	<string id="30060">Automatický výber jazyka</string>
+	<string id="30061">Ľubovoľný</string>
+	<string id="30062">Angličtina</string>
+	<string id="30063">Čeština</string>
 	<string id="30100">Priečinok pre filmy</string>
 	<string id="30101">Priečinok pre seriály</string>
-	<string id="30102">Uspať po štarte</string>
-	<string id="30063">Vkladať titulky, ak sú k dispozícii</string>
+	<string id="30102">Zdržať štart služby o (hodiny)</string>
+	<string id="30103">Všeobecné</string>
+	<string id="30104">Služba knižnice</string>
+	<string id="30105">Štandardný čas pre obnovu seriálov (dni)</string>
 	<string id="31000">Údaje o použití sú zaslané iba v okamihu, keď spustíte prehrávanie alebo sťahovanie videa doplnkom.</string>
 </strings>
