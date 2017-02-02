@@ -165,7 +165,7 @@ class SosacContentProvider(ContentProvider):
 
     def a_to_z(self, url):
         result = []
-        for letter in ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'e', 'h', 'i', 'j', 'k', 'l', 'm',
+        for letter in ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
                        'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']:
             item = self.dir_item(title=letter.upper())
             item['url'] = URL + url + letter + ".json"
