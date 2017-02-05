@@ -2,10 +2,11 @@
 <settings>
     <category label="30103">
         <setting label="30000" type="text" id="keep-searches" default="20" />
-        <setting label="30063" id="subs" type="bool" default="true" />
+        <setting label="30065" id="subs" type="bool" default="true" />
         <setting label="30057" id="order-episodes" type="enum" lvalues="30058|30059" default="0" />
         <setting label="30050" id="quality" type="enum" lvalues="30051|30052|30053|30054|30055|30056" default="0" />
         <setting label="30060" id="language" type="enum" lvalues="30061|30062|30063" default="0" />
+        <setting label="30070" id="force-czech" type="bool" default="false" />
         <setting label="30030" id="downloads" type="folder" default="" />
         <setting label="30032" id="download-notify" type="bool" default="true" />
         <setting label="30033" id="download-notify-every" type="enum" lvalues="30034|30035|30036" default="0" visible="eq(-1,true)" />
