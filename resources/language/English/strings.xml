@@ -38,7 +38,7 @@
     <string id="30103">General</string>
     <string id="30104">Subscriptions</string>
     <string id="30105">Default show check time (days)</string>
-    <string id="30063">Load subtitles if available</string>
+    <string id="30065">Load subtitles if available</string>
     <string id="31000">Usage of plugin is tracked whenever you play or download video.</string>
     <string id="30070">Force Czech titles</string>
 </strings>
