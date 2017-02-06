@@ -25,6 +25,7 @@ import urllib2
 import cookielib
 import sys
 import json
+import datetime
 
 import util
 from provider import ContentProvider, cached, ResolveException
@@ -136,8 +137,7 @@ class SosacContentProvider(ContentProvider):
                              J_TV_SHOWS_MOST_POPULAR)
         result.append(item)
 
-        item = self.dir_item(title="Movies - Recently added", url=URL +
-                             J_MOVIES_RECENTLY_ADDED)
+        item = self.item_with_last_mod("Movies - Recently added", URL + J_MOVIES_RECENTLY_ADDED)
         item['menu'] = {
             LIBRARY_MENU_ITEM_ADD_ALL: {
                 'action': LIBRARY_ACTION_ADD_ALL,
@@ -153,8 +153,7 @@ class SosacContentProvider(ContentProvider):
                 'action': LIBRARY_ACTION_REMOVE_ALL
             }
 
-        item = self.dir_item(title="TV Shows - Recently added", url=URL +
-                             J_TV_SHOWS_RECENTLY_ADDED)
+        item = self.item_with_last_mod("TV Shows - Recently added", URL + J_TV_SHOWS_RECENTLY_ADDED)
         result.append(item)
 
         return result
@@ -393,3 +392,26 @@ class SosacContentProvider(ContentProvider):
 
     def get_subscriptions(self):
         return self.parent.get_subs()
+
+    def request_last_update(self, url):
+        util.debug('request: %s' % url)
+        lastmod = None
+        req = urllib2.Request(url)
+        req.add_header('User-Agent', util.UA)
+        try:
+            response = urllib2.urlopen(req)
+            lastmod = datetime.datetime(*response.info().getdate('Last-Modified')[:6]).strftime(
+                                        '%d.%m.%Y')
+            response.close()
+        except urllib2.HTTPError, error:
+            util.debug(error.read())
+            error.close()
+        util.debug('last update' + lastmod)
+        return lastmod
+
+    def item_with_last_mod(self, title, url):
+        lastmod = self.request_last_update(url)
+        if lastmod:
+            title += " (" + lastmod + ")"
+        item = self.dir_item(title=title, url=url)
+        return item
