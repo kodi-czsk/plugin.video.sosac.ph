@@ -131,23 +131,27 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         return (xbmc.getCondVisibility('Library.IsScanningVideo') or
                 xbmc.getCondVisibility('Library.IsScanningMusic'))
 
-    def getBBDB(self, name):
-        name = util.request('http://csfd.bbaron.sk/find.php?' +
-                            urllib.urlencode({'sosac': 1, 'name': name}))
-        if name != '':
-            return self.getTVDB(name, 1)
-        return None
-
-    def getTVDB(self, name, level=0):
-        data = util.request('http://thetvdb.com/api/GetSeries.php?' +
-                            urllib.urlencode({'seriesname': name, 'language': 'cs'}))
-        try:
-            tvid = re.search('<id>(\d+)</id>', data).group(1)
-        except:
-            if level == 0:
-                tvid = self.getBBDB(name)
-            else:
+    def getTVDB(self, name, id):
+        if id:
+            data = (util.request('http://thetvdb.com/api/GetSeriesByRemoteID.php?imdbid=tt'
+                    + id + '&language=all'))
+            try:
+                tvid = re.search('<id>(\d+)</id>', data).group(1)
+            except:
                 tvid = None
+        if tvid is None:
+            shortname = re.search('(.+) (\(\d{4}\))', name).group(1)
+            urllang = [urllib.urlencode({'seriesname': shortname})+'&language=cs',
+                    urllib.urlencode({'seriesname': shortname})+'&language=all',
+                    urllib.urlencode({'seriesname': name})+'&language=cs',
+                    urllib.urlencode({'seriesname': name})+'&language=all']
+            for iter in urllang:
+                data = util.request('http://thetvdb.com/api/GetSeries.php?' + iter)
+                try:
+                    tvid = re.search('<id>(\d+)</id>', data).group(1)
+                    break
+                except:
+                    tvid = None
         return tvid
 
     def add_item(self, params):
@@ -173,12 +177,14 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 sub['name']), self.normalize_filename(params['name']) + '.nfo')
             if not xbmcvfs.exists(nfo_file):
                 metadata = ""
-                if 'imdb' in params:
+                if ('imdb' in params and params['imdb'] is not None
+                        and re.match('^$|^[?0]$', params['imdb']) is None):
                     metadata += "http://www.imdb.com/title/tt{0}/\n".format(params['imdb'])
-                if 'csfd' in params:
+                if ('csfd' in params and params['csfd'] is not None
+                        and re.match('^$|^[?0]$', params['csfd']) is None):
                     metadata += "http://www.csfd.cz/film/{0}\n".format(params['csfd'])
-
-                self.add_item_to_library(nfo_file, metadata)
+                if metadata != "":
+                    self.add_item_to_library(nfo_file, metadata)
 
             (error, new_items) = self.add_item_to_library(
                 os.path.join(item_dir, self.normalize_filename(sub['name']),
@@ -196,13 +202,16 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             nfo_file = os.path.join(item_dir, self.normalize_filename(params['name']), 'tvshow.nfo')
             if not xbmcvfs.exists(nfo_file):
                 metadata = ""
-                if 'imdb' in params:
+                if ('imdb' in params and params['imdb'] is not None
+                        and re.match('^$|^[?0]$', params['imdb']) is None):
                     metadata += "http://www.imdb.com/title/tt{0}/\n".format(params['imdb'])
-                if 'csfd' in params:
+                if ('csfd' in params and params['csfd'] is not None
+                        and re.match('^$|^[?0]$', params['csfd']) is None):
                     metadata += "http://www.csfd.cz/film/{0}\n".format(params['csfd'])
-                tvid = self.getTVDB(params['name'])
+                tvid = self.getTVDB(params['name'], params['imdb'])
                 if tvid:
                     metadata += "http://thetvdb.com/index.php?tab=series&id={0}\n".format(tvid)
+                if metadata != "":
                     self.add_item_to_library(nfo_file, metadata)
 
             episodes = self.provider.list_episodes(params['url'])
