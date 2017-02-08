@@ -133,18 +133,18 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     def getTVDB(self, name, id):
         if id:
-            data = (util.request('http://thetvdb.com/api/GetSeriesByRemoteID.php?imdbid=tt'
-                    + id + '&language=all'))
+            data = (util.request('http://thetvdb.com/api/GetSeriesByRemoteID.php?imdbid=tt' +
+                    id + '&language=all'))
             try:
                 tvid = re.search('<id>(\d+)</id>', data).group(1)
             except:
                 tvid = None
         if tvid is None:
             shortname = re.search('(.+) (\(\d{4}\))', name).group(1)
-            urllang = [urllib.urlencode({'seriesname': shortname})+'&language=cs',
-                    urllib.urlencode({'seriesname': shortname})+'&language=all',
-                    urllib.urlencode({'seriesname': name})+'&language=cs',
-                    urllib.urlencode({'seriesname': name})+'&language=all']
+            urllang = ([urllib.urlencode({'seriesname': shortname})+'&language=cs',
+                        urllib.urlencode({'seriesname': shortname})+'&language=all',
+                        urllib.urlencode({'seriesname': name})+'&language=cs',
+                        urllib.urlencode({'seriesname': name})+'&language=all'])
             for iter in urllang:
                 data = util.request('http://thetvdb.com/api/GetSeries.php?' + iter)
                 try:
@@ -177,11 +177,11 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 sub['name']), self.normalize_filename(params['name']) + '.nfo')
             if not xbmcvfs.exists(nfo_file):
                 metadata = ""
-                if ('imdb' in params and params['imdb'] is not None
-                        and re.match('^$|^[?0]$', params['imdb']) is None):
+                if ('imdb' in params and params['imdb'] is not None and
+                        re.match('^$|^[?0]$', params['imdb']) is None):
                     metadata += "http://www.imdb.com/title/tt{0}/\n".format(params['imdb'])
-                if ('csfd' in params and params['csfd'] is not None
-                        and re.match('^$|^[?0]$', params['csfd']) is None):
+                if ('csfd' in params and params['csfd'] is not None and
+                        re.match('^$|^[?0]$', params['csfd']) is None):
                     metadata += "http://www.csfd.cz/film/{0}\n".format(params['csfd'])
                 if metadata != "":
                     self.add_item_to_library(nfo_file, metadata)
@@ -202,11 +202,11 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             nfo_file = os.path.join(item_dir, self.normalize_filename(params['name']), 'tvshow.nfo')
             if not xbmcvfs.exists(nfo_file):
                 metadata = ""
-                if ('imdb' in params and params['imdb'] is not None
-                        and re.match('^$|^[?0]$', params['imdb']) is None):
+                if ('imdb' in params and params['imdb'] is not None and
+                        re.match('^$|^[?0]$', params['imdb']) is None):
                     metadata += "http://www.imdb.com/title/tt{0}/\n".format(params['imdb'])
-                if ('csfd' in params and params['csfd'] is not None
-                        and re.match('^$|^[?0]$', params['csfd']) is None):
+                if ('csfd' in params and params['csfd'] is not None and
+                        re.match('^$|^[?0]$', params['csfd']) is None):
                     metadata += "http://www.csfd.cz/film/{0}\n".format(params['csfd'])
                 tvid = self.getTVDB(params['name'], params['imdb'])
                 if tvid:
