@@ -258,56 +258,40 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 self.dialog.create("Sosac", "Adding All Movies to library")
                 self.dialog.update(0)
                 if params['type'] == sosac.LIBRARY_TYPE_ALL_VIDEOS:
-                    self.dialog.create("Sosac", "Adding All Movies to library")
-                    self.dialog.update(0)
-                    videos = self.provider.library_list_all_videos()
-                    for video in videos:
-                        if self.dialog.iscanceled():
-                            return
-                        if 'progress' in video:
-                            self.dialog.update(video['progress'])
-                        else:
-                            item = video['menu'][sosac.LIBRARY_MENU_ITEM_ADD]
-                            item["update"] = True
-                            item["notify"] = True
-                            item["type"] = sosac.LIBRARY_TYPE_VIDEO
-                            self.add_item(item)
-                    self.dialog.close()
+                    self.action_add_all("Adding All Movies to library",
+                                        self.provider.library_list_all_videos)
                 if params['type'] == sosac.LIBRARY_TYPE_RECENT_VIDEOS:
-                    self.dialog.create("Sosac", "Adding Recent Movies to library")
-                    self.dialog.update(0)
-                    videos = self.provider.library_list_recent_videos()
-                    for video in videos:
-                        if self.dialog.iscanceled():
-                            return
-                        if 'progress' in video:
-                            self.dialog.update(video['progress'])
-                        else:
-                            item = video['menu'][sosac.LIBRARY_MENU_ITEM_ADD]
-                            item["update"] = True
-                            item["notify"] = True
-                            item["type"] = sosac.LIBRARY_TYPE_VIDEO
-                            self.add_item(item)
-                    self.dialog.close()
+                    self.action_add_all("Adding Recent Movies to library",
+                                        self.provider.library_list_recent_videos)
+                if params['type'] == sosac.LIBRARY_TYPE_RECENT_CZ_VIDEOS:
+                    self.action_add_all("Adding Recent Movies CZ to library",
+                                        self.provider.library_list_recent_videos,
+                                        self.provider.has_video_czech_dub)
                 elif params['type'] == sosac.LIBRARY_TYPE_ALL_SHOWS:
-                    self.dialog.create(
-                        "Sosac", "Adding All TV Shows to library")
-                    self.dialog.update(0)
-                    shows = self.provider.library_list_all_tvshows()
-                    for show in shows:
-                        if self.dialog.iscanceled():
-                            return
-                        if 'progress' in show:
-                            self.dialog.update(show['progress'])
-                        else:
-                            item = show['menu'][sosac.LIBRARY_MENU_ITEM_ADD]
-                            item["update"] = True
-                            item["notify"] = True
-                            item["type"] = sosac.LIBRARY_TYPE_TVSHOW
-                            self.add_item(item)
+                    self.action_add_all("Adding All TV Shows to library",
+                                        self.provider.library_list_all_tvshows,
+                                        sosac_type=sosac.LIBRARY_TYPE_TVSHOW)
 
                 xbmc.executebuiltin('UpdateLibrary(video)')
         return False
+
+    def action_add_all(self, dialog_text, list_cb, filter=None,
+                       sosac_type=sosac.LIBRARY_TYPE_VIDEO):
+        self.dialog.create("Sosac", dialog_text)
+        self.dialog.update(0)
+        videos = list_cb(filter) if filter else list_cb()
+        for video in videos:
+            if self.dialog.iscanceled():
+                return
+            if 'progress' in video:
+                self.dialog.update(video['progress'])
+            else:
+                item = video['menu'][sosac.LIBRARY_MENU_ITEM_ADD]
+                item["update"] = True
+                item["notify"] = True
+                item["type"] = sosac_type
+                self.add_item(item)
+        self.dialog.close()
 
     def add_item_to_library(self, item_path, item_url):
         error = False
