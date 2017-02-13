@@ -173,9 +173,11 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 sub['name']), self.normalize_filename(params['name']) + '.nfo')
             if not xbmcvfs.exists(nfo_file):
                 metadata = ""
-                if 'imdb' in params and params['imdb'] and not re.match('^$|^[?0]$', params['imdb']):
+                if ('imdb' in params and params['imdb'] and not
+                        re.match('^$|^[?0]$', params['imdb'])):
                     metadata += "http://www.imdb.com/title/tt{0}/\n".format(params['imdb'])
-                if 'csfd' in params and params['csfd'] and not re.match('^$|^[?0]$', params['csfd']):
+                if ('csfd' in params and params['csfd'] and not
+                        re.match('^$|^[?0]$', params['csfd'])):
                     metadata += "http://www.csfd.cz/film/{0}\n".format(params['csfd'])
                 if metadata != "":
                     self.add_item_to_library(nfo_file, metadata)
@@ -196,9 +198,11 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             nfo_file = os.path.join(item_dir, self.normalize_filename(params['name']), 'tvshow.nfo')
             if not xbmcvfs.exists(nfo_file):
                 metadata = ""
-                if 'imdb' in params and params['imdb'] and not re.match('^$|^[?0]$', params['imdb']):
+                if ('imdb' in params and params['imdb'] and not
+                        re.match('^$|^[?0]$', params['imdb'])):
                     metadata += "http://www.imdb.com/title/tt{0}/\n".format(params['imdb'])
-                if 'csfd' in params and params['csfd'] and not re.match('^$|^[?0]$', params['csfd']):
+                if ('csfd' in params and params['csfd'] and not
+                        re.match('^$|^[?0]$', params['csfd'])):
                     metadata += "http://www.csfd.cz/film/{0}\n".format(params['csfd'])
                 tvid = self.getTVDB(params['name'], params['imdb'])
                 if tvid:
