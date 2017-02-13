@@ -36,6 +36,8 @@ sys.setrecursionlimit(10000)
 MOVIES_BASE_URL = "http://movies.prehraj.me"
 TV_SHOW_FLAG = "#tvshow#"
 ISO_639_1_CZECH = "cs"
+ALPHA_SORT = '1'
+YEAR_SORT = '2'
 
 # JSONs
 URL = "http://tv.sosac.to"
@@ -87,7 +89,7 @@ class SosacContentProvider(ContentProvider):
     par = None
 
     def __init__(self, username=None, password=None, filter=None, reverse_eps=False,
-                 force_czech=False):
+                 force_czech=False, order_recently_by=0):
         ContentProvider.__init__(self, name='sosac.ph', base_url=MOVIES_BASE_URL, username=username,
                                  password=password, filter=filter)
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.LWPCookieJar()))
@@ -97,6 +99,7 @@ class SosacContentProvider(ContentProvider):
         self.streamujtv_user = None
         self.streamujtv_pass = None
         self.streamujtv_location = None
+        self.order_recently_by = order_recently_by
 
     def on_init(self):
         kodilang = self.lang or 'cs'
@@ -193,7 +196,7 @@ class SosacContentProvider(ContentProvider):
         if J_MOVIES_MOST_POPULAR in url:
             return self.list_videos(url)
         if J_MOVIES_RECENTLY_ADDED in url:
-            return self.list_videos(url)
+            return self.list_videos(url, order_by=self.order_recently_by)
         if J_TV_SHOWS_A_TO_Z_TYPE in url:
             return self.a_to_z(J_TV_SHOWS)
         if J_TV_SHOWS in url:
@@ -217,7 +220,7 @@ class SosacContentProvider(ContentProvider):
 
         return sorted(result, key=lambda i: i['title'])
 
-    def list_videos(self, url):
+    def list_videos(self, url, order_by=0):
         result = []
         data = util.request(url)
         json_video_array = json.loads(data)
@@ -248,6 +251,11 @@ class SosacContentProvider(ContentProvider):
             if IMDB in video and video[CSFD] is not None:
                 item['menu'][LIBRARY_MENU_ITEM_ADD]['imdb'] = video[IMDB]
             result.append(item)
+        util.debug("ORDER BY" + str(order_by))
+        if order_by == ALPHA_SORT:
+            result = sorted(result, key=lambda i: i['title'])
+        elif order_by == YEAR_SORT:
+            result = sorted(result, key=lambda i: i['year'], reverse=True)
         return result
 
     def list_series_letter(self, url, load_subs=True):

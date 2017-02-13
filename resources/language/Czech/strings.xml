@@ -45,4 +45,8 @@
     <string id="30110">Mimo ČR</string>
     <string id="31000">Data o použití jsou zaslána pouze v okamžiku, kdy spustíte přehrávání nebo stahování videa doplňkem.</string>
     <string id="30070">Vynutit české názvy</string>
+    <string id="30080">Řadit poslední přidané</string>
+    <string id="30081">Neřadit</string>
+    <string id="30082">Abecedně</string>
+    <string id="30083">Roku</string>
 </strings>

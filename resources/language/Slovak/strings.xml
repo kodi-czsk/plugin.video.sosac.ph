@@ -48,4 +48,8 @@
     <string id="31000">Údaje o použití sú zaslané iba v okamihu, keď spustíte prehrávanie alebo sťahovanie videa doplnkom.</string>
     <string id="30065">Vkladať titulky</string>
     <string id="30070">Vynutit české názvy</string>
+    <string id="30080">Radiť poslednej pridanej</string>
+    <string id="30081">Neradiť</string>
+    <string id="30082">Abecedne</string>
+    <string id="30083">Roku</string>
 </strings>
