@@ -263,10 +263,18 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 if params['type'] == sosac.LIBRARY_TYPE_RECENT_VIDEOS:
                     self.action_add_all("Adding Recent Movies to library",
                                         self.provider.library_list_recent_videos)
-                if params['type'] == sosac.LIBRARY_TYPE_RECENT_CZ_VIDEOS:
-                    self.action_add_all("Adding Recent Movies CZ to library",
+                if sosac.LIBRARY_TYPE_ALL_VIDEOS + sosac.DUBBING_URL_PARAM in params['type']:
+                    dub = self.provider.search_dub(params['type']).group(1)
+                    self.action_add_all("Adding All Movies to library " + dub,
+                                        self.provider.library_list_all_videos,
+                                        self.provider.has_video_dub(dub)
+                                        )
+                if sosac.LIBRARY_TYPE_RECENT_VIDEOS + sosac.DUBBING_URL_PARAM in params['type']:
+                    dub = self.provider.search_dub(params['type']).group(1)
+                    self.action_add_all("Adding Recent Movies to library " + dub,
                                         self.provider.library_list_recent_videos,
-                                        self.provider.has_video_czech_dub)
+                                        self.provider.has_video_dub(dub)
+                                        )
                 elif params['type'] == sosac.LIBRARY_TYPE_ALL_SHOWS:
                     self.action_add_all("Adding All TV Shows to library",
                                         self.provider.library_list_all_tvshows,
