@@ -39,6 +39,11 @@
     <string id="30104">Subscriptions</string>
     <string id="30105">Default show check time (days)</string>
     <string id="30065">Load subtitles if available</string>
+    <string id="30106">StreamujTV Login</string>
+    <string id="30107">StreamujTV Password</string>
+    <string id="30108">StreamujTV Location</string>
+    <string id="30109">Czech</string>
+    <string id="30110">Other</string>
     <string id="31000">Usage of plugin is tracked whenever you play or download video.</string>
     <string id="30070">Force Czech titles</string>
 </strings>

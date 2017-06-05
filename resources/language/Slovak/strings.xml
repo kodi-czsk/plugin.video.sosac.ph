@@ -38,6 +38,13 @@
 	<string id="30103">Všeobecné</string>
 	<string id="30104">Služba knižnice</string>
 	<string id="30105">Štandardný čas pre obnovu seriálov (dni)</string>
+	<string id="30102">Uspať po štarte</string>
+	<string id="30065">Vkladať titulky, ak sú k dispozícii</string>
+    <string id="30106">StreamujTV Login</string>
+    <string id="30107">StreamujTV Heslo</string>
+    <string id="30108">StreamujTV Lokalita</string>
+    <string id="30109">ČR</string>
+    <string id="30110">Mimo ČR</string>
 	<string id="31000">Údaje o použití sú zaslané iba v okamihu, keď spustíte prehrávanie alebo sťahovanie videa doplnkom.</string>
 	<string id="30065">Vkladať titulky</string>
 	<string id="30070">Vynutit české názvy</string>

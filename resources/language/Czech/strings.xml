@@ -38,6 +38,11 @@
     <string id="30104">Služba knihovny</string>
     <string id="30105">Výchozí čas pro obnovu seriálu (dny)</string>
     <string id="30065">Vkládat titulky, jsou li k dispozici</string>
+    <string id="30106">StreamujTV Login</string>
+    <string id="30107">StreamujTV Heslo</string>
+    <string id="30108">StreamujTV Lokalita</string>
+    <string id="30109">ČR</string>
+    <string id="30110">Mimo ČR</string>
     <string id="31000">Data o použití jsou zaslána pouze v okamžiku, kdy spustíte přehrávání nebo stahování videa doplňkem.</string>
     <string id="30070">Vynutit české názvy</string>
 </strings>

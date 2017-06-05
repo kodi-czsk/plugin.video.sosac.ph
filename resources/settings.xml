@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <settings>
     <category label="30103">
+        <setting label="30106" id="streamujtv_user" type="text" default="" />
+        <setting label="30107" id="streamujtv_pass" type="text" default="" option="hidden" />
+        <setting label="30108" id="streamujtv_location" type="enum" lvalues="30061|30109|30110" default="0" />
         <setting label="30000" type="text" id="keep-searches" default="20" />
         <setting label="30065" id="subs" type="bool" default="true" />
         <setting label="30057" id="order-episodes" type="enum" lvalues="30058|30059" default="0" />
