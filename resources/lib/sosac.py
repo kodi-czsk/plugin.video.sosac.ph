@@ -90,8 +90,10 @@ class SosacContentProvider(ContentProvider):
                  force_czech=False):
         ContentProvider.__init__(self, name='sosac.ph', base_url=MOVIES_BASE_URL, username=username,
                                  password=password, filter=filter)
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.LWPCookieJar()))
-        urllib2.install_opener(opener)
+        util.init_urllib(self.cache)
+        cookies = self.cache.get(util.CACHE_COOKIES)
+        if not cookies or len(cookies) == 0:
+            util.request(self.base_url)
         self.reverse_eps = reverse_eps
         self.force_czech = force_czech
         self.streamujtv_user = None
