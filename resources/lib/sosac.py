@@ -23,6 +23,7 @@
 import urllib
 import urllib2
 import cookielib
+import hashlib
 import sys
 import json
 import datetime
@@ -93,6 +94,9 @@ class SosacContentProvider(ContentProvider):
         urllib2.install_opener(opener)
         self.reverse_eps = reverse_eps
         self.force_czech = force_czech
+        self.streamujtv_user = None
+        self.streamujtv_pass = None
+        self.streamujtv_location = None
 
     def on_init(self):
         kodilang = self.lang or 'cs'
@@ -386,9 +390,24 @@ class SosacContentProvider(ContentProvider):
             raise ResolveException('Video is not available.')
         result = self.findstreams([STREAMUJ_URL + data])
         if len(result) == 1:
-            return result[0]
+            return self.set_streamujtv_info(result[0])
         elif len(result) > 1 and select_cb:
-            return select_cb(result)
+            return self.set_streamujtv_info(select_cb(result))
+
+    def set_streamujtv_info(self, stream):
+        if stream:
+            if len(self.streamujtv_user) > 0 and len(self.streamujtv_pass) > 0:
+                # set streamujtv credentials
+                m = hashlib.md5()
+                m.update(self.streamujtv_pass)
+                h = m.hexdigest()
+                m = hashlib.md5()
+                m.update(h)
+                stream['url'] = stream['url'] + \
+                    "&pass=%s:::%s" % (self.streamujtv_user, m.hexdigest())
+            if self.streamujtv_location in ['1', '2']:
+                stream['url'] = stream['url'] + "&location=%s" % self.streamujtv_location
+        return stream
 
     def get_subscriptions(self):
         return self.parent.get_subs()
@@ -401,7 +420,7 @@ class SosacContentProvider(ContentProvider):
         try:
             response = urllib2.urlopen(req)
             lastmod = datetime.datetime(*response.info().getdate('Last-Modified')[:6]).strftime(
-                                        '%d.%m.%Y')
+                '%d.%m.%Y')
             response.close()
         except urllib2.HTTPError, error:
             util.debug(error.read())

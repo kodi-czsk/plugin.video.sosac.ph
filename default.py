@@ -45,5 +45,10 @@ if params == {}:
     xbmcutil.init_usage_reporting(__scriptid__)
 
 util.info("Running sosac provider with params: " + str(params))
-XBMCSosac(SosacContentProvider(reverse_eps=reverse_eps, force_czech=force_czech), settings,
-          __addon__).run(params)
+
+sosac = SosacContentProvider(reverse_eps=reverse_eps, force_czech=force_czech)
+sosac.streamujtv_user = __set__('streamujtv_user')
+sosac.streamujtv_pass = __set__('streamujtv_pass')
+sosac.streamujtv_location = __set__('streamujtv_location')
+
+XBMCSosac(sosac, settings, __addon__).run(params)
