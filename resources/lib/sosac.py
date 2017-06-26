@@ -385,14 +385,37 @@ class SosacContentProvider(ContentProvider):
             return self.base_url + "/" + url.lstrip('./')
 
     def resolve(self, item, captcha_cb=None, select_cb=None):
+
+        def probeHTML5(result):
+
+            class NoRedirectHandler(urllib2.HTTPRedirectHandler):
+
+                def http_error_302(self, req, fp, code, msg, headers):
+                    infourl = urllib.addinfourl(fp, headers, req.get_full_url())
+                    infourl.status = code
+                    infourl.code = code
+                    return infourl
+                http_error_300 = http_error_302
+                http_error_301 = http_error_302
+                http_error_303 = http_error_302
+                http_error_307 = http_error_302
+
+            opener = urllib2.build_opener(NoRedirectHandler())
+            urllib2.install_opener(opener)
+
+            r = urllib2.urlopen(urllib2.Request(result['url'], headers=result['headers']))
+            if r.code == 200:
+                result['url'] = r.read()
+            return result
+
         data = item['url']
         if not data:
             raise ResolveException('Video is not available.')
         result = self.findstreams([STREAMUJ_URL + data])
         if len(result) == 1:
-            return self.set_streamujtv_info(result[0])
+            return probeHTML5(self.set_streamujtv_info(result[0]))
         elif len(result) > 1 and select_cb:
-            return self.set_streamujtv_info(select_cb(result))
+            return probeHTML5(self.set_streamujtv_info(select_cb(result)))
 
     def set_streamujtv_info(self, stream):
         if stream:
