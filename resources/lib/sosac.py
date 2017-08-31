@@ -376,14 +376,6 @@ class SosacContentProvider(ContentProvider):
             return names[self.ISO_639_1_CZECH]
         return names[ISO_639_1_CZECH]
 
-    def _url(self, url):
-        # DirtyFix nefunkcniho downloadu: Neznam kod tak se toho zkusenejsi chopte
-        # a prepiste to lepe :)
-        if '&authorize=' in url:
-            return url
-        else:
-            return self.base_url + "/" + url.lstrip('./')
-
     def resolve(self, item, captcha_cb=None, select_cb=None):
 
         def probeHTML5(result):
