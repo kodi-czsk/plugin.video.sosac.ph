@@ -1,3 +1,6 @@
+[B]1.3.7:[/B] 03. 10. 2017
+- opraveno stahování
+- opraveno přehrávání (závislost na vyšší verzi stream.resolver)
 [B]1.3.6:[/B] 26. 06. 2017
 - Oprava přehrávání HTML5 steamů
 [B]1.3.5:[/B] 06. 05. 2017
