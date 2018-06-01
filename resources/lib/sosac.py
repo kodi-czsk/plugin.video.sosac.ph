@@ -225,13 +225,13 @@ class SosacContentProvider(ContentProvider):
             item = self.video_item()
             item['title'] = self.get_video_name(video)
             item['img'] = IMAGE_MOVIE + video['i']
-            item['url'] = video['l'] if video['l'] else ""
+            item['url'] = video['l'] if video['l'] and video['l'] is not None else ""
             item['year'] = int(video['y'])
             if RATING in video:
                 item['rating'] = video[RATING] * RATING_STEP
             if LANG in video:
                 item['lang'] = video[LANG]
-            if QUALITY in video:
+            if QUALITY in video and video[QUALITY] is not None:
                 item['quality'] = video[QUALITY]
             if GENRE in video:
                 item['plot'] = ' '.join(video[GENRE])
@@ -245,7 +245,7 @@ class SosacContentProvider(ContentProvider):
             }
             if CSFD in video and video[CSFD] is not None:
                 item['menu'][LIBRARY_MENU_ITEM_ADD]['csfd'] = video[CSFD]
-            if IMDB in video and video[CSFD] is not None:
+            if IMDB in video and video[IMBD] is not None:
                 item['menu'][LIBRARY_MENU_ITEM_ADD]['imdb'] = video[IMDB]
             result.append(item)
         return result
