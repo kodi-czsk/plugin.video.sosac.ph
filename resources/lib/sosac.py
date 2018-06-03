@@ -27,6 +27,7 @@ import hashlib
 import sys
 import json
 import datetime
+import re
 
 import util
 from provider import ContentProvider, cached, ResolveException
@@ -57,6 +58,34 @@ IMAGE_URL = "http://movies.sosac.tv/images/"
 IMAGE_MOVIE = IMAGE_URL + "75x109/movie-"
 IMAGE_SERIES = IMAGE_URL + "558x313/serial-"
 IMAGE_EPISODE = URL
+IMAGE_DUBBING = "http://movies.sosac.tv/web-icons/sounds/"
+
+FILTER_URL_PARAM = "?filter"
+DUBBING_URL_PARAM = "?dub="
+DUBBING_REGEX = r"\?dub=(\w\w)"
+DUBBING_SETTINGS = [
+    ["cs", "CZECH"],
+    ["en", "ENGLISH"],
+    ["sk", "SLOVAK"],
+    ["cn", "CHINES"],
+    ["de", "GERMAN"],
+    ["el", "GREEK"],
+    ["es", "SPANISH"],
+    ["fi", "FINNISH"],
+    ["fr", "FRENCH"],
+    ["hr", "CROATIAN"],
+    ["id", "INDONESIAN"],
+    ["it", "ITALIAN"],
+    ["ja", "JAPANES"],
+    ["ko", "KOREAN"],
+    ["nl", "DUTCH"],
+    ["no", "NORWEGIAN"],
+    ["pl", "POLISH"],
+    ["pt", "PORTUGUESE"],
+    ["ru", "RUSSIAN"],
+    ["tr", "TURKISH"],
+    ["vi", "VIETNAMESE"]
+]
 
 LIBRARY_MENU_ITEM_ADD = "[B][COLOR red]Add to library[/COLOR][/B]"
 LIBRARY_MENU_ITEM_ADD_ALL = "[B][COLOR red]Add all to library[/COLOR][/B]"
@@ -187,27 +216,36 @@ class SosacContentProvider(ContentProvider):
     def has_tv_show_flag(self, url):
         return TV_SHOW_FLAG in url
 
-    def list(self, url):
+    def list(self, url, filter=None):
         util.info("Examining url " + url)
-        if J_MOVIES_A_TO_Z_TYPE in url:
+        if FILTER_URL_PARAM in url:
+            return self.list_movies_by_dubbing(url)
+        if not filter and DUBBING_URL_PARAM in url:
+            return self.list_dubbing(url)
+        if J_MOVIES_A_TO_Z_TYPE in url or J_MOVIES_GENRE in url:
             return self.load_json_list(url)
-        if J_MOVIES_GENRE in url:
-            return self.load_json_list(url)
-        if J_MOVIES_MOST_POPULAR in url:
-            return self.list_videos(url)
-        if J_MOVIES_RECENTLY_ADDED in url:
-            return self.list_videos(url, order_by=self.order_recently_by)
         if J_TV_SHOWS_A_TO_Z_TYPE in url:
             return self.a_to_z(J_TV_SHOWS)
-        if J_TV_SHOWS in url:
-            return self.list_series_letter(url)
         if J_SERIES in url:
             return self.list_episodes(url)
-        if J_TV_SHOWS_MOST_POPULAR in url:
+        if J_TV_SHOWS in url or J_TV_SHOWS_MOST_POPULAR in url:
             return self.list_series_letter(url)
         if J_TV_SHOWS_RECENTLY_ADDED in url:
             return self.list_recentlyadded_episodes(url)
-        return self.list_videos(url)
+
+        order_by = None
+        if J_MOVIES_RECENTLY_ADDED in url:
+            order_by = self.order_recently_by
+        return self.list_videos(url, filter, order_by)
+
+    def list_dubbing(self, url):
+        p = re.compile(DUBBING_REGEX)
+        m = p.search(url)
+        dub = m.group(1)
+        url_without_dub = url[:m.start()]
+
+        filter = self.has_video_dub(dub)
+        return self.list(url_without_dub, filter)
 
     def load_json_list(self, url):
         result = []
@@ -220,42 +258,45 @@ class SosacContentProvider(ContentProvider):
 
         return sorted(result, key=lambda i: i['title'])
 
-    def list_videos(self, url, order_by=0):
+    def list_videos(self, url, filter=None, order_by=0):
         result = []
         data = util.request(url)
         json_video_array = json.loads(data)
         for video in json_video_array:
-            item = self.video_item()
-            item['title'] = self.get_video_name(video)
-            item['img'] = IMAGE_MOVIE + video['i']
-            item['url'] = video['l'] if video['l'] and video['l'] is not None else ""
-            item['year'] = int(video['y'])
-            if RATING in video:
-                item['rating'] = video[RATING] * RATING_STEP
-            if LANG in video:
-                item['lang'] = video[LANG]
-            if QUALITY in video and video[QUALITY] is not None:
-                item['quality'] = video[QUALITY]
-            if GENRE in video:
-                item['plot'] = ' '.join(video[GENRE])
-            item['menu'] = {
-                LIBRARY_MENU_ITEM_ADD: {
-                    'url': item['url'],
-                    'type': LIBRARY_TYPE_VIDEO,
-                    'action': LIBRARY_ACTION_ADD,
-                    'name': self.get_library_video_name(video)
+            if not filter or filter(video):
+                item = self.video_item()
+                item['title'] = self.get_video_name(video)
+                item['img'] = IMAGE_MOVIE + video['i']
+                item['url'] = video['l'] if video['l'] and video['l'] is not None else ""
+                item['year'] = int(video['y'])
+                if RATING in video:
+                    item['rating'] = video[RATING] * RATING_STEP
+                if LANG in video:
+                    item['lang'] = video[LANG]
+                if QUALITY in video and video[QUALITY] is not None:
+                    item['quality'] = video[QUALITY]
+                if GENRE in video:
+                    item['plot'] = ' '.join(video[GENRE])
+                item['menu'] = {
+                    LIBRARY_MENU_ITEM_ADD: {
+                        'url': item['url'],
+                        'type': LIBRARY_TYPE_VIDEO,
+                        'action': LIBRARY_ACTION_ADD,
+                        'name': self.get_library_video_name(video)
+                    }
                 }
-            }
-            if CSFD in video and video[CSFD] is not None:
-                item['menu'][LIBRARY_MENU_ITEM_ADD]['csfd'] = video[CSFD]
-            if IMDB in video and video[IMBD] is not None:
-                item['menu'][LIBRARY_MENU_ITEM_ADD]['imdb'] = video[IMDB]
-            result.append(item)
+                if CSFD in video and video[CSFD] is not None:
+                    item['menu'][LIBRARY_MENU_ITEM_ADD]['csfd'] = video[CSFD]
+                if IMDB in video and video[IMDB] is not None:
+                    item['menu'][LIBRARY_MENU_ITEM_ADD]['imdb'] = video[IMDB]
+                result.append(item)
         util.debug("ORDER BY" + str(order_by))
         if order_by == ALPHA_SORT:
             result = sorted(result, key=lambda i: i['title'])
         elif order_by == YEAR_SORT:
             result = sorted(result, key=lambda i: i['year'], reverse=True)
+        if not filter:
+            result.insert(0, self.dir_item(title="Filter", url=url + FILTER_URL_PARAM))
         return result
 
     def list_series_letter(self, url, load_subs=True):
@@ -298,6 +339,16 @@ class SosacContentProvider(ContentProvider):
             result.append(item)
         return result
 
+    def list_movies_by_dubbing(self, url):
+        url_without_filter = url[:-len(FILTER_URL_PARAM)]
+
+        result = []
+        for i in DUBBING_SETTINGS:
+            item = self.dir_item(title=i[1], url=url_without_filter + DUBBING_URL_PARAM + i[0])
+            item['img'] = IMAGE_DUBBING + i[0] + ".png"
+            result.append(item)
+        return result
+
     def list_episodes(self, url):
         result = []
         data = util.request(url)
@@ -332,21 +383,21 @@ class SosacContentProvider(ContentProvider):
             result.append(item)
         return result
 
-    def library_list_all_videos(self):
+    def library_list_all_videos(self, filter=None):
         letters = self.load_json_list(URL + J_MOVIES_A_TO_Z_TYPE)
         total = len(letters)
 
-        step = int(100 / len(letters))
+        step = int(100 / total)
         for idx, letter in enumerate(letters):
-            for video in self.list_videos(letter['url']):
+            for video in self.list_videos(letter['url'], filter=filter):
                 yield video
             yield {'progress': step * (idx + 1)}
 
-    def library_list_recent_videos(self):
-        videos = self.list_videos(URL + J_MOVIES_RECENTLY_ADDED)
+    def library_list_recent_videos(self, filter=None):
+        videos = self.list_videos(URL + J_MOVIES_RECENTLY_ADDED, filter)
         total = len(videos)
 
-        step = int(100 / len(videos))
+        step = int(100 / total)
         for idx, video in enumerate(videos):
             yield video
             yield {'progress': step * (idx + 1)}
@@ -355,7 +406,7 @@ class SosacContentProvider(ContentProvider):
         letters = self.a_to_z(J_TV_SHOWS)
         total = len(letters)
 
-        step = int(100 / len(letters))
+        step = int(100 / total)
         for idx, letter in enumerate(letters):
             for video in self.list_series_letter(letter['url'], False):
                 yield video
@@ -457,3 +508,6 @@ class SosacContentProvider(ContentProvider):
             title += " (" + lastmod + ")"
         item = self.dir_item(title=title, url=url)
         return item
+
+    def has_video_dub(self, dubbing):
+        return lambda v: LANG in v and dubbing in v[LANG]
