@@ -38,6 +38,7 @@ settings = {'downloads': __set__('downloads'), 'quality': __set__(
 
 reverse_eps = __set__('order-episodes') == '0'
 force_czech = __set__('force-czech') == 'true'
+order_recently_by = __set__('order-recently-by')
 
 util.info("URL: " + sys.argv[2])
 params = util.params()
@@ -46,7 +47,8 @@ if params == {}:
 
 util.info("Running sosac provider with params: " + str(params))
 
-sosac = SosacContentProvider(reverse_eps=reverse_eps, force_czech=force_czech)
+sosac = SosacContentProvider(reverse_eps=reverse_eps, force_czech=force_czech,
+                             order_recently_by=order_recently_by)
 sosac.streamujtv_user = __set__('streamujtv_user')
 sosac.streamujtv_pass = __set__('streamujtv_pass')
 sosac.streamujtv_location = __set__('streamujtv_location')

@@ -46,4 +46,8 @@
     <string id="30110">Other</string>
     <string id="31000">Usage of plugin is tracked whenever you play or download video.</string>
     <string id="30070">Force Czech titles</string>
+    <string id="30080">Sort recently added</string>
+    <string id="30081">Unsorted</string>
+    <string id="30082">Alphabetical</string>
+    <string id="30083">Year</string>
 </strings>
