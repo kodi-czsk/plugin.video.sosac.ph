@@ -466,7 +466,8 @@ class SosacContentProvider(ContentProvider):
         if len(result) == 1:
             return probeHTML5(self.set_streamujtv_info(result[0]))
         elif len(result) > 1 and select_cb:
-            return probeHTML5(self.set_streamujtv_info(select_cb(result)))
+            stream = select_cb(result)
+            return probeHTML5(self.set_streamujtv_info(stream)) if stream is not None else None
 
     def set_streamujtv_info(self, stream):
         if stream:
