@@ -218,25 +218,28 @@ class SosacContentProvider(ContentProvider):
 
     def list(self, url, filter=None):
         util.info("Examining url " + url)
-        if FILTER_URL_PARAM in url:
-            return self.list_movies_by_dubbing(url)
-        if not filter and DUBBING_URL_PARAM in url:
-            return self.list_dubbing(url)
-        if J_MOVIES_A_TO_Z_TYPE in url or J_MOVIES_GENRE in url:
-            return self.load_json_list(url)
-        if J_TV_SHOWS_A_TO_Z_TYPE in url:
-            return self.a_to_z(J_TV_SHOWS)
-        if J_SERIES in url:
-            return self.list_episodes(url)
-        if J_TV_SHOWS in url or J_TV_SHOWS_MOST_POPULAR in url:
-            return self.list_series_letter(url)
-        if J_TV_SHOWS_RECENTLY_ADDED in url:
-            return self.list_recentlyadded_episodes(url)
 
-        order_by = None
-        if J_MOVIES_RECENTLY_ADDED in url:
-            order_by = self.order_recently_by
-        return self.list_videos(url, filter, order_by)
+        list_result = None
+        if FILTER_URL_PARAM in url:
+            list_result = self.list_movies_by_dubbing(url)
+        elif not filter and DUBBING_URL_PARAM in url:
+            list_result = self.list_dubbing(url)
+        elif J_MOVIES_A_TO_Z_TYPE in url or J_MOVIES_GENRE in url:
+            list_result = self.load_json_list(url)
+        elif J_SERIES in url:
+            list_result = self.list_episodes(url)
+        elif J_TV_SHOWS in url or J_TV_SHOWS_MOST_POPULAR in url:
+            list_result = self.list_series_letter(url)
+        elif J_TV_SHOWS_RECENTLY_ADDED in url:
+            list_result = self.list_recentlyadded_episodes(url)
+        elif J_TV_SHOWS_A_TO_Z_TYPE in url:
+            list_result = self.a_to_z(J_TV_SHOWS)
+        else:
+            order_by = None
+            if J_MOVIES_RECENTLY_ADDED in url:
+                order_by = self.order_recently_by
+            list_result = self.list_videos(url, filter, order_by)
+        return list_result
 
     def list_dubbing(self, url):
         p = re.compile(DUBBING_REGEX)
@@ -436,38 +439,40 @@ class SosacContentProvider(ContentProvider):
         return names[ISO_639_1_CZECH]
 
     def resolve(self, item, captcha_cb=None, select_cb=None):
-
-        def probeHTML5(result):
-
-            class NoRedirectHandler(urllib2.HTTPRedirectHandler):
-
-                def http_error_302(self, req, fp, code, msg, headers):
-                    infourl = urllib.addinfourl(fp, headers, req.get_full_url())
-                    infourl.status = code
-                    infourl.code = code
-                    return infourl
-                http_error_300 = http_error_302
-                http_error_301 = http_error_302
-                http_error_303 = http_error_302
-                http_error_307 = http_error_302
-
-            opener = urllib2.build_opener(NoRedirectHandler())
-            urllib2.install_opener(opener)
-
-            r = urllib2.urlopen(urllib2.Request(result['url'], headers=result['headers']))
-            if r.code == 200:
-                result['url'] = r.read()
-            return result
-
         data = item['url']
         if not data:
             raise ResolveException('Video is not available.')
         result = self.findstreams([STREAMUJ_URL + data])
+        stream = None
         if len(result) == 1:
-            return probeHTML5(self.set_streamujtv_info(result[0]))
+            stream = result[0]
         elif len(result) > 1 and select_cb:
             stream = select_cb(result)
-            return probeHTML5(self.set_streamujtv_info(stream)) if stream is not None else None
+            if not stream:
+                return None
+        return self.probe_html5(self.set_streamujtv_info(stream))
+
+    def probe_html5(self, result):
+
+        class NoRedirectHandler(urllib2.HTTPRedirectHandler):
+
+            def http_error_302(self, req, fp, code, msg, headers):
+                infourl = urllib.addinfourl(fp, headers, req.get_full_url())
+                infourl.status = code
+                infourl.code = code
+                return infourl
+            http_error_300 = http_error_302
+            http_error_301 = http_error_302
+            http_error_303 = http_error_302
+            http_error_307 = http_error_302
+
+        opener = urllib2.build_opener(NoRedirectHandler())
+        urllib2.install_opener(opener)
+
+        r = urllib2.urlopen(urllib2.Request(result['url'], headers=result['headers']))
+        if r.code == 200:
+            result['url'] = r.read()
+        return result
 
     def set_streamujtv_info(self, stream):
         if stream:
