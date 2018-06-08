@@ -1,3 +1,8 @@
+[B]1.3.8:[/B] 04. 06. 2018
+- Přidána možnost filtrování podle dabingu
+- Opraveno pímseno P
+- Možnost řazení posledních přidaných filmů podle data, názvu
+- Opravena chyba při zrušení výběru kvality
 [B]1.3.7:[/B] 03. 10. 2017
 - opraveno stahování
 - opraveno přehrávání (závislost na vyšší verzi stream.resolver)
