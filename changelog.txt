@@ -1,3 +1,5 @@
+[B]1.3.9:[/B] 07. 08. 2018
+- Opraveno Add all to library pro filmy
 [B]1.3.8:[/B] 04. 06. 2018
 - Přidána možnost filtrování podle dabingu
 - Opraveno pímseno P
