@@ -261,7 +261,7 @@ class SosacContentProvider(ContentProvider):
 
         return sorted(result, key=lambda i: i['title'])
 
-    def list_videos(self, url, filter=None, order_by=0):
+    def list_videos(self, url, filter=None, order_by=0, library=False):
         result = []
         data = util.request(url)
         json_video_array = json.loads(data)
@@ -298,7 +298,7 @@ class SosacContentProvider(ContentProvider):
             result = sorted(result, key=lambda i: i['title'])
         elif order_by == YEAR_SORT:
             result = sorted(result, key=lambda i: i['year'], reverse=True)
-        if not filter:
+        if not filter and not library:
             result.insert(0, self.dir_item(title="Filter", url=url + FILTER_URL_PARAM))
         return result
 
@@ -392,12 +392,12 @@ class SosacContentProvider(ContentProvider):
 
         step = int(100 / total)
         for idx, letter in enumerate(letters):
-            for video in self.list_videos(letter['url'], filter=filter):
+            for video in self.list_videos(letter['url'], filter=filter, library=True):
                 yield video
             yield {'progress': step * (idx + 1)}
 
     def library_list_recent_videos(self, filter=None):
-        videos = self.list_videos(URL + J_MOVIES_RECENTLY_ADDED, filter)
+        videos = self.list_videos(URL + J_MOVIES_RECENTLY_ADDED, filter, library=True)
         total = len(videos)
 
         step = int(100 / total)
