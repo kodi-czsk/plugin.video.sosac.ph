@@ -505,7 +505,6 @@ class SosacContentProvider(ContentProvider):
         except urllib2.HTTPError, error:
             util.debug(error.read())
             error.close()
-        util.debug('last update' + lastmod)
         return lastmod
 
     def item_with_last_mod(self, title, url):
