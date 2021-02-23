@@ -16,5 +16,8 @@
         <description lang="cs">Sledujte online filmy a serialy z www.sosac.tv.</description>
         <platform>all</platform>
         <source>https://github.com/kodi-czsk/plugin.video.sosac.ph</source>
+        <assets>
+            <icon>icon.png</icon>
+        </assets>
     </extension>
 </addon>
