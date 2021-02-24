@@ -1,0 +1,218 @@
+# Kodi Media Center language file
+# Addon Name: Sosáč
+# Addon id: plugin.video.sosac.ph
+# Addon Provider: L. Zoubek + jondas
+msgid ""
+msgstr ""
+"Project-Id-Version: Kodi Addons\n"
+"Report-Msgid-Bugs-To: https://forum.kodi.tv/\n"
+"POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Kodi Translation Team\n"
+"Language-Team: Team-Kodi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en_GB\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "#30000"
+msgid "Size of search history"
+msgstr ""
+
+msgctxt "#30001"
+msgid "Video is not available, check[CR]whether it works using web page."
+msgstr ""
+
+msgctxt "#30002"
+msgid "Playing this video[CR]is not yet supported."
+msgstr ""
+
+msgctxt "#30003"
+msgid "[B]Latest episodes[/B]"
+msgstr ""
+
+msgctxt "#30004"
+msgid "Choose video source"
+msgstr ""
+
+msgctxt "#30005"
+msgid "By date"
+msgstr ""
+
+msgctxt "#30006"
+msgid "By performer"
+msgstr ""
+
+msgctxt "#30007"
+msgid "By rating"
+msgstr ""
+
+msgctxt "#30008"
+msgid "[B]Previous[/B]"
+msgstr ""
+
+msgctxt "#30009"
+msgid "[B]Next[/B]"
+msgstr ""
+
+msgctxt "#30030"
+msgid "Downloads"
+msgstr ""
+
+msgctxt "#30031"
+msgid "Please setup downloads folder"
+msgstr ""
+
+msgctxt "#30032"
+msgid "Notify when downloading"
+msgstr ""
+
+msgctxt "#30033"
+msgid " - display notification every"
+msgstr ""
+
+msgctxt "#30034"
+msgid "10%"
+msgstr ""
+
+msgctxt "#30035"
+msgid "5%"
+msgstr ""
+
+msgctxt "#30036"
+msgid "1%"
+msgstr ""
+
+msgctxt "#30037"
+msgid "[B]Downloads[/B]"
+msgstr ""
+
+msgctxt "#30050"
+msgid "Video quality"
+msgstr ""
+
+msgctxt "#30051"
+msgid "Always ask"
+msgstr ""
+
+msgctxt "#30052"
+msgid "Best"
+msgstr ""
+
+msgctxt "#30053"
+msgid "Worst"
+msgstr ""
+
+msgctxt "#30054"
+msgid "720p"
+msgstr ""
+
+msgctxt "#30055"
+msgid "480p"
+msgstr ""
+
+msgctxt "#30056"
+msgid "360p"
+msgstr ""
+
+msgctxt "#30057"
+msgid "Episodes order"
+msgstr ""
+
+msgctxt "#30058"
+msgid "Oldest first"
+msgstr ""
+
+msgctxt "#30059"
+msgid "Latest first"
+msgstr ""
+
+msgctxt "#30060"
+msgid "Autoselect language"
+msgstr ""
+
+msgctxt "#30061"
+msgid "Any"
+msgstr ""
+
+msgctxt "#30062"
+msgid "English"
+msgstr ""
+
+msgctxt "#30063"
+msgid "Czech"
+msgstr ""
+
+msgctxt "#30065"
+msgid "Load subtitles if available"
+msgstr ""
+
+msgctxt "#30070"
+msgid "Force Czech titles"
+msgstr ""
+
+msgctxt "#30080"
+msgid "Sort recently added"
+msgstr ""
+
+msgctxt "#30081"
+msgid "Unsorted"
+msgstr ""
+
+msgctxt "#30082"
+msgid "Alphabetical"
+msgstr ""
+
+msgctxt "#30083"
+msgid "Year"
+msgstr ""
+
+msgctxt "#30100"
+msgid "Movies library"
+msgstr ""
+
+msgctxt "#30101"
+msgid "TVShow library"
+msgstr ""
+
+msgctxt "#30102"
+msgid "Subscription service sleep on start (hours)"
+msgstr ""
+
+msgctxt "#30103"
+msgid "General"
+msgstr ""
+
+msgctxt "#30104"
+msgid "Subscriptions"
+msgstr ""
+
+msgctxt "#30105"
+msgid "Default show check time (days)"
+msgstr ""
+
+msgctxt "#30106"
+msgid "StreamujTV Login"
+msgstr ""
+
+msgctxt "#30107"
+msgid "StreamujTV Password"
+msgstr ""
+
+msgctxt "#30108"
+msgid "StreamujTV Location"
+msgstr ""
+
+msgctxt "#30109"
+msgid "Czech"
+msgstr ""
+
+msgctxt "#30110"
+msgid "Other"
+msgstr ""
+
+msgctxt "#31000"
+msgid "Usage of plugin is tracked whenever you play or download video."
+msgstr ""
+

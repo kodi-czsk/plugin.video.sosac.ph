@@ -1,24 +1,188 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<settings>
-    <category label="30103">
-        <setting label="30106" id="streamujtv_user" type="text" default="" />
-        <setting label="30107" id="streamujtv_pass" type="text" default="" option="hidden" />
-        <setting label="30108" id="streamujtv_location" type="enum" lvalues="30061|30109|30110" default="0" />
-        <setting label="30000" type="text" id="keep-searches" default="20" />
-        <setting label="30065" id="subs" type="bool" default="true" />
-        <setting label="30057" id="order-episodes" type="enum" lvalues="30058|30059" default="0" />
-        <setting label="30050" id="quality" type="enum" lvalues="30051|30052|30053|30054|30055|30056" default="0" />
-        <setting label="30060" id="language" type="enum" lvalues="30061|30062|30063" default="0" />
-        <setting label="30070" id="force-czech" type="bool" default="false" />
-        <setting label="30080" id="order-recently-by" type="enum" lvalues="30081|30082|30083" default="0" />
-        <setting label="30030" id="downloads" type="folder" default="" />
-        <setting label="30032" id="download-notify" type="bool" default="true" />
-        <setting label="30033" id="download-notify-every" type="enum" lvalues="30034|30035|30036" default="0" visible="eq(-1,true)" />
-    </category>
-    <category label="30104">
-        <setting label="30100" id="library-movies" type="folder" default="special://profile/addon_data/plugin.video.sosac.ph/Movies/" />
-        <setting label="30101" id="library-tvshows" type="folder" default="special://profile/addon_data/plugin.video.sosac.ph/TVShows/" />
-        <setting label="30102" id="start_sleep_time" type="slider" default="10" range="0,60" option="int" />
-        <setting label="30105" id="refresh_time" type="slider" default="1" range="0,60" option="int" />
-    </category>
+<?xml version="1.0" ?>
+<settings version="1">
+	<section id="plugin.video.sosac.ph">
+		<category id="default" label="30103" help="">
+			<group id="1">
+				<setting id="streamujtv_user" type="string" label="30106" help="">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="edit" format="string">
+						<heading>30106</heading>
+					</control>
+				</setting>
+				<setting id="streamujtv_pass" type="string" label="30107" help="">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="edit" format="string">
+						<heading>30107</heading>
+						<hidden>true</hidden>
+					</control>
+				</setting>
+				<setting id="streamujtv_location" type="integer" label="30108" help="">
+					<level>0</level>
+					<default>0</default>
+					<constraints>
+						<options>
+							<option label="30061">0</option>
+							<option label="30109">1</option>
+							<option label="30110">2</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="keep-searches" type="string" label="30000" help="">
+					<level>0</level>
+					<default>20</default>
+					<control type="edit" format="string">
+						<heading>30000</heading>
+					</control>
+				</setting>
+				<setting id="subs" type="boolean" label="30065" help="">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="order-episodes" type="integer" label="30057" help="">
+					<level>0</level>
+					<default>0</default>
+					<constraints>
+						<options>
+							<option label="30058">0</option>
+							<option label="30059">1</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="quality" type="integer" label="30050" help="">
+					<level>0</level>
+					<default>0</default>
+					<constraints>
+						<options>
+							<option label="30051">0</option>
+							<option label="30052">1</option>
+							<option label="30053">2</option>
+							<option label="30054">3</option>
+							<option label="30055">4</option>
+							<option label="30056">5</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="language" type="integer" label="30060" help="">
+					<level>0</level>
+					<default>0</default>
+					<constraints>
+						<options>
+							<option label="30061">0</option>
+							<option label="30062">1</option>
+							<option label="30063">2</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="force-czech" type="boolean" label="30070" help="">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="order-recently-by" type="integer" label="30080" help="">
+					<level>0</level>
+					<default>0</default>
+					<constraints>
+						<options>
+							<option label="30081">0</option>
+							<option label="30082">1</option>
+							<option label="30083">2</option>
+						</options>
+					</constraints>
+					<control type="spinner" format="string"/>
+				</setting>
+				<setting id="downloads" type="path" label="30030" help="">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<writable>false</writable>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="button" format="path">
+						<heading>30030</heading>
+					</control>
+				</setting>
+				<setting id="download-notify" type="boolean" label="30032" help="">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="download-notify-every" type="integer" label="30033" help="">
+					<level>0</level>
+					<default>0</default>
+					<constraints>
+						<options>
+							<option label="30034">0</option>
+							<option label="30035">1</option>
+							<option label="30036">2</option>
+						</options>
+					</constraints>
+					<dependencies>
+						<dependency type="visible">
+							<condition operator="is" setting="download-notify">true</condition>
+						</dependency>
+					</dependencies>
+					<control type="spinner" format="string"/>
+				</setting>
+			</group>
+		</category>
+		<category id="default" label="30104" help="">
+			<group id="1">
+				<setting id="library-movies" type="path" label="30100" help="">
+					<level>0</level>
+					<default>special://profile/addon_data/plugin.video.sosac.ph/Movies/</default>
+					<constraints>
+						<writable>false</writable>
+					</constraints>
+					<control type="button" format="path">
+						<heading>30100</heading>
+					</control>
+				</setting>
+				<setting id="library-tvshows" type="path" label="30101" help="">
+					<level>0</level>
+					<default>special://profile/addon_data/plugin.video.sosac.ph/TVShows/</default>
+					<constraints>
+						<writable>false</writable>
+					</constraints>
+					<control type="button" format="path">
+						<heading>30101</heading>
+					</control>
+				</setting>
+				<setting id="start_sleep_time" type="integer" label="30102" help="">
+					<level>0</level>
+					<default>10</default>
+					<constraints>
+						<minimum>0</minimum>
+						<maximum>60</maximum>
+					</constraints>
+					<control type="slider" format="integer">
+						<popup>false</popup>
+					</control>
+				</setting>
+				<setting id="refresh_time" type="integer" label="30105" help="">
+					<level>0</level>
+					<default>1</default>
+					<constraints>
+						<minimum>0</minimum>
+						<maximum>60</maximum>
+					</constraints>
+					<control type="slider" format="integer">
+						<popup>false</popup>
+					</control>
+				</setting>
+			</group>
+		</category>
+	</section>
 </settings>
