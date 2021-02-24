@@ -2,7 +2,7 @@
 <addon id="plugin.video.sosac.ph" name="Sosáč" provider-name="L. Zoubek + jondas" version="1.4.0">
     <requires>
         <import addon="xbmc.python" version="3.0.0" />
-        <import addon="script.module.stream.resolver" version="1.7.0" />
+        <import addon="script.module.stream.resolver" version="1.7.1" />
         <import addon="script.common.plugin.cache" version="2.5.0" />
     </requires>
     <extension library="default.py" point="xbmc.python.pluginsource" provides="video">
