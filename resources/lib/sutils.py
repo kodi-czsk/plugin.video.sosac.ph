@@ -78,7 +78,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     def showNotification(self, title, message, time=1000):
         xbmcgui.Dialog().notification(self.encode(title), self.encode(message), time=time,
-                                      icon=xbmc.translatePath(
+                                      icon=xbmcvfs.translatePath(
                                           self.addon_dir() + "/icon.png"),
                                       sound=False)
 
@@ -313,7 +313,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         error = False
         new = False
         if item_path:
-            item_path = xbmc.translatePath(item_path)
+            item_path = xbmcvfs.translatePath(item_path)
             dir = os.path.dirname(item_path)
             if not xbmcvfs.exists(dir):
                 try:
