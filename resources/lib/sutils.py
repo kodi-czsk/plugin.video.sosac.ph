@@ -64,10 +64,10 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             self.cache.set("subscription.last_run", str(self.last_run))
             pass
 
-        if not xbmc.abortRequested and time.time() > self.last_run:
+        if not xbmc.Monitor.abortRequested and time.time() > self.last_run:
             self.evalSchedules()
 
-        while not xbmc.abortRequested:
+        while not xbmc.Monitor.abortRequested:
             # evaluate subsciptions every 10 minutes
             if(time.time() > self.last_run + 600):
                 self.evalSchedules()
@@ -372,6 +372,6 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     @staticmethod
     def sleep(sleep_time):
-        while not xbmc.abortRequested and sleep_time > 0:
+        while not xbmc.Monitor.abortRequested and sleep_time > 0:
             sleep_time -= 1
             xbmc.sleep(1)
