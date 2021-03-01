@@ -1,0 +1,214 @@
+# Kodi Media Center language file
+# Addon Name: Sosáč
+# Addon id: plugin.video.sosac.ph
+# Addon Provider: L. Zoubek + jondas
+msgid ""
+msgstr ""
+"Project-Id-Version: Kodi Addons\n"
+"Report-Msgid-Bugs-To: https://forum.kodi.tv/\n"
+"POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Kodi Translation Team\n"
+"Language-Team: Team-Kodi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: cs_CZ\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+
+msgctxt "#30000"
+msgid "Size of search history"
+msgstr "Počet zapamatovaných hledání"
+
+msgctxt "#30001"
+msgid "Video is not available, check[CR]whether it works using web page."
+msgstr "Video není dostupné, zkontrolujte,[CR]zda funguje přehrávání na webu."
+
+msgctxt "#30003"
+msgid "[B]Latest episodes[/B]"
+msgstr "[B]Nejnovější epizody[/B]"
+
+msgctxt "#30004"
+msgid "Choose video source"
+msgstr "Zvolte zdroj"
+
+msgctxt "#30005"
+msgid "By date"
+msgstr "Dle datumu"
+
+msgctxt "#30006"
+msgid "By performer"
+msgstr "Dle účinkujícího"
+
+msgctxt "#30007"
+msgid "By rating"
+msgstr "Dle hodnocení"
+
+msgctxt "#30008"
+msgid "[B]Previous[/B]"
+msgstr "[B]Předchozí[/B]"
+
+msgctxt "#30009"
+msgid "[B]Next[/B]"
+msgstr "[B]Další[/B]"
+
+msgctxt "#30030"
+msgid "Downloads"
+msgstr "Složka pro stahování"
+
+msgctxt "#30031"
+msgid "Please setup downloads folder"
+msgstr "Nastavte prosím složku pro stahování"
+
+msgctxt "#30032"
+msgid "Notify when downloading"
+msgstr "Zobrazovat stav stahování"
+
+msgctxt "#30033"
+msgid " - display notification every"
+msgstr " - zobrazit stav každých"
+
+msgctxt "#30034"
+msgid "10%"
+msgstr "10%"
+
+msgctxt "#30035"
+msgid "5%"
+msgstr "5%"
+
+msgctxt "#30036"
+msgid "1%"
+msgstr "1%"
+
+msgctxt "#30037"
+msgid "[B]Downloads[/B]"
+msgstr "[B]Stažené soubory[/B]"
+
+msgctxt "#30050"
+msgid "Video quality"
+msgstr "Kvalita videa"
+
+msgctxt "#30051"
+msgid "Always ask"
+msgstr "Zeptat se"
+
+msgctxt "#30052"
+msgid "Best"
+msgstr "Nejlepší"
+
+msgctxt "#30053"
+msgid "Worst"
+msgstr "Nejhorší"
+
+msgctxt "#30054"
+msgid "720p"
+msgstr "720p"
+
+msgctxt "#30055"
+msgid "480p"
+msgstr "480p"
+
+msgctxt "#30056"
+msgid "360p"
+msgstr "360p"
+
+msgctxt "#30057"
+msgid "Episodes order"
+msgstr "Řazení epizod"
+
+msgctxt "#30058"
+msgid "Oldest first"
+msgstr "Od nejstarších"
+
+msgctxt "#30059"
+msgid "Latest first"
+msgstr "Od nejnovějších"
+
+msgctxt "#30060"
+msgid "Autoselect language"
+msgstr "Jazyk videa"
+
+msgctxt "#30061"
+msgid "Any"
+msgstr "Nezáleží"
+
+msgctxt "#30062"
+msgid "English"
+msgstr "Anglicky"
+
+msgctxt "#30063"
+msgid "Czech"
+msgstr "Česky"
+
+msgctxt "#30065"
+msgid "Load subtitles if available"
+msgstr "Vkládat titulky, jsou li k dispozici"
+
+msgctxt "#30070"
+msgid "Force Czech titles"
+msgstr "Vynutit české názvy"
+
+msgctxt "#30080"
+msgid "Sort recently added"
+msgstr "Řadit poslední přidané"
+
+msgctxt "#30081"
+msgid "Unsorted"
+msgstr "Neřadit"
+
+msgctxt "#30082"
+msgid "Alphabetical"
+msgstr "Abecedně"
+
+msgctxt "#30083"
+msgid "Year"
+msgstr "Roku"
+
+msgctxt "#30100"
+msgid "Movies library"
+msgstr "Složka pro filmy"
+
+msgctxt "#30101"
+msgid "TVShow library"
+msgstr "Složka pro seriály"
+
+msgctxt "#30102"
+msgid "Subscription service sleep on start (hours)"
+msgstr "Opozdit start služby o (hodiny)"
+
+msgctxt "#30103"
+msgid "General"
+msgstr "Obecné"
+
+msgctxt "#30104"
+msgid "Subscriptions"
+msgstr "Služba knihovny"
+
+msgctxt "#30105"
+msgid "Default show check time (days)"
+msgstr "Výchozí čas pro obnovu seriálu (dny)"
+
+msgctxt "#30106"
+msgid "StreamujTV Login"
+msgstr "StreamujTV Login"
+
+msgctxt "#30107"
+msgid "StreamujTV Password"
+msgstr "StreamujTV Heslo"
+
+msgctxt "#30108"
+msgid "StreamujTV Location"
+msgstr "StreamujTV Lokalita"
+
+msgctxt "#30109"
+msgid "Czech"
+msgstr "ČR"
+
+msgctxt "#30110"
+msgid "Other"
+msgstr "Mimo ČR"
+
+msgctxt "#31000"
+msgid "Usage of plugin is tracked whenever you play or download video."
+msgstr "Data o použití jsou zaslána pouze v okamžiku, kdy spustíte přehrávání nebo stahování videa doplňkem."
+

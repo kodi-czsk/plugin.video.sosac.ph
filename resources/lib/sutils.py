@@ -10,8 +10,8 @@ import re
 import time
 import string
 import datetime
-import urllib
-import sosac
+import urllib.request, urllib.parse, urllib.error
+from . import sosac
 
 
 class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
@@ -64,10 +64,10 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             self.cache.set("subscription.last_run", str(self.last_run))
             pass
 
-        if not xbmc.abortRequested and time.time() > self.last_run:
+        if not xbmc.Monitor.abortRequested and time.time() > self.last_run:
             self.evalSchedules()
 
-        while not xbmc.abortRequested:
+        while not xbmc.Monitor.abortRequested:
             # evaluate subsciptions every 10 minutes
             if(time.time() > self.last_run + 600):
                 self.evalSchedules()
@@ -78,7 +78,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     def showNotification(self, title, message, time=1000):
         xbmcgui.Dialog().notification(self.encode(title), self.encode(message), time=time,
-                                      icon=xbmc.translatePath(
+                                      icon=xbmcvfs.translatePath(
                                           self.addon_dir() + "/icon.png"),
                                       sound=False)
 
@@ -88,7 +88,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             util.info("SOSAC Loading subscriptions")
             subs = self.get_subs()
             new_items = False
-            for url, sub in subs.iteritems():
+            for url, sub in subs.items():
                 if xbmc.abortRequested:
                     util.info("SOSAC Exiting")
                     return
@@ -139,10 +139,10 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             if tvid:
                 return tvid.group(1)
         shortname = re.search('(.+) (\(\d{4}\))', name).group(1)
-        urllang = [urllib.urlencode({'seriesname': shortname, 'language': 'cs'}),
-                   urllib.urlencode({'seriesname': shortname, 'language': 'all'}),
-                   urllib.urlencode({'seriesname': name, 'language': 'cs'}),
-                   urllib.urlencode({'seriesname': name, 'language': 'all'})]
+        urllang = [urllib.parse.urlencode({'seriesname': shortname, 'language': 'cs'}),
+                   urllib.parse.urlencode({'seriesname': shortname, 'language': 'all'}),
+                   urllib.parse.urlencode({'seriesname': name, 'language': 'cs'}),
+                   urllib.parse.urlencode({'seriesname': name, 'language': 'all'})]
         for iter in urllang:
             data = util.request('http://thetvdb.com/api/GetSeries.php?' + iter)
             tvid = re.search('<id>(\d+)</id>', data)
@@ -238,7 +238,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             icon = os.path.join(self.addon.getAddonInfo('path'), 'icon.png')
             if params['action'] == sosac.LIBRARY_ACTION_REMOVE_SUBSCRIPTION:
                 subs = self.get_subs()
-                if params['url'] in subs.keys():
+                if params['url'] in list(subs.keys()):
                     del subs[params['url']]
                     self.set_subs(subs)
                     self.showNotification(
@@ -313,12 +313,12 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         error = False
         new = False
         if item_path:
-            item_path = xbmc.translatePath(item_path)
+            item_path = xbmcvfs.translatePath(item_path)
             dir = os.path.dirname(item_path)
             if not xbmcvfs.exists(dir):
                 try:
                     xbmcvfs.mkdirs(dir)
-                except Exception, e:
+                except Exception as e:
                     error = True
                     util.error('Failed to create directory 1: ' + dir)
 
@@ -328,7 +328,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     file_desc.write(item_url)
                     file_desc.close()
                     new = True
-                except Exception, e:
+                except Exception as e:
                     util.error('Failed to create .strm file: ' +
                                item_path + " | " + str(e))
                     error = True
@@ -346,7 +346,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 return {}
             self.subs = eval(data)
             return self.subs
-        except Exception, e:
+        except Exception as e:
             util.error(e)
             return {}
 
@@ -372,6 +372,6 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     @staticmethod
     def sleep(sleep_time):
-        while not xbmc.abortRequested and sleep_time > 0:
+        while not xbmc.Monitor.abortRequested and sleep_time > 0:
             sleep_time -= 1
             xbmc.sleep(1)

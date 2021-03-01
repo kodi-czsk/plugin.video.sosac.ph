@@ -20,14 +20,14 @@
 # *
 # */
 
-import urllib
-import urllib2
-import cookielib
+import urllib.request, urllib.parse, urllib.error
+import http.cookiejar
 import hashlib
 import sys
 import json
 import datetime
 import re
+import time
 
 import util
 from provider import ContentProvider, cached, ResolveException
@@ -121,8 +121,8 @@ class SosacContentProvider(ContentProvider):
                  force_czech=False, order_recently_by=0):
         ContentProvider.__init__(self, name='sosac.ph', base_url=MOVIES_BASE_URL, username=username,
                                  password=password, filter=filter)
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.LWPCookieJar()))
-        urllib2.install_opener(opener)
+        opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.LWPCookieJar()))
+        urllib.request.install_opener(opener)
         self.reverse_eps = reverse_eps
         self.force_czech = force_czech
         self.streamujtv_user = None
@@ -198,7 +198,7 @@ class SosacContentProvider(ContentProvider):
         if len(keyword) < 3 or len(keyword) > 100:
             return [self.dir_item(title="Search query must be between 3 and 100 characters long!",
                                   url="fail")]
-        return self.list_videos(URL + J_SEARCH + urllib.quote_plus(keyword))
+        return self.list_videos(URL + J_SEARCH + urllib.parse.quote_plus(keyword))
 
     def a_to_z(self, url):
         result = []
@@ -254,7 +254,7 @@ class SosacContentProvider(ContentProvider):
         result = []
         data = util.request(url)
         json_list = json.loads(data)
-        for key, value in json_list.iteritems():
+        for key, value in json_list.items():
             item = self.dir_item(title=key.title())
             item['url'] = value
             result.append(item)
@@ -266,7 +266,7 @@ class SosacContentProvider(ContentProvider):
         data = util.request(url)
         json_video_array = json.loads(data)
         for video in json_video_array:
-            if not filter or filter(video):
+            if not filter or list(filter(video)):
                 item = self.video_item()
                 item['title'] = self.get_video_name(video)
                 item['img'] = IMAGE_MOVIE + video['i']
@@ -357,8 +357,8 @@ class SosacContentProvider(ContentProvider):
         data = util.request(url)
         json_series = json.loads(data)
         for series in json_series:
-            for series_key, episode in series.iteritems():
-                for episode_key, video in episode.iteritems():
+            for series_key, episode in series.items():
+                for episode_key, video in episode.items():
                     item = self.video_item()
                     item['title'] = (series_key.zfill(2) + "x" + episode_key.zfill(2) +
                                      " - " + video['n'])
@@ -454,7 +454,7 @@ class SosacContentProvider(ContentProvider):
 
     def probe_html5(self, result):
 
-        class NoRedirectHandler(urllib2.HTTPRedirectHandler):
+        class NoRedirectHandler(urllib.request.HTTPRedirectHandler):
 
             def http_error_302(self, req, fp, code, msg, headers):
                 infourl = urllib.addinfourl(fp, headers, req.get_full_url())
@@ -466,10 +466,10 @@ class SosacContentProvider(ContentProvider):
             http_error_303 = http_error_302
             http_error_307 = http_error_302
 
-        opener = urllib2.build_opener(NoRedirectHandler())
-        urllib2.install_opener(opener)
+        opener = urllib.request.build_opener(NoRedirectHandler())
+        urllib.request.install_opener(opener)
 
-        r = urllib2.urlopen(urllib2.Request(result['url'], headers=result['headers']))
+        r = urllib.request.urlopen(urllib.request.Request(result['url'], headers=result['headers']))
         if r.code == 200:
             result['url'] = r.read()
         return result
@@ -479,10 +479,10 @@ class SosacContentProvider(ContentProvider):
             if len(self.streamujtv_user) > 0 and len(self.streamujtv_pass) > 0:
                 # set streamujtv credentials
                 m = hashlib.md5()
-                m.update(self.streamujtv_pass)
+                m.update(self.streamujtv_pass.encode('utf-8'))
                 h = m.hexdigest()
                 m = hashlib.md5()
-                m.update(h)
+                m.update(h.encode('utf-8'))
                 stream['url'] = stream['url'] + \
                     "&pass=%s:::%s" % (self.streamujtv_user, m.hexdigest())
             if self.streamujtv_location in ['1', '2']:
@@ -495,14 +495,15 @@ class SosacContentProvider(ContentProvider):
     def request_last_update(self, url):
         util.debug('request: %s' % url)
         lastmod = None
-        req = urllib2.Request(url)
+        req = urllib.request.Request(url)
         req.add_header('User-Agent', util.UA)
         try:
-            response = urllib2.urlopen(req)
-            lastmod = datetime.datetime(*response.info().getdate('Last-Modified')[:6]).strftime(
-                '%d.%m.%Y')
+            response = urllib.request.urlopen(req)
+            lastmodtime = time.strptime(response.info().get_all('Last-Modified')[0], 
+                '%a, %d %b %Y %H:%M:%S %Z')
+            lastmod = datetime.datetime(*lastmodtime[:6]).strftime('%d.%m.%Y')
             response.close()
-        except urllib2.HTTPError, error:
+        except urllib.error.HTTPError as error:
             util.debug(error.read())
             error.close()
         return lastmod
