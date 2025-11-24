@@ -20,6 +20,7 @@
 #  *
 #  */
 
+import sys
 import xbmcaddon
 import xbmcutil
 import util

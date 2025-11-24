@@ -10,8 +10,9 @@ import re
 import time
 import string
 import datetime
-import urllib
+import urllib.parse
 import sosac
+import ast
 
 
 class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
@@ -49,13 +50,14 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     def service(self):
         util.info("SOSAC Service Started")
+        monitor = xbmc.Monitor()
         try:
             sleep_time = int(self.getSetting("start_sleep_time")) * 1000 * 60 * 60
         except:
             sleep_time = self.sleep_time
             pass
 
-        self.sleep(sleep_time)
+        self.sleep(sleep_time, monitor)
 
         try:
             self.last_run = float(self.cache.get("subscription.last_run"))
@@ -64,21 +66,21 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             self.cache.set("subscription.last_run", str(self.last_run))
             pass
 
-        if not xbmc.abortRequested and time.time() > self.last_run:
+        if not monitor.abortRequested() and time.time() > self.last_run:
             self.evalSchedules()
 
-        while not xbmc.abortRequested:
+        while not monitor.abortRequested():
             # evaluate subsciptions every 10 minutes
             if(time.time() > self.last_run + 600):
                 self.evalSchedules()
                 self.last_run = time.time()
                 self.cache.set("subscription.last_run", str(self.last_run))
-            self.sleep(self.sleep_time)
+            self.sleep(self.sleep_time, monitor)
         util.info("SOSAC Shutdown")
 
     def showNotification(self, title, message, time=1000):
         xbmcgui.Dialog().notification(self.encode(title), self.encode(message), time=time,
-                                      icon=xbmc.translatePath(
+                                      icon=xbmcvfs.translatePath(
                                           self.addon_dir() + "/icon.png"),
                                       sound=False)
 
@@ -88,8 +90,9 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             util.info("SOSAC Loading subscriptions")
             subs = self.get_subs()
             new_items = False
-            for url, sub in subs.iteritems():
-                if xbmc.abortRequested:
+            monitor = xbmc.Monitor()
+            for url, sub in subs.items():
+                if monitor.abortRequested():
                     util.info("SOSAC Exiting")
                     return
                 if sub['type'] == sosac.LIBRARY_TYPE_TVSHOW:
@@ -139,10 +142,10 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             if tvid:
                 return tvid.group(1)
         shortname = re.search('(.+) (\(\d{4}\))', name).group(1)
-        urllang = [urllib.urlencode({'seriesname': shortname, 'language': 'cs'}),
-                   urllib.urlencode({'seriesname': shortname, 'language': 'all'}),
-                   urllib.urlencode({'seriesname': name, 'language': 'cs'}),
-                   urllib.urlencode({'seriesname': name, 'language': 'all'})]
+        urllang = [urllib.parse.urlencode({'seriesname': shortname, 'language': 'cs'}),
+                   urllib.parse.urlencode({'seriesname': shortname, 'language': 'all'}),
+                   urllib.parse.urlencode({'seriesname': name, 'language': 'cs'}),
+                   urllib.parse.urlencode({'seriesname': name, 'language': 'all'})]
         for iter in urllang:
             data = util.request('http://thetvdb.com/api/GetSeries.php?' + iter)
             tvid = re.search('<id>(\d+)</id>', data)
@@ -313,12 +316,12 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         error = False
         new = False
         if item_path:
-            item_path = xbmc.translatePath(item_path)
+            item_path = xbmcvfs.translatePath(item_path)
             dir = os.path.dirname(item_path)
             if not xbmcvfs.exists(dir):
                 try:
                     xbmcvfs.mkdirs(dir)
-                except Exception, e:
+                except Exception as e:
                     error = True
                     util.error('Failed to create directory 1: ' + dir)
 
@@ -328,7 +331,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     file_desc.write(item_url)
                     file_desc.close()
                     new = True
-                except Exception, e:
+                except Exception as e:
                     util.error('Failed to create .strm file: ' +
                                item_path + " | " + str(e))
                     error = True
@@ -344,9 +347,10 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         try:
             if data == '':
                 return {}
-            self.subs = eval(data)
+            # Use ast.literal_eval instead of eval for security
+            self.subs = ast.literal_eval(data)
             return self.subs
-        except Exception, e:
+        except Exception as e:
             util.error(e)
             return {}
 
@@ -356,7 +360,12 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     @staticmethod
     def encode(string):
-        return unicodedata.normalize('NFKD', string.decode('utf-8')).encode('ascii', 'ignore')
+        # In Python 3, strings are already Unicode
+        if isinstance(string, bytes):
+            string = string.decode('utf-8')
+        # Normalize and encode to ASCII, ignoring non-ASCII characters
+        normalized = unicodedata.normalize('NFKD', string)
+        return normalized.encode('ascii', 'ignore').decode('ascii')
 
     def addon_dir(self):
         return self.addon.getAddonInfo('path')
@@ -371,7 +380,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         return self.addon.getLocalizedString(string_id)
 
     @staticmethod
-    def sleep(sleep_time):
-        while not xbmc.abortRequested and sleep_time > 0:
-            sleep_time -= 1
-            xbmc.sleep(1)
+    def sleep(sleep_time, monitor=None):
+        if monitor is None:
+            monitor = xbmc.Monitor()
+        # Convert sleep_time from milliseconds to seconds and use waitForAbort
+        monitor.waitForAbort(sleep_time / 1000.0)
